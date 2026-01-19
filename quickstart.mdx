@@ -27,7 +27,7 @@ export RAYSURFER_API_KEY=your_api_key_here
 
 ## Drop-in Replacement
 
-Raysurfer is a drop-in replacement for Claude Agent SDK. Simply swap your import:
+Raysurfer wraps the Claude Agent SDK. Swap your client and method names:
 
 <CodeGroup>
 
@@ -35,13 +35,18 @@ Raysurfer is a drop-in replacement for Claude Agent SDK. Simply swap your import
 # Before
 from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
 
-# After - just change the import
-from raysurfer import ClaudeSDKClient, ClaudeAgentOptions
-
-# Everything else stays exactly the same
 async with ClaudeSDKClient(options) as client:
     await client.query("Generate quarterly report")
     async for msg in client.receive_response():
+        print(msg)
+
+# After
+from raysurfer import RaysurferClient
+from claude_agent_sdk import ClaudeAgentOptions  # Options come from Claude SDK
+
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("Generate quarterly report")
+    async for msg in client.raysurfer_response():
         print(msg)
 ```
 
@@ -49,19 +54,31 @@ async with ClaudeSDKClient(options) as client:
 // Before
 import { ClaudeSDKClient } from "@anthropic-ai/claude-agent-sdk";
 
-// After - just change the import
+const client = new ClaudeSDKClient(options);
+for await (const msg of client.query("Generate quarterly report")) {
+  console.log(msg);
+}
+
+// After
 import { RaysurferClient } from "raysurfer";
 
-// Everything else stays exactly the same
-// const client = new ClaudeSDKClient(options);
 const client = new RaysurferClient(options);
-
-for await (const msg of client.query("Generate quarterly report")) {
+for await (const msg of client.raysurferQuery("Generate quarterly report")) {
   console.log(msg);
 }
 ```
 
 </CodeGroup>
+
+## Key Differences
+
+| Claude SDK | Raysurfer |
+|------------|-----------|
+| `ClaudeSDKClient` | `RaysurferClient` |
+| `client.query()` | `client.raysurfer_query()` |
+| `client.receive_response()` | `client.raysurfer_response()` |
+
+Options (`ClaudeAgentOptions`) come directly from `claude_agent_sdk` — no Raysurfer-specific options needed.
 
 ## Verifying It Works
 

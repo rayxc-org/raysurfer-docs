@@ -21,55 +21,84 @@ Get your key from the [dashboard](https://raysurfer.com/dashboard/api-keys).
 
 ## Usage
 
-Just change your import. Everything else stays the same.
+Swap your client class and method names. Options come directly from `claude_agent_sdk`:
 
 ```python
 # Before
 from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
 
 # After
-from raysurfer import ClaudeSDKClient, ClaudeAgentOptions
+from raysurfer import RaysurferClient
+from claude_agent_sdk import ClaudeAgentOptions
 
-# Your existing code works unchanged
-async with ClaudeSDKClient(options) as client:
-    await client.query("Generate quarterly report")
-    async for msg in client.receive_response():
+options = ClaudeAgentOptions(
+    allowed_tools=["Read", "Write", "Bash"],
+    system_prompt="You are a helpful assistant.",
+)
+
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("Generate quarterly report")
+    async for msg in client.raysurfer_response():
         print(msg)
 ```
 
-## Configuration
+## Method Mapping
 
-Optional settings you can add:
+| Claude SDK | Raysurfer |
+|------------|-----------|
+| `ClaudeSDKClient(options)` | `RaysurferClient(options)` |
+| `await client.query(prompt)` | `await client.raysurfer_query(prompt)` |
+| `client.receive_response()` | `client.raysurfer_response()` |
+
+## Options
+
+Options are passed through directly from `claude_agent_sdk.ClaudeAgentOptions`. All standard options work:
 
 ```python
-from raysurfer import ClaudeSDKClient, RaysurferOptions
+from claude_agent_sdk import ClaudeAgentOptions
 
-options = RaysurferOptions(
-    # Raysurfer options
-    cache_enabled=True,      # Turn caching on/off (default: True)
-    private_outputs=False,   # Keep outputs private (Pro/Enterprise)
-
-    # Standard Claude SDK options
+options = ClaudeAgentOptions(
+    allowed_tools=["Read", "Write", "Bash"],
+    system_prompt="You are a helpful assistant.",
     model="claude-sonnet-4-20250514",
-    max_tokens=4096,
+    max_turns=10,
+    cwd="/path/to/working/dir",
+    # ... all other ClaudeAgentOptions fields
 )
-
-async with ClaudeSDKClient(options) as client:
-    # ...
 ```
 
-## Disable Caching for a Request
+No Raysurfer-specific options are needed. Caching is enabled automatically when `RAYSURFER_API_KEY` is set.
+
+## Full Example
 
 ```python
-# Skip cache for this specific query
-await client.query("Generate unique content", cache=False)
+import asyncio
+import os
+from raysurfer import RaysurferClient
+from claude_agent_sdk import ClaudeAgentOptions
+
+os.environ["RAYSURFER_API_KEY"] = "your_api_key"
+
+async def main():
+    options = ClaudeAgentOptions(
+        allowed_tools=["Read", "Write", "Bash"],
+        system_prompt="You are a helpful assistant.",
+    )
+
+    async with RaysurferClient(options) as client:
+        # First run: generates and caches code
+        await client.raysurfer_query("Fetch GitHub trending repos")
+        async for msg in client.raysurfer_response():
+            print(msg)
+
+        # Second run: retrieves from cache (instant)
+        await client.raysurfer_query("Fetch GitHub trending repos")
+        async for msg in client.raysurfer_response():
+            print(msg)
+
+asyncio.run(main())
 ```
 
-## Check Cache Status
+## Without Caching
 
-```python
-response = await client.query("Generate report")
-
-if response.cache_hit:
-    print("Served from cache!")
-```
+If `RAYSURFER_API_KEY` is not set, `RaysurferClient` behaves exactly like `ClaudeSDKClient` — no caching, just a pass-through wrapper.
