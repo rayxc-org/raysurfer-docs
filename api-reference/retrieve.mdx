@@ -1,0 +1,115 @@
+---
+title: Retrieve Code Blocks
+api: POST /v1/retrieve
+description: "Retrieve cached code blocks by semantic similarity"
+---
+
+## Request
+
+<ParamField body="query" type="string" required>
+  Natural language description of what you're looking for
+</ParamField>
+
+<ParamField body="limit" type="number" default="5">
+  Maximum number of results to return (1-20)
+</ParamField>
+
+<ParamField body="threshold" type="number" default="0.7">
+  Minimum similarity score (0-1) for results
+</ParamField>
+
+<ParamField body="language" type="string">
+  Filter by programming language
+</ParamField>
+
+<ParamField body="include_community" type="boolean" default="true">
+  Include results from the community registry
+</ParamField>
+
+## Example Request
+
+```bash
+curl -X POST https://api.raysurfer.com/v1/retrieve \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "generate PDF invoice from order data",
+    "limit": 3,
+    "language": "python"
+  }'
+```
+
+## Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "results": [
+      {
+        "id": "cb_abc123xyz",
+        "source": "def generate_invoice(order):\n    items = [format_line_item(i) for i in order.items]\n    html = render_template(\"invoice.html\", order_id=order.id, items=items)\n    return html_to_pdf(html)",
+        "entrypoint": "generate_invoice",
+        "language": "python",
+        "task_description": "Generate a PDF invoice from an order object",
+        "similarity": 0.94,
+        "verdict": {
+          "thumbs_up": 1847,
+          "thumbs_down": 23,
+          "score": 0.988
+        },
+        "reuse_count": 48293
+      }
+    ],
+    "total_matches": 127
+  },
+  "meta": {
+    "request_id": "req_ghi789",
+    "latency_ms": 45
+  }
+}
+```
+
+## Response Fields
+
+<ResponseField name="results" type="array">
+  Array of matching code blocks, sorted by relevance
+</ResponseField>
+
+<ResponseField name="results[].id" type="string">
+  Unique identifier for the code block
+</ResponseField>
+
+<ResponseField name="results[].source" type="string">
+  The source code content
+</ResponseField>
+
+<ResponseField name="results[].entrypoint" type="string">
+  The main function or entry point name
+</ResponseField>
+
+<ResponseField name="results[].similarity" type="number">
+  Semantic similarity score (0-1)
+</ResponseField>
+
+<ResponseField name="results[].verdict" type="object">
+  Community feedback and quality score
+</ResponseField>
+
+<ResponseField name="results[].reuse_count" type="number">
+  Number of times this code has been reused
+</ResponseField>
+
+<ResponseField name="total_matches" type="number">
+  Total number of matches found (before limit applied)
+</ResponseField>
+
+## Verdict-Aware Scoring
+
+Results are ranked by a combination of:
+
+1. **Semantic similarity** - How closely the code matches your query
+2. **Verdict score** - Community feedback (thumbs up/down ratio)
+3. **Reuse count** - How often this code has been successfully reused
+
+Code with high verdict scores and reuse counts is prioritized, even if semantic similarity is slightly lower.

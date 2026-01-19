@@ -1,0 +1,115 @@
+---
+title: Quickstart
+description: "Get started with Raysurfer in under 5 minutes"
+---
+
+## Installation
+
+<CodeGroup>
+
+```bash Python
+pip install raysurfer
+```
+
+```bash TypeScript
+npm install raysurfer
+```
+
+</CodeGroup>
+
+## Set Your API Key
+
+Get your API key from the [dashboard](https://raysurfer.com/dashboard/api-keys) and set it as an environment variable:
+
+```bash
+export RAYSURFER_API_KEY=your_api_key_here
+```
+
+## Drop-in Replacement
+
+Raysurfer is a drop-in replacement for Claude Agent SDK. Simply swap your import:
+
+<CodeGroup>
+
+```python Python
+# Before
+from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
+
+# After - just change the import
+from raysurfer import ClaudeSDKClient, ClaudeAgentOptions
+
+# Everything else stays exactly the same
+async with ClaudeSDKClient(options) as client:
+    await client.query("Generate quarterly report")
+    async for msg in client.receive_response():
+        print(msg)
+```
+
+```typescript TypeScript
+// Before
+import { ClaudeSDKClient } from "@anthropic-ai/claude-agent-sdk";
+
+// After - just change the import
+import { RaysurferClient } from "raysurfer";
+
+// Everything else stays exactly the same
+// const client = new ClaudeSDKClient(options);
+const client = new RaysurferClient(options);
+
+for await (const msg of client.query("Generate quarterly report")) {
+  console.log(msg);
+}
+```
+
+</CodeGroup>
+
+## Verifying It Works
+
+The simplest way to verify Raysurfer is working:
+
+1. **First run**: Execute a unique input - this generates and caches the output
+2. **Second run**: Run the same input again - it should return instantly from cache
+
+The speedup vs running the same agent via Claude SDK should be significant (~30x) since pulling cached code is much faster than regenerating tokens.
+
+<Steps>
+  <Step title="Run your agent once">
+    The first execution generates output normally and caches it automatically.
+  </Step>
+  <Step title="Run the same query again">
+    The second execution retrieves from cache almost instantly.
+  </Step>
+  <Step title="Compare the times">
+    You should see a dramatic speedup on the cached run.
+  </Step>
+</Steps>
+
+## What Gets Cached?
+
+Raysurfer caches:
+
+- Code outputs from agent tool calls
+- Generated reports, templates, and documents
+- API response patterns
+- Any structured output your agent produces
+
+<Note>
+  By default, your outputs are shared with the community registry. Upgrade to Pro or Enterprise to keep outputs private to your team.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Python SDK" icon="python" href="/sdk/python">
+    Full Python SDK reference and examples
+  </Card>
+  <Card title="TypeScript SDK" icon="js" href="/sdk/typescript">
+    Full TypeScript SDK reference and examples
+  </Card>
+  <Card title="How It Works" icon="gear" href="/how-it-works">
+    Learn about semantic matching and verdict-aware scoring
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/overview">
+    Direct API access for advanced use cases
+  </Card>
+</CardGroup>

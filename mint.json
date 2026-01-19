@@ -1,0 +1,68 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Raysurfer",
+  "logo": {
+    "dark": "/logo-light.webp",
+    "light": "/logo-light.webp"
+  },
+  "favicon": "/logo-light.webp",
+  "colors": {
+    "primary": "#d4c4a8",
+    "light": "#E8DCC4",
+    "dark": "#1e3a5f",
+    "background": {
+      "dark": "#0C1D52",
+      "light": "#ffffff"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Dashboard",
+      "url": "https://raysurfer.com/dashboard"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get API Key",
+    "url": "https://raysurfer.com/dashboard/api-keys"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/ryx2/raysurfer-python"
+    },
+    {
+      "name": "PyPI",
+      "icon": "python",
+      "url": "https://pypi.org/project/raysurfer/"
+    },
+    {
+      "name": "npm",
+      "icon": "npm",
+      "url": "https://www.npmjs.com/package/raysurfer"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": ["introduction", "quickstart", "how-it-works"]
+    },
+    {
+      "group": "SDK",
+      "pages": ["sdk/python", "sdk/typescript"]
+    },
+    {
+      "group": "API Reference",
+      "pages": ["api-reference/overview", "api-reference/store", "api-reference/retrieve"]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/ryx2/raysurfer-python"
+  }
+}

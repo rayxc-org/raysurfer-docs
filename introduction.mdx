@@ -1,0 +1,47 @@
+---
+title: Introduction
+description: "Recycle Claude Agent SDK outputs in production"
+---
+
+# What is Raysurfer?
+
+Raysurfer is an LLM output caching and reuse infrastructure designed to accelerate Claude-based AI agents by retrieving and reusing similar results instead of regenerating them.
+
+<CardGroup cols={2}>
+  <Card title="30x Faster" icon="bolt">
+    Cached outputs are delivered up to 30x faster than regenerating tokens
+  </Card>
+  <Card title="Drop-in Replacement" icon="plug">
+    One import change. Same API. Works with your existing Claude Agent SDK code.
+  </Card>
+  <Card title="Lower Variance" icon="chart-line">
+    Reuse proven, validated outputs instead of regenerating unpredictable results
+  </Card>
+  <Card title="Community Registry" icon="users">
+    Access a shared library of validated code patterns from the community
+  </Card>
+</CardGroup>
+
+## The Problem
+
+Every time your agent runs, you wait for tokens to generate. The same patterns. The same outputs. Every. Single. Time.
+
+You're paying for tokens. You're waiting for generation. For code that's already been generated somewhere else.
+
+## The Solution
+
+Raysurfer instantly pastes proven code from previous generations. No waiting. No regenerating. Just paste.
+
+```
+Generate once, paste forever.
+```
+
+## How It Works
+
+1. **Store code blocks** - Cache your agent's code outputs with semantic embeddings
+2. **Retrieve by task** - Describe what you need in natural language
+3. **Verdict-aware scoring** - The AI gives the code thumbs up or thumbs down over time
+
+<Card title="Ready to get started?" icon="rocket" href="/quickstart">
+  Follow our quickstart guide to integrate Raysurfer in under 5 minutes
+</Card>

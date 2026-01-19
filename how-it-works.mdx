@@ -1,0 +1,73 @@
+---
+title: How It Works
+description: "Understanding Raysurfer's caching and retrieval system"
+---
+
+## Architecture Overview
+
+Raysurfer intercepts your Claude Agent SDK calls and checks for similar cached outputs before generating new tokens.
+
+```
+Your Agent → Raysurfer → Cache Hit? → Return cached output
+                  ↓
+              Cache Miss? → Claude API → Cache result → Return output
+```
+
+## Semantic Matching
+
+When you make a query, Raysurfer doesn't just do exact string matching. It uses semantic embeddings to find similar queries that have been answered before.
+
+<AccordionGroup>
+  <Accordion title="How embeddings work">
+    Each query is converted into a high-dimensional vector using Voyage AI embeddings. Similar queries end up close together in this vector space, allowing us to find relevant cached outputs even when the wording differs.
+  </Accordion>
+  <Accordion title="Hybrid search">
+    We combine semantic similarity with keyword matching to find the best results. This catches both conceptually similar queries and those with exact term matches.
+  </Accordion>
+</AccordionGroup>
+
+## Code Block Storage
+
+When your agent generates code, Raysurfer stores:
+
+| Field | Description |
+|-------|-------------|
+| `source` | The generated code content |
+| `entrypoint` | The main function or entry point |
+| `language` | Python, TypeScript, etc. |
+| `embedding` | Semantic vector for retrieval |
+| `metadata` | Task description, timestamps, etc. |
+
+## Verdict-Aware Scoring
+
+Not all cached outputs are equal. Raysurfer tracks how well each output performed:
+
+<CardGroup cols={2}>
+  <Card title="Thumbs Up" icon="thumbs-up">
+    Output worked correctly. Gets prioritized in future retrievals.
+  </Card>
+  <Card title="Thumbs Down" icon="thumbs-down">
+    Output had issues. Gets deprioritized or excluded.
+  </Card>
+</CardGroup>
+
+The AI automatically evaluates outputs over time, building a quality score that influences which cached results get returned.
+
+## The Community Registry
+
+By default, validated outputs are shared across all Raysurfer users. This creates a flywheel effect:
+
+1. Someone's agent generates a perfect Stripe webhook handler
+2. It gets validated and added to the registry
+3. Your agent can now paste it instantly instead of regenerating
+
+<Note>
+  Pro and Enterprise plans let you keep outputs private to your organization.
+</Note>
+
+## Privacy & Security
+
+- All code is stored encrypted at rest
+- Embeddings don't contain the actual code content
+- Private outputs are isolated per organization
+- You control what gets shared vs. kept private

@@ -1,0 +1,152 @@
+---
+title: TypeScript SDK
+description: "Complete TypeScript SDK reference for Raysurfer"
+---
+
+## Installation
+
+```bash
+npm install raysurfer
+# or
+bun add raysurfer
+# or
+yarn add raysurfer
+```
+
+## Configuration
+
+Set your API key as an environment variable:
+
+```bash
+export RAYSURFER_API_KEY=your_api_key_here
+```
+
+Or pass it directly:
+
+```typescript
+import { RaysurferClient } from "raysurfer";
+
+const client = new RaysurferClient({ apiKey: "your_api_key_here" });
+```
+
+## Basic Usage
+
+Raysurfer is a drop-in replacement for Claude Agent SDK:
+
+```typescript
+// Just change the import
+import { RaysurferClient } from "raysurfer";
+
+const client = new RaysurferClient({
+  model: "claude-sonnet-4-20250514",
+  maxTokens: 4096,
+});
+
+for await (const msg of client.query("Generate a quarterly sales report")) {
+  console.log(msg);
+}
+```
+
+## Client Options
+
+```typescript
+import { RaysurferClient, RaysurferOptions } from "raysurfer";
+
+const options: RaysurferOptions = {
+  // Raysurfer-specific options
+  cacheEnabled: true,        // Enable/disable caching (default: true)
+  cacheThreshold: 0.85,      // Similarity threshold for cache hits (0-1)
+  privateOutputs: false,     // Keep outputs private to your org
+
+  // Pass-through to Claude SDK
+  model: "claude-sonnet-4-20250514",
+  maxTokens: 4096,
+};
+
+const client = new RaysurferClient(options);
+```
+
+## Cache Control
+
+### Disable caching for a single request
+
+```typescript
+await client.query("Generate unique content", { cache: false });
+```
+
+### Force cache refresh
+
+```typescript
+await client.query("Generate report", { refreshCache: true });
+```
+
+### Check cache status
+
+```typescript
+const response = await client.query("Generate report");
+console.log(response.cacheHit);  // true if served from cache
+console.log(response.cacheKey);  // Cache key for this query
+```
+
+## Direct API Access
+
+For advanced use cases, you can interact with the Raysurfer API directly:
+
+```typescript
+import { RaysurferAPI } from "raysurfer";
+
+const api = new RaysurferAPI({ apiKey: "your_key" });
+
+// Store a code block
+await api.store({
+  source: "function hello() { return 'world'; }",
+  entrypoint: "hello",
+  language: "typescript",
+  taskDescription: "Simple greeting function",
+});
+
+// Retrieve similar code
+const results = await api.retrieve({
+  query: "function that returns a greeting",
+  limit: 5,
+});
+```
+
+## Error Handling
+
+```typescript
+import { RaysurferError, CacheMissError } from "raysurfer";
+
+try {
+  const response = await client.query("Generate report");
+} catch (error) {
+  if (error instanceof CacheMissError) {
+    // No cached result found, will generate fresh
+  } else if (error instanceof RaysurferError) {
+    console.error(`Raysurfer error: ${error.message}`);
+  }
+}
+```
+
+## Streaming Responses
+
+```typescript
+const client = new RaysurferClient(options);
+
+for await (const chunk of client.query("Generate a long report")) {
+  process.stdout.write(chunk.content);
+}
+```
+
+## Type Definitions
+
+Full TypeScript types are included:
+
+```typescript
+import type {
+  RaysurferOptions,
+  RaysurferResponse,
+  CacheStatus,
+  CodeBlock,
+} from "raysurfer";
+```
