@@ -1,6 +1,6 @@
 ---
 title: Python SDK
-description: "Complete Python SDK reference for Raysurfer"
+description: "Drop-in replacement for Claude Agent SDK"
 ---
 
 ## Installation
@@ -9,133 +9,67 @@ description: "Complete Python SDK reference for Raysurfer"
 pip install raysurfer
 ```
 
-## Configuration
+## Setup
 
-Set your API key as an environment variable:
+Set your API key:
 
 ```bash
 export RAYSURFER_API_KEY=your_api_key_here
 ```
 
-Or pass it directly:
+Get your key from the [dashboard](https://raysurfer.com/dashboard/api-keys).
+
+## Usage
+
+Just change your import. Everything else stays the same.
 
 ```python
-from raysurfer import RaysurferClient
+# Before
+from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
 
-client = RaysurferClient(api_key="your_api_key_here")
-```
-
-## Basic Usage
-
-Raysurfer is a drop-in replacement for Claude Agent SDK:
-
-```python
-# Just change the import
+# After
 from raysurfer import ClaudeSDKClient, ClaudeAgentOptions
 
-options = ClaudeAgentOptions(
+# Your existing code works unchanged
+async with ClaudeSDKClient(options) as client:
+    await client.query("Generate quarterly report")
+    async for msg in client.receive_response():
+        print(msg)
+```
+
+## Configuration
+
+Optional settings you can add:
+
+```python
+from raysurfer import ClaudeSDKClient, RaysurferOptions
+
+options = RaysurferOptions(
+    # Raysurfer options
+    cache_enabled=True,      # Turn caching on/off (default: True)
+    private_outputs=False,   # Keep outputs private (Pro/Enterprise)
+
+    # Standard Claude SDK options
     model="claude-sonnet-4-20250514",
     max_tokens=4096,
 )
 
 async with ClaudeSDKClient(options) as client:
-    await client.query("Generate a quarterly sales report")
-    async for msg in client.receive_response():
-        print(msg)
+    # ...
 ```
 
-## Client Options
+## Disable Caching for a Request
 
 ```python
-from raysurfer import RaysurferClient, RaysurferOptions
-
-options = RaysurferOptions(
-    # Raysurfer-specific options
-    cache_enabled=True,          # Enable/disable caching (default: True)
-    cache_threshold=0.85,        # Similarity threshold for cache hits (0-1)
-    private_outputs=False,       # Keep outputs private to your org
-
-    # Pass-through to Claude SDK
-    model="claude-sonnet-4-20250514",
-    max_tokens=4096,
-)
-
-client = RaysurferClient(options)
+# Skip cache for this specific query
+await client.query("Generate unique content", cache=False)
 ```
 
-## Cache Control
-
-### Disable caching for a single request
-
-```python
-await client.query(
-    "Generate unique content",
-    cache=False
-)
-```
-
-### Force cache refresh
-
-```python
-await client.query(
-    "Generate report",
-    refresh_cache=True  # Regenerate even if cached
-)
-```
-
-### Check cache status
+## Check Cache Status
 
 ```python
 response = await client.query("Generate report")
-print(response.cache_hit)  # True if served from cache
-print(response.cache_key)  # Cache key for this query
-```
 
-## Direct API Access
-
-For advanced use cases, you can interact with the Raysurfer API directly:
-
-```python
-from raysurfer import RaysurferAPI
-
-api = RaysurferAPI(api_key="your_key")
-
-# Store a code block
-await api.store(
-    source="def hello(): return 'world'",
-    entrypoint="hello",
-    language="python",
-    task_description="Simple greeting function"
-)
-
-# Retrieve similar code
-results = await api.retrieve(
-    query="function that returns a greeting",
-    limit=5
-)
-```
-
-## Error Handling
-
-```python
-from raysurfer import RaysurferError, CacheMissError
-
-try:
-    response = await client.query("Generate report")
-except CacheMissError:
-    # No cached result found, will generate fresh
-    pass
-except RaysurferError as e:
-    print(f"Raysurfer error: {e}")
-```
-
-## Async Context Manager
-
-The recommended way to use the client:
-
-```python
-async with RaysurferClient(options) as client:
-    # Client is properly initialized
-    response = await client.query("Your query")
-    # Client is properly cleaned up after the block
+if response.cache_hit:
+    print("Served from cache!")
 ```

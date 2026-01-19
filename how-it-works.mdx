@@ -1,73 +1,55 @@
 ---
 title: How It Works
-description: "Understanding Raysurfer's caching and retrieval system"
+description: "The magic behind Raysurfer's speed"
 ---
 
-## Architecture Overview
+## The Simple Version
 
-Raysurfer intercepts your Claude Agent SDK calls and checks for similar cached outputs before generating new tokens.
+When your agent runs a task it's done before, Raysurfer returns the cached result instantly instead of regenerating it.
 
 ```
-Your Agent → Raysurfer → Cache Hit? → Return cached output
-                  ↓
-              Cache Miss? → Claude API → Cache result → Return output
+First run:  Your query → Claude generates → Result cached → Output
+Second run: Your query → Cache hit → Output (instant)
 ```
 
-## Semantic Matching
+That's it. You don't need to manage anything.
 
-When you make a query, Raysurfer doesn't just do exact string matching. It uses semantic embeddings to find similar queries that have been answered before.
+## Why This Works
 
-<AccordionGroup>
-  <Accordion title="How embeddings work">
-    Each query is converted into a high-dimensional vector using Voyage AI embeddings. Similar queries end up close together in this vector space, allowing us to find relevant cached outputs even when the wording differs.
-  </Accordion>
-  <Accordion title="Hybrid search">
-    We combine semantic similarity with keyword matching to find the best results. This catches both conceptually similar queries and those with exact term matches.
-  </Accordion>
-</AccordionGroup>
+Most AI agent outputs are predictable. B2B vertical agents generate the same types of outputs:
 
-## Code Block Storage
+- Invoices and reports
+- Email templates
+- API responses
+- Data transformations
 
-When your agent generates code, Raysurfer stores:
+These patterns repeat constantly. Why regenerate the same code every time?
 
-| Field | Description |
-|-------|-------------|
-| `source` | The generated code content |
-| `entrypoint` | The main function or entry point |
-| `language` | Python, TypeScript, etc. |
-| `embedding` | Semantic vector for retrieval |
-| `metadata` | Task description, timestamps, etc. |
+## What Gets Cached
 
-## Verdict-Aware Scoring
+Raysurfer automatically caches:
 
-Not all cached outputs are equal. Raysurfer tracks how well each output performed:
+- Code outputs from your agent
+- Generated documents and templates
+- Structured data transformations
+
+You don't need to tag or categorize anything. Raysurfer uses semantic matching to find similar past outputs.
+
+## Quality Over Time
+
+Raysurfer tracks which cached outputs work well:
+
+- Outputs that succeed get prioritized
+- Outputs that fail get deprioritized
+- The system improves automatically
+
+## Privacy
 
 <CardGroup cols={2}>
-  <Card title="Thumbs Up" icon="thumbs-up">
-    Output worked correctly. Gets prioritized in future retrievals.
+  <Card title="Free Plan" icon="users">
+    Your outputs join the community registry and help other users (and theirs help you)
   </Card>
-  <Card title="Thumbs Down" icon="thumbs-down">
-    Output had issues. Gets deprioritized or excluded.
+  <Card title="Pro / Enterprise" icon="lock">
+    Keep all outputs private to your organization
   </Card>
 </CardGroup>
-
-The AI automatically evaluates outputs over time, building a quality score that influences which cached results get returned.
-
-## The Community Registry
-
-By default, validated outputs are shared across all Raysurfer users. This creates a flywheel effect:
-
-1. Someone's agent generates a perfect Stripe webhook handler
-2. It gets validated and added to the registry
-3. Your agent can now paste it instantly instead of regenerating
-
-<Note>
-  Pro and Enterprise plans let you keep outputs private to your organization.
-</Note>
-
-## Privacy & Security
-
-- All code is stored encrypted at rest
-- Embeddings don't contain the actual code content
-- Private outputs are isolated per organization
-- You control what gets shared vs. kept private
