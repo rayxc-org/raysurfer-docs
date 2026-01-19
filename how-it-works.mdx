@@ -16,14 +16,17 @@ That's it. You don't need to manage anything.
 
 ## Why This Works
 
-Most AI agent outputs are predictable. B2B vertical agents generate the same types of outputs:
+Production agents in 2026 are running longer and longer. Multi-step workflows, complex tool chains, sprawling context windows. They're becoming difficult to context manage and behave consistently.
 
-- Invoices and reports
-- Email templates
-- API responses
-- Data transformations
+But here's the thing: **the median run has a typical shape.**
 
-These patterns repeat constantly. Why regenerate the same code every time?
+Despite all the complexity, most runs follow similar patterns. Raysurfer captures these patterns and guides the model to execute from the median run's starting point—editing that code file rather than regenerating it from scratch.
+
+This gives you:
+
+- **Better context management** — intermediate outputs between API calls or code functions aren't printed by default, keeping context clean
+- **Consistent behavior** — the model starts from proven code instead of improvising each time
+- **Faster execution** — skip the generation, go straight to the result
 
 ## What Gets Cached
 
