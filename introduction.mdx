@@ -3,9 +3,13 @@ title: Introduction
 description: "Recycle Claude Agent SDK outputs in production"
 ---
 
+{/* TODO: Consider adding a hero image or animated diagram showing the before/after speed comparison */}
+
 # What is Raysurfer?
 
 Raysurfer is an LLM output caching and reuse infrastructure designed to accelerate Claude-based AI agents by retrieving and reusing similar results instead of regenerating them.
+
+{/* TODO: Add a short (30-60 second) demo video or GIF showing Raysurfer in action? */}
 
 <CardGroup cols={2}>
   <Card title="30x Faster" icon="bolt">
@@ -28,6 +32,8 @@ Every time your agent runs, you wait for tokens to generate. The same patterns. 
 
 You're paying for tokens. You're waiting for generation. For code that's already been generated somewhere else.
 
+{/* TODO: Add concrete numbers here if you have them - e.g., "The average agent spends X% of time regenerating similar outputs" or "Teams report spending $X/month on redundant generations" */}
+
 ## The Solution
 
 Raysurfer instantly pastes proven code from previous generations. No waiting. No regenerating. Just paste.
@@ -36,11 +42,39 @@ Raysurfer instantly pastes proven code from previous generations. No waiting. No
 Generate once, paste forever.
 ```
 
+{/* TODO: Consider adding a simple before/after comparison table showing:
+- Time to complete (e.g., 45s vs 1.5s)
+- Token cost (e.g., 10,000 tokens vs 0)
+- Consistency (e.g., "varies" vs "identical proven output")
+*/}
+
 ## How It Works
 
 1. **Store code blocks** - Cache your agent's code outputs with semantic embeddings
 2. **Retrieve by task** - Describe what you need in natural language
 3. **Verdict-aware scoring** - The AI gives the code thumbs up or thumbs down over time
+
+{/* TODO: Add a visual flow diagram here showing the request lifecycle:
+Query → Check Cache → [Cache Hit: Return instantly] OR [Cache Miss: Generate → Store → Return]
+*/}
+
+## Who Is This For?
+
+{/* TODO: Please fill in your target audience - here are some suggestions: */}
+
+<CardGroup cols={2}>
+  <Card title="AI Agent Developers" icon="robot">
+    {/* TODO: Add description - e.g., "Building production agents with Claude that run repetitive workflows" */}
+  </Card>
+  <Card title="DevOps Teams" icon="server">
+    {/* TODO: Add description - e.g., "Running automated code generation pipelines at scale" */}
+  </Card>
+</CardGroup>
+
+{/* TODO: Consider adding a "Not For" section to set expectations:
+- One-off creative tasks where uniqueness matters
+- Highly dynamic queries with constantly changing requirements
+*/}
 
 <Card title="Ready to get started?" icon="rocket" href="/quickstart">
   Follow our quickstart guide to integrate Raysurfer in under 5 minutes

@@ -9,6 +9,23 @@ description: "Drop-in replacement for Claude Agent SDK"
 pip install raysurfer
 ```
 
+{/* TODO: Add version requirements and optional dependencies:
+
+### Requirements
+
+- Python 3.8+
+- `claude-agent-sdk` (peer dependency)
+
+### Optional Dependencies
+
+```bash
+# For async support (if not using asyncio by default)
+pip install raysurfer[async]
+
+# [TODO: List any other optional extras]
+```
+*/}
+
 ## Setup
 
 Set your API key:
@@ -99,6 +116,135 @@ async def main():
 asyncio.run(main())
 ```
 
+{/* TODO: Add more real-world examples that show common use cases:
+
+## More Examples
+
+### Code Generation Agent
+
+```python
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("""
+        Create a FastAPI endpoint that:
+        - Accepts POST requests at /users
+        - Validates email format
+        - Returns a 201 status on success
+    """)
+    async for msg in client.raysurfer_response():
+        print(msg)
+```
+
+### Data Processing Pipeline
+
+```python
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("""
+        Write a pandas script that:
+        - Reads a CSV from 'data/sales.csv'
+        - Groups by month
+        - Calculates total revenue
+        - Exports to 'output/monthly_revenue.csv'
+    """)
+    async for msg in client.raysurfer_response():
+        print(msg)
+```
+
+### DevOps Automation
+
+```python
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("""
+        Create a bash script that:
+        - Checks if Docker is running
+        - Pulls the latest image for 'myapp:latest'
+        - Stops the current container
+        - Starts a new container with the updated image
+    """)
+    async for msg in client.raysurfer_response():
+        print(msg)
+```
+
+[TODO: Add examples specific to your most common user workflows]
+*/}
+
 ## Without Caching
 
 If `RAYSURFER_API_KEY` is not set, `RaysurferClient` behaves exactly like `ClaudeSDKClient` — no caching, just a pass-through wrapper.
+
+{/* TODO: Add error handling section:
+
+## Error Handling
+
+```python
+from raysurfer import RaysurferClient, RaysurferError, CacheError, APIError
+
+try:
+    async with RaysurferClient(options) as client:
+        await client.raysurfer_query("Generate report")
+        async for msg in client.raysurfer_response():
+            print(msg)
+except APIError as e:
+    print(f"API error: {e.status_code} - {e.message}")
+except CacheError as e:
+    print(f"Cache error: {e}")
+except RaysurferError as e:
+    print(f"General error: {e}")
+```
+
+[TODO: Document what errors can occur and when]
+*/}
+
+{/* TODO: Add advanced configuration section:
+
+## Advanced Configuration
+
+### Custom Cache Behavior
+
+[TODO: Can users configure cache TTL, disable caching for specific queries, etc.?]
+
+```python
+# Example: Disable caching for a specific query
+await client.raysurfer_query("Generate report", cache=False)
+
+# Example: Force refresh the cache
+await client.raysurfer_query("Generate report", force_refresh=True)
+```
+
+### Logging and Debugging
+
+[TODO: How can users enable debug logging to see cache hits/misses?]
+
+```python
+import logging
+logging.getLogger("raysurfer").setLevel(logging.DEBUG)
+```
+
+### Cache Metrics
+
+[TODO: Can users see cache hit rates, storage usage, etc.?]
+
+```python
+# Get cache statistics
+stats = await client.get_cache_stats()
+print(f"Hit rate: {stats.hit_rate}%")
+print(f"Cached entries: {stats.entry_count}")
+```
+*/}
+
+{/* TODO: Add type hints / API reference section:
+
+## API Reference
+
+### RaysurferClient
+
+```python
+class RaysurferClient:
+    def __init__(self, options: ClaudeAgentOptions) -> None: ...
+    async def __aenter__(self) -> RaysurferClient: ...
+    async def __aexit__(self, *args) -> None: ...
+    async def raysurfer_query(self, prompt: str, **kwargs) -> None: ...
+    def raysurfer_response(self) -> AsyncIterator[Message]: ...
+```
+
+[TODO: Document all parameters, return types, and method signatures]
+*/}

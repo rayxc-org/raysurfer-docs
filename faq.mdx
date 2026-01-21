@@ -1,0 +1,157 @@
+---
+title: FAQ & Troubleshooting
+description: "Common questions and solutions"
+---
+
+{/* TODO: This page is a template - fill in the answers based on your actual product behavior */}
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Is my data shared with other users?">
+    {/* TODO: Explain your data isolation model. Example: */}
+    Your cached data is isolated to your API key. Other users cannot access your cached outputs.
+  </Accordion>
+
+  <Accordion title="How long are cached outputs stored?">
+    {/* TODO: Fill in your actual cache TTL policy. Example: */}
+    Cached outputs are stored for [X days/indefinitely]. You can manage your cache from the [dashboard](https://raysurfer.com/dashboard).
+  </Accordion>
+
+  <Accordion title="Can I clear my cache?">
+    {/* TODO: Explain how users can clear cache - via dashboard? API call? Example: */}
+    Yes, you can clear your cache from the [dashboard](https://raysurfer.com/dashboard) or programmatically:
+
+    ```python
+    # TODO: Add actual cache clearing code if this API exists
+    await client.clear_cache()
+    ```
+  </Accordion>
+
+  <Accordion title="What happens if Raysurfer is down?">
+    {/* TODO: Explain your fallback behavior. Example: */}
+    If Raysurfer's servers are unreachable, the SDK falls back to the standard Claude Agent SDK behavior. Your agents will continue to work, just without caching.
+  </Accordion>
+
+  <Accordion title="How does semantic matching work?">
+    {/* TODO: Explain your matching algorithm at a high level. Example: */}
+    Raysurfer uses embeddings to convert your queries into vectors. When a new query comes in, we find cached outputs with similar vectors above a similarity threshold.
+  </Accordion>
+
+  <Accordion title="Can I use Raysurfer with models other than Claude?">
+    {/* TODO: Clarify supported models/providers. Example: */}
+    Currently, Raysurfer only supports the Claude Agent SDK. Support for other providers is [on the roadmap / not planned].
+  </Accordion>
+
+  <Accordion title="Is there a free tier?">
+    {/* TODO: Explain your pricing/free tier. Example: */}
+    Yes! New accounts get [X] free cached queries per month. See our [pricing page](https://raysurfer.com/pricing) for details.
+  </Accordion>
+
+  <Accordion title="How do I know if a response came from cache?">
+    {/* TODO: Explain how users can identify cache hits. Example: */}
+    You can enable debug logging to see cache hit/miss information:
+
+    ```python
+    import logging
+    logging.getLogger("raysurfer").setLevel(logging.DEBUG)
+    ```
+
+    {/* Or if you have response metadata: */}
+    {/* The response includes metadata indicating whether it was cached:
+    ```python
+    async for msg in client.raysurfer_response():
+        print(f"Cached: {msg.metadata.cached}")
+    ```
+    */}
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+### Cache Not Working
+
+<Steps>
+  <Step title="Check your API key">
+    Ensure `RAYSURFER_API_KEY` is set correctly:
+
+    ```bash
+    echo $RAYSURFER_API_KEY
+    ```
+
+    The output should show your API key (not empty).
+  </Step>
+
+  <Step title="Verify the key is valid">
+    Check that your API key is active in the [dashboard](https://raysurfer.com/dashboard/api-keys).
+  </Step>
+
+  <Step title="Check for errors">
+    Enable debug logging to see if there are any cache-related errors:
+
+    ```python
+    import logging
+    logging.getLogger("raysurfer").setLevel(logging.DEBUG)
+    ```
+  </Step>
+</Steps>
+
+### Slow First Requests
+
+The first request for a unique query will always take time because it needs to generate the output. Subsequent similar queries will be faster due to caching.
+
+{/* TODO: Add any warm-up or preloading strategies if available */}
+
+### Import Errors
+
+<Tabs>
+  <Tab title="Python">
+    ```bash
+    # Ensure both packages are installed
+    pip install raysurfer claude-agent-sdk
+    ```
+  </Tab>
+  <Tab title="TypeScript">
+    ```bash
+    # Ensure both packages are installed
+    npm install raysurfer @anthropic-ai/claude-agent-sdk
+    ```
+  </Tab>
+</Tabs>
+
+### API Rate Limits
+
+{/* TODO: Fill in your actual rate limits */}
+
+If you're hitting rate limits, you'll see an error like:
+
+```
+RaysurferError: Rate limit exceeded. Please wait X seconds.
+```
+
+Current rate limits:
+- Free tier: [X] requests per minute
+- Pro tier: [X] requests per minute
+
+{/* TODO: Link to rate limit documentation or upgrade page */}
+
+### Network Errors
+
+If you're seeing network timeouts or connection errors:
+
+1. Check your internet connection
+2. Verify that `api.raysurfer.com` is not blocked by your firewall
+3. Try increasing the timeout:
+
+```python
+# TODO: Add timeout configuration if this option exists
+client = RaysurferClient(options, timeout=30)
+```
+
+## Getting Help
+
+{/* TODO: Add your support channels */}
+
+- **GitHub Issues**: [ryx2/raysurfer-python](https://github.com/ryx2/raysurfer-python/issues)
+- **Discord**: {/* TODO: Add Discord link if you have one */}
+- **Email**: {/* TODO: Add support email */}

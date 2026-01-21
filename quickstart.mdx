@@ -3,6 +3,14 @@ title: Quickstart
 description: "Get started with Raysurfer in under 5 minutes"
 ---
 
+{/* TODO: Add prerequisites section - what do users need before starting?
+## Prerequisites
+
+- Python 3.8+ or Node.js 18+
+- An existing Claude Agent SDK project (or willingness to set one up)
+- A Raysurfer API key ([get one here](https://raysurfer.com/dashboard/api-keys))
+*/}
+
 ## Installation
 
 <CodeGroup>
@@ -24,6 +32,32 @@ Get your API key from the [dashboard](https://raysurfer.com/dashboard/api-keys) 
 ```bash
 export RAYSURFER_API_KEY=your_api_key_here
 ```
+
+{/* TODO: Add info about where users can also set the API key:
+<Tabs>
+  <Tab title="Environment Variable">
+    ```bash
+    export RAYSURFER_API_KEY=your_api_key_here
+    ```
+  </Tab>
+  <Tab title=".env File">
+    ```bash
+    # .env
+    RAYSURFER_API_KEY=your_api_key_here
+    ```
+  </Tab>
+  <Tab title="In Code (not recommended)">
+    ```python
+    import os
+    os.environ["RAYSURFER_API_KEY"] = "your_api_key_here"
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  Never commit your API key to version control. Use environment variables or a secrets manager.
+</Warning>
+*/}
 
 ## Drop-in Replacement
 
@@ -89,6 +123,44 @@ The simplest way to verify Raysurfer is working:
 
 The speedup vs running the same agent via Claude SDK should be significant (~30x) since pulling cached code is much faster than regenerating tokens.
 
+{/* TODO: Add a concrete "copy-paste and run" verification script that users can use:
+
+### Quick Verification Script
+
+<CodeGroup>
+```python Python
+import asyncio
+import time
+from raysurfer import RaysurferClient
+from claude_agent_sdk import ClaudeAgentOptions
+
+async def verify_caching():
+    options = ClaudeAgentOptions(allowed_tools=["Bash"])
+
+    async with RaysurferClient(options) as client:
+        # First run - should take longer
+        start = time.time()
+        await client.raysurfer_query("Write a hello world Python script")
+        async for msg in client.raysurfer_response():
+            pass
+        first_run = time.time() - start
+
+        # Second run - should be near-instant
+        start = time.time()
+        await client.raysurfer_query("Write a hello world Python script")
+        async for msg in client.raysurfer_response():
+            pass
+        second_run = time.time() - start
+
+        print(f"First run: {first_run:.2f}s")
+        print(f"Second run: {second_run:.2f}s")
+        print(f"Speedup: {first_run/second_run:.1f}x")
+
+asyncio.run(verify_caching())
+```
+</CodeGroup>
+*/}
+
 <Steps>
   <Step title="Run your agent once">
     The first execution generates output normally and caches it automatically.
@@ -113,6 +185,29 @@ Raysurfer caches:
 <Note>
   Raysurfer automatically verifies and stores successful code snippets from your runs for future reuse.
 </Note>
+
+{/* TODO: Add a "Common Issues" section for the quickstart:
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Cache not working - always regenerating">
+    Make sure `RAYSURFER_API_KEY` is set correctly. You can verify with:
+    ```bash
+    echo $RAYSURFER_API_KEY
+    ```
+  </Accordion>
+  <Accordion title="Import errors">
+    Ensure you have both packages installed:
+    ```bash
+    pip install raysurfer claude-agent-sdk
+    ```
+  </Accordion>
+  <Accordion title="API key invalid">
+    Check that your API key is active in the [dashboard](https://raysurfer.com/dashboard/api-keys).
+  </Accordion>
+</AccordionGroup>
+*/}
 
 ## Next Steps
 

@@ -1,0 +1,343 @@
+---
+title: Use Cases & Examples
+description: "Real-world examples of Raysurfer in action"
+---
+
+{/* TODO: Replace these generic examples with real examples from your users or your own testing */}
+
+Raysurfer excels at accelerating repetitive, pattern-based agent workflows. Here are common use cases where caching provides the biggest wins.
+
+## Code Generation
+
+Perfect for agents that generate boilerplate, templates, or common patterns.
+
+### API Endpoint Generation
+
+```python
+import asyncio
+from raysurfer import RaysurferClient
+from claude_agent_sdk import ClaudeAgentOptions
+
+async def generate_endpoint():
+    options = ClaudeAgentOptions(
+        allowed_tools=["Write"],
+        system_prompt="You are a FastAPI code generator.",
+    )
+
+    async with RaysurferClient(options) as client:
+        await client.raysurfer_query("""
+            Create a FastAPI CRUD endpoint for a User model with:
+            - GET /users - list all users
+            - GET /users/{id} - get single user
+            - POST /users - create user
+            - PUT /users/{id} - update user
+            - DELETE /users/{id} - delete user
+        """)
+        async for msg in client.raysurfer_response():
+            print(msg)
+
+asyncio.run(generate_endpoint())
+```
+
+<Info>
+  After the first run, generating similar CRUD endpoints (for Products, Orders, etc.) will be faster because the pattern is cached.
+</Info>
+
+### React Component Generation
+
+```typescript
+import { RaysurferClient } from "raysurfer";
+
+const client = new RaysurferClient({
+  allowedTools: ["Write"],
+  systemPrompt: "You are a React TypeScript component generator.",
+});
+
+for await (const msg of client.raysurferQuery(`
+  Create a data table component with:
+  - Sortable columns
+  - Pagination
+  - Search filter
+  - TypeScript types
+`)) {
+  console.log(msg);
+}
+```
+
+{/* TODO: Add a note about what kinds of variations still hit cache (e.g., "Create a data table for users" vs "Create a data table for products") */}
+
+---
+
+## DevOps & Infrastructure
+
+Agents that automate deployment, monitoring, and infrastructure tasks.
+
+### Deployment Scripts
+
+```python
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("""
+        Create a deployment script that:
+        1. Runs tests
+        2. Builds Docker image
+        3. Pushes to ECR
+        4. Updates ECS service
+        5. Waits for healthy deployment
+        6. Sends Slack notification
+    """)
+    async for msg in client.raysurfer_response():
+        print(msg)
+```
+
+### Infrastructure as Code
+
+```python
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("""
+        Generate Terraform code for:
+        - VPC with public/private subnets
+        - RDS PostgreSQL instance
+        - ECS cluster with Fargate
+        - Application Load Balancer
+    """)
+    async for msg in client.raysurfer_response():
+        print(msg)
+```
+
+{/* TODO: Add real examples from your DevOps users if you have them */}
+
+---
+
+## Data Processing
+
+Agents that transform, analyze, or migrate data.
+
+### Data Transformation Pipeline
+
+```python
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("""
+        Write a pandas script that:
+        - Reads CSV from 'input/raw_data.csv'
+        - Cleans null values
+        - Normalizes date formats
+        - Aggregates by month
+        - Exports to 'output/processed.parquet'
+    """)
+    async for msg in client.raysurfer_response():
+        print(msg)
+```
+
+### Report Generation
+
+```python
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("""
+        Generate a Python script that:
+        - Queries our analytics database
+        - Calculates key metrics (DAU, MAU, retention)
+        - Creates visualizations with matplotlib
+        - Exports to PDF report
+    """)
+    async for msg in client.raysurfer_response():
+        print(msg)
+```
+
+---
+
+## Testing & QA
+
+Agents that write tests or perform quality checks.
+
+### Unit Test Generation
+
+```python
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("""
+        Write pytest unit tests for the UserService class in src/services/user.py
+        Include tests for:
+        - create_user (happy path + validation errors)
+        - get_user (found + not found)
+        - update_user (valid + invalid updates)
+        - delete_user (exists + doesn't exist)
+    """)
+    async for msg in client.raysurfer_response():
+        print(msg)
+```
+
+### E2E Test Scripts
+
+```typescript
+const client = new RaysurferClient({
+  allowedTools: ["Write"],
+  systemPrompt: "You are a Playwright E2E test generator.",
+});
+
+for await (const msg of client.raysurferQuery(`
+  Write Playwright tests for the checkout flow:
+  1. Add item to cart
+  2. Go to checkout
+  3. Fill shipping form
+  4. Enter payment details
+  5. Complete purchase
+  6. Verify confirmation page
+`)) {
+  console.log(msg);
+}
+```
+
+---
+
+## Documentation
+
+Agents that generate or update documentation.
+
+### API Documentation
+
+```python
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("""
+        Generate OpenAPI 3.0 documentation for the endpoints in src/api/routes.py
+        Include:
+        - Request/response schemas
+        - Example values
+        - Error responses
+        - Authentication requirements
+    """)
+    async for msg in client.raysurfer_response():
+        print(msg)
+```
+
+### README Generation
+
+```python
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("""
+        Analyze this repository and generate a README.md with:
+        - Project description
+        - Installation instructions
+        - Usage examples
+        - Configuration options
+        - Contributing guidelines
+    """)
+    async for msg in client.raysurfer_response():
+        print(msg)
+```
+
+---
+
+## Best Practices for Cache Efficiency
+
+{/* TODO: Fill in based on your actual product behavior */}
+
+<CardGroup cols={2}>
+  <Card title="Be Specific" icon="bullseye">
+    More specific queries get better cache matches. "Create a REST API for users" is better than "Create an API".
+  </Card>
+  <Card title="Use Consistent Patterns" icon="repeat">
+    Standardize your prompt templates. Similar phrasing increases cache hit rates.
+  </Card>
+  <Card title="Batch Similar Tasks" icon="layer-group">
+    Run similar queries together to warm the cache for related tasks.
+  </Card>
+  <Card title="Avoid Dynamic Data" icon="shuffle">
+    Don't include timestamps, random values, or highly variable data in prompts.
+  </Card>
+</CardGroup>
+
+### Query Design Tips
+
+{/* TODO: Add specific tips based on how your semantic matching works */}
+
+**Good queries (high cache hit potential):**
+```
+Create a Python function to parse JSON from an API response
+Write a bash script to check if a service is running
+Generate a React form component with validation
+```
+
+**Queries that may not cache well:**
+```
+Analyze the data in /tmp/report-2024-01-15-abc123.csv  (dynamic filename)
+Fix the bug in commit a1b2c3d  (specific to one codebase)
+What's the current time?  (inherently dynamic)
+```
+
+---
+
+## Example: Full Agent Implementation
+
+{/* TODO: Add a complete, runnable example that users can copy and adapt */}
+
+Here's a complete example of a code review agent using Raysurfer:
+
+```python
+import asyncio
+import os
+from raysurfer import RaysurferClient
+from claude_agent_sdk import ClaudeAgentOptions
+
+async def review_pull_request(pr_diff: str):
+    """
+    Review a pull request using a cached code review agent.
+    Similar PRs (e.g., adding CRUD endpoints) will get faster reviews
+    due to cached analysis patterns.
+    """
+    options = ClaudeAgentOptions(
+        allowed_tools=["Read"],
+        system_prompt="""You are a senior code reviewer. Review the code for:
+        - Security vulnerabilities
+        - Performance issues
+        - Code style and best practices
+        - Potential bugs
+        Provide specific, actionable feedback.""",
+    )
+
+    async with RaysurferClient(options) as client:
+        await client.raysurfer_query(f"""
+            Review this pull request diff:
+
+            ```diff
+            {pr_diff}
+            ```
+
+            Provide:
+            1. Summary of changes
+            2. Issues found (critical/warning/info)
+            3. Suggestions for improvement
+            4. Overall assessment (approve/request changes)
+        """)
+
+        review = []
+        async for msg in client.raysurfer_response():
+            review.append(msg)
+
+        return review
+
+# Usage
+async def main():
+    diff = """
+    + def get_user(user_id: str):
+    +     query = f"SELECT * FROM users WHERE id = {user_id}"
+    +     return db.execute(query)
+    """
+
+    review = await review_pull_request(diff)
+    for msg in review:
+        print(msg)
+
+asyncio.run(main())
+```
+
+{/* TODO: Add more complete examples based on your most common use cases */}
+
+---
+
+## Share Your Use Case
+
+{/* TODO: Add a way for users to share their use cases */}
+
+Using Raysurfer for something interesting? We'd love to hear about it!
+
+- **GitHub Discussions**: [Share your use case](https://github.com/ryx2/raysurfer-python/discussions)
+- **Twitter/X**: Tag us at {/* TODO: Add Twitter handle */}

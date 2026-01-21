@@ -50,6 +50,10 @@
     {
       "group": "SDK Reference",
       "pages": ["sdk/python", "sdk/typescript"]
+    },
+    {
+      "group": "Resources",
+      "pages": ["use-cases", "faq"]
     }
   ],
   "footerSocials": {

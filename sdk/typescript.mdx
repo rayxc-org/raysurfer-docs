@@ -9,6 +9,30 @@ description: "Drop-in replacement for Claude Agent SDK"
 npm install raysurfer
 ```
 
+{/* TODO: Add alternative package managers and requirements:
+
+<CodeGroup>
+
+```bash npm
+npm install raysurfer
+```
+
+```bash yarn
+yarn add raysurfer
+```
+
+```bash pnpm
+pnpm add raysurfer
+```
+
+</CodeGroup>
+
+### Requirements
+
+- Node.js 18+ (or compatible runtime like Bun/Deno)
+- `@anthropic-ai/claude-agent-sdk` (peer dependency)
+*/}
+
 ## Setup
 
 Set your API key:
@@ -95,6 +119,159 @@ for await (const msg of client.raysurferQuery("Fetch GitHub trending repos")) {
 }
 ```
 
+{/* TODO: Add more real-world examples:
+
+## More Examples
+
+### Next.js API Route
+
+```typescript
+// app/api/generate/route.ts
+import { RaysurferClient } from "raysurfer";
+import { ClaudeAgentOptions } from "@anthropic-ai/claude-agent-sdk";
+
+export async function POST(request: Request) {
+  const { prompt } = await request.json();
+
+  const client = new RaysurferClient({
+    allowedTools: ["Read", "Write"],
+    systemPrompt: "You are a code generation assistant.",
+  });
+
+  const results: string[] = [];
+  for await (const msg of client.raysurferQuery(prompt)) {
+    results.push(msg.content);
+  }
+
+  return Response.json({ output: results.join("") });
+}
+```
+
+### Express Middleware
+
+```typescript
+import express from "express";
+import { RaysurferClient } from "raysurfer";
+
+const app = express();
+
+app.post("/generate", async (req, res) => {
+  const client = new RaysurferClient(options);
+
+  const output: string[] = [];
+  for await (const msg of client.raysurferQuery(req.body.prompt)) {
+    output.push(msg.content);
+  }
+
+  res.json({ result: output.join("") });
+});
+```
+
+### CLI Tool
+
+```typescript
+#!/usr/bin/env npx tsx
+import { RaysurferClient } from "raysurfer";
+
+const [, , ...args] = process.argv;
+const prompt = args.join(" ");
+
+const client = new RaysurferClient({
+  allowedTools: ["Bash"],
+  systemPrompt: "You are a CLI assistant.",
+});
+
+for await (const msg of client.raysurferQuery(prompt)) {
+  process.stdout.write(msg.content);
+}
+```
+
+[TODO: Add examples specific to your most common user frameworks/use cases]
+*/}
+
 ## Without Caching
 
 If `RAYSURFER_API_KEY` is not set, `RaysurferClient` behaves exactly like `ClaudeSDKClient` — no caching, just a pass-through wrapper.
+
+{/* TODO: Add error handling section:
+
+## Error Handling
+
+```typescript
+import { RaysurferClient, RaysurferError, CacheError, APIError } from "raysurfer";
+
+try {
+  const client = new RaysurferClient(options);
+  for await (const msg of client.raysurferQuery("Generate report")) {
+    console.log(msg);
+  }
+} catch (error) {
+  if (error instanceof APIError) {
+    console.error(`API error: ${error.statusCode} - ${error.message}`);
+  } else if (error instanceof CacheError) {
+    console.error(`Cache error: ${error.message}`);
+  } else if (error instanceof RaysurferError) {
+    console.error(`General error: ${error.message}`);
+  }
+}
+```
+
+[TODO: Document what errors can occur and when]
+*/}
+
+{/* TODO: Add TypeScript-specific features:
+
+## TypeScript Types
+
+Raysurfer exports full TypeScript types:
+
+```typescript
+import type {
+  RaysurferClient,
+  RaysurferOptions,
+  CacheStats,
+  Message,
+} from "raysurfer";
+```
+
+[TODO: Document all exported types]
+*/}
+
+{/* TODO: Add API reference:
+
+## API Reference
+
+### RaysurferClient
+
+```typescript
+class RaysurferClient {
+  constructor(options: ClaudeAgentOptions): RaysurferClient;
+  raysurferQuery(prompt: string, options?: QueryOptions): AsyncIterable<Message>;
+  getCacheStats(): Promise<CacheStats>;
+  // [TODO: Add all methods]
+}
+
+interface QueryOptions {
+  cache?: boolean;       // Enable/disable caching for this query
+  forceRefresh?: boolean; // Force regeneration even if cached
+  // [TODO: Add all options]
+}
+```
+*/}
+
+{/* TODO: Add Node.js vs Browser usage notes:
+
+## Runtime Environments
+
+### Node.js
+
+Works out of the box with Node.js 18+.
+
+### Edge Functions (Vercel, Cloudflare)
+
+[TODO: Any special considerations for edge runtimes?]
+
+### Browser
+
+[TODO: Is the SDK browser-compatible? If not, clarify this.]
+*/}
