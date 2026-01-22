@@ -67,7 +67,39 @@ const options: ClaudeAgentOptions = {
 };
 ```
 
-No Raysurfer-specific options are needed. Caching is enabled automatically when `RAYSURFER_API_KEY` is set.
+Caching is enabled automatically when `RAYSURFER_API_KEY` is set.
+
+## Snippet Retrieval Scope
+
+Control which cached snippets are retrieved using `publicSnips` and `snipsDesired`:
+
+```typescript
+import { RaysurferClient } from "raysurfer";
+import { ClaudeAgentOptions } from "@anthropic-ai/claude-agent-sdk";
+
+const options: ClaudeAgentOptions = {
+  allowedTools: ["Read", "Write", "Bash"],
+};
+
+// Include both public and company snippets
+const client = new RaysurferClient(options, {
+  publicSnips: true,        // Include public/shared snippets
+  snipsDesired: "company",  // Also include company-level snippets
+});
+
+// Enterprise: Retrieve client-specific snippets only
+const enterpriseClient = new RaysurferClient(options, {
+  snipsDesired: "client",   // Client workspace snippets (Enterprise only)
+});
+```
+
+| Configuration | Required Tier |
+|--------------|---------------|
+| `publicSnips: true` only | FREE (default) |
+| `snipsDesired: "company"` | TEAM or ENTERPRISE |
+| `snipsDesired: "client"` | ENTERPRISE only |
+
+**Default behavior:** FREE tier gets public snippets only. TEAM/ENTERPRISE tiers get company snippets by default (no public). Add `publicSnips: true` to include public snippets on top of your tier's default.
 
 ## Full Example
 
