@@ -53,3 +53,13 @@ Every cached output is verified before reuse:
 - Only successful executions get cached
 - Failed outputs are automatically excluded
 - Your agent builds a library of proven code over time
+
+## Immutable Snippets
+
+Code snippets in Raysurfer are immutable—they cannot be edited after creation. When you need a modified version of existing code, a new snippet is created instead.
+
+This design provides:
+
+- **Auditability** — complete history of all cached code
+- **Reproducibility** — retrieval results are consistent over time
+- **Quality tracking** — verdict scores stay tied to the exact code that earned them
