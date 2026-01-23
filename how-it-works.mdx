@@ -63,3 +63,25 @@ This design provides:
 - **Auditability** — complete history of all cached code
 - **Reproducibility** — retrieval results are consistent over time
 - **Quality tracking** — verdict scores stay tied to the exact code that earned them
+
+## Well-Documented Tool Schemas
+
+For cached code to be reusable, the tool functions it calls must have well-documented input and output schemas. This lets agents extract specific properties (accessors) from one tool's response to pass into the next.
+
+```python
+# Good: Agent can extract user.email for the next call
+class UserResponse:
+    id: str           # Unique user identifier
+    email: str        # User's email address
+    created_at: str   # ISO 8601 timestamp
+
+# Bad: Agent doesn't know what's inside
+def get_user(id: str) -> dict:
+    ...
+```
+
+Well-typed responses enable:
+
+- **Property extraction** — agents can access `.email` or `.id` from responses
+- **Chained tool calls** — output from one tool feeds directly into the next
+- **Better cache hits** — semantic matching works on structured, documented schemas
