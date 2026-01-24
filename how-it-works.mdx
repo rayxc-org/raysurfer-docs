@@ -122,3 +122,17 @@ Well-typed responses enable:
 - **Property extraction** — agents can access `.email` or `.id` from responses
 - **Chained tool calls** — output from one tool feeds directly into the next
 - **Better cache hits** — semantic matching works on structured, documented schemas
+
+Here's an example of chained tool calls where each output feeds into the next:
+
+```python
+llm_input = params
+out1 = query_customer_records_from_postgres_database(llm_input)
+out2 = lookup_contact_details_in_local_csv_file(out1[2])
+out3 = fetch_purchase_history_from_stripe_api(out2.files[-1])
+out4 = calculate_loyalty_tier_from_transaction_count(out3.length)
+
+return out4
+```
+
+Each function extracts specific properties from the previous result—`out1[2]`, `out2.files[-1]`, `out3.length`—demonstrating why well-documented schemas matter for cache reuse.
