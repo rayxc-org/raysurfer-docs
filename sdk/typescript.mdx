@@ -152,7 +152,11 @@ const result = await client.getCodeFiles({
 });
 
 // result.addToLlmPrompt contains a pre-formatted string like:
-// "\n\nYou have access to pre-written code files:\n- .raysurfer_code/github_fetcher.ts: Fetches trending repos\n..."
+// "
+//
+// You have access to pre-written code files:
+// - .raysurfer_code/github_fetcher.ts: Fetches trending repos
+// ..."
 
 // Augment your system prompt with cached code context
 const basePrompt = "You are a helpful coding assistant.";
@@ -161,7 +165,7 @@ const augmentedPrompt = basePrompt + result.addToLlmPrompt;
 // Make your Anthropic API call with the augmented prompt
 const anthropic = new Anthropic();
 const response = await anthropic.messages.create({
-  model: "claude-sonnet-4-20250514",
+  model: "claude-opus-4-5-20250514",
   max_tokens: 1024,
   system: augmentedPrompt,
   messages: [{ role: "user", content: "Fetch the top 10 trending GitHub repos" }],

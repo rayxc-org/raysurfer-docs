@@ -159,7 +159,11 @@ result = client.get_code_files(
 )
 
 # result.add_to_llm_prompt contains a pre-formatted string like:
-# "\n\nYou have access to pre-written code files:\n- .raysurfer_code/github_fetcher.py: Fetches trending repos\n..."
+# "
+#
+# You have access to pre-written code files:
+# - .raysurfer_code/github_fetcher.py: Fetches trending repos
+# ..."
 
 # Augment your system prompt with cached code context
 base_prompt = "You are a helpful coding assistant."
@@ -168,7 +172,7 @@ augmented_prompt = base_prompt + result.add_to_llm_prompt
 # Make your Anthropic API call with the augmented prompt
 anthropic_client = anthropic.Anthropic()
 response = anthropic_client.messages.create(
-    model="claude-sonnet-4-20250514",
+    model="claude-opus-4-5-20250514",
     max_tokens=1024,
     system=augmented_prompt,
     messages=[{"role": "user", "content": "Fetch the top 10 trending GitHub repos"}],
