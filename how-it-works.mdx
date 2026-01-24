@@ -5,12 +5,14 @@ description: "The magic behind Raysurfer's speed"
 
 ## The Simple Version
 
-When your agent runs a task it's done before, Raysurfer returns the cached result instantly instead of regenerating it.
+When your agent runs a task similar to one it's done before, Raysurfer returns the cached result instantly instead of regenerating it.
 
 ```
-First run:  Your query → Code generated → Result cached → Code retrieved
-Second run: Your query → Cache hit → Code retrieved (instant)
+First run:  Your query → Code generated → Result cached
+Second run: Similar query → Cache hit → Code retrieved (instant)
 ```
+
+Queries don't need to be identical—Raysurfer uses semantic matching to find related patterns. "Fetch user data from the API" and "Get customer info from the endpoint" can hit the same cache.
 
 That's it. You don't need to manage anything.
 
