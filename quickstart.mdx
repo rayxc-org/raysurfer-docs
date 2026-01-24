@@ -89,6 +89,10 @@ The simplest way to verify Raysurfer is working:
 
 The speedup vs running the same agent via Claude SDK should be significant (~30x) since pulling cached code is much faster than regenerating tokens.
 
+<Tip>
+  You can also run the same query using `claude-agent-sdk` directly (without Raysurfer) to compare performance side-by-side. This makes it easy to measure the exact speedup you're getting from caching.
+</Tip>
+
 <Steps>
   <Step title="Run your agent once">
     The first execution generates output normally and caches it automatically.
@@ -125,5 +129,8 @@ Raysurfer caches:
   </Card>
   <Card title="How It Works" icon="gear" href="/how-it-works">
     Learn about semantic matching and verified snippets
+  </Card>
+  <Card title="Tool Compatibility" icon="puzzle-piece" href="/tool-compatibility">
+    See which Claude tools work with Raysurfer caching
   </Card>
 </CardGroup>
