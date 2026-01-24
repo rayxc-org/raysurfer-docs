@@ -1,0 +1,579 @@
+---
+title: API Reference
+description: "Complete reference for all publicly exposed SDK functions and types"
+---
+
+This page documents all publicly exposed functions and types in the Raysurfer SDK.
+
+## High-Level Client
+
+The primary way to use Raysurfer is through the drop-in replacement client.
+
+### RaysurferClient
+
+Drop-in replacement for Claude Agent SDK's `ClaudeSDKClient`.
+
+<CodeGroup>
+
+```python Python
+from raysurfer import RaysurferClient
+from claude_agent_sdk import ClaudeAgentOptions
+
+options = ClaudeAgentOptions(
+    allowed_tools=["Read", "Write", "Bash"],
+    system_prompt="You are a helpful assistant.",
+)
+
+async with RaysurferClient(options) as client:
+    await client.raysurfer_query("Your task here")
+    async for msg in client.raysurfer_response():
+        print(msg)
+```
+
+```typescript TypeScript
+import { RaysurferClient } from "raysurfer";
+import { ClaudeAgentOptions } from "@anthropic-ai/claude-agent-sdk";
+
+const options: ClaudeAgentOptions = {
+  allowedTools: ["Read", "Write", "Bash"],
+  systemPrompt: "You are a helpful assistant.",
+};
+
+const client = new RaysurferClient(options);
+
+for await (const msg of client.raysurferQuery("Your task here")) {
+  console.log(msg);
+}
+```
+
+</CodeGroup>
+
+#### Constructor Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `options` | `ClaudeAgentOptions` | Standard Claude Agent SDK options |
+| `public_snips` / `publicSnips` | `boolean` | Include public/shared snippets (default: `false`) |
+| `snips_desired` / `snipsDesired` | `"company"` \| `"client"` | Scope of private snippets |
+
+#### Methods
+
+| Method | Description |
+|--------|-------------|
+| `raysurfer_query(prompt)` / `raysurferQuery(prompt)` | Send a query with automatic cache retrieval |
+| `raysurfer_response()` | Async generator yielding response messages (Python only) |
+
+---
+
+## Low-Level API Client
+
+For custom integrations, use the direct API client.
+
+### RaySurfer / AsyncRaySurfer
+
+<CodeGroup>
+
+```python Python
+from raysurfer import RaySurfer, AsyncRaySurfer
+
+# Sync client
+client = RaySurfer(api_key="your_api_key")
+
+# Async client
+async with AsyncRaySurfer(api_key="your_api_key") as client:
+    snips = await client.get_code_snips(task="Fetch GitHub repos")
+```
+
+```typescript TypeScript
+import { RaySurfer } from "raysurfer";
+
+const client = new RaySurfer({ apiKey: "your_api_key" });
+const snips = await client.getCodeSnips({ task: "Fetch GitHub repos" });
+```
+
+</CodeGroup>
+
+#### Constructor Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `api_key` / `apiKey` | `string` | Your Raysurfer API key |
+| `base_url` / `baseUrl` | `string` | API base URL (optional) |
+| `timeout` | `number` | Request timeout in seconds/ms |
+| `organization_id` / `organizationId` | `string` | Organization ID for team/enterprise namespacing |
+| `workspace_id` / `workspaceId` | `string` | Workspace ID for enterprise client namespacing |
+| `public_snips` / `publicSnips` | `boolean` | Include public snippets in retrieval |
+| `snips_desired` / `snipsDesired` | `"company"` \| `"client"` | Scope of private snippets |
+
+---
+
+## Retrieval Methods
+
+### get_code_snips / getCodeSnips
+
+Retrieve cached code snippets by task description using semantic search.
+
+<CodeGroup>
+
+```python Python
+snips = client.get_code_snips(
+    task="Fetch GitHub trending repos",
+    top_k=10,
+    min_verdict_score=0.0,
+)
+
+for match in snips.code_blocks:
+    print(f"{match.code_block.name}: {match.score}")
+```
+
+```typescript TypeScript
+const snips = await client.getCodeSnips({
+  task: "Fetch GitHub trending repos",
+  topK: 10,
+  minVerdictScore: 0.0,
+});
+
+for (const match of snips.codeBlocks) {
+  console.log(`${match.codeBlock.name}: ${match.score}`);
+}
+```
+
+</CodeGroup>
+
+#### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `task` | `string` | required | Natural language task description |
+| `top_k` / `topK` | `number` | `10` | Maximum number of results |
+| `min_verdict_score` / `minVerdictScore` | `number` | `0.0` | Minimum verdict score filter |
+
+#### Returns: `RetrieveCodeBlockResponse`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code_blocks` / `codeBlocks` | `CodeBlockMatch[]` | Matching code blocks with scores |
+| `total_found` / `totalFound` | `number` | Total matches found |
+
+---
+
+### retrieve_best / retrieveBest
+
+Get the single best code block for a task using verdict-aware scoring.
+
+<CodeGroup>
+
+```python Python
+result = client.retrieve_best(
+    task="Fetch GitHub trending repos",
+    top_k=10,
+    min_verdict_score=0.0,
+)
+
+if result.best_match:
+    print(f"Best: {result.best_match.code_block.name}")
+    print(f"Score: {result.best_match.combined_score}")
+```
+
+```typescript TypeScript
+const result = await client.retrieveBest({
+  task: "Fetch GitHub trending repos",
+  topK: 10,
+  minVerdictScore: 0.0,
+});
+
+if (result.bestMatch) {
+  console.log(`Best: ${result.bestMatch.codeBlock.name}`);
+  console.log(`Score: ${result.bestMatch.combinedScore}`);
+}
+```
+
+</CodeGroup>
+
+#### Returns: `RetrieveBestResponse`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `best_match` / `bestMatch` | `BestMatch \| null` | The highest-scoring code block |
+| `alternative_candidates` / `alternativeCandidates` | `AlternativeCandidate[]` | Other good matches |
+| `retrieval_confidence` / `retrievalConfidence` | `string` | Confidence level |
+
+---
+
+### get_code_files / getCodeFiles
+
+Get code files ready to download to a sandbox environment.
+
+<CodeGroup>
+
+```python Python
+result = client.get_code_files(
+    task="Fetch GitHub user data",
+    top_k=5,
+    min_verdict_score=0.3,
+    prefer_complete=True,
+)
+
+for file in result.files:
+    print(f"{file.filename}: {file.verdict_score}")
+```
+
+```typescript TypeScript
+const result = await client.getCodeFiles({
+  task: "Fetch GitHub user data",
+  topK: 5,
+  minVerdictScore: 0.3,
+  preferComplete: true,
+});
+
+for (const file of result.files) {
+  console.log(`${file.filename}: ${file.verdictScore}`);
+}
+```
+
+</CodeGroup>
+
+#### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `task` | `string` | required | Natural language task description |
+| `top_k` / `topK` | `number` | `5` | Maximum number of files |
+| `min_verdict_score` / `minVerdictScore` | `number` | `0.3` | Minimum verdict score |
+| `prefer_complete` / `preferComplete` | `boolean` | `true` | Prefer longer/complete implementations |
+
+---
+
+### get_few_shot_examples / getFewShotExamples
+
+Retrieve few-shot examples for code generation prompting.
+
+<CodeGroup>
+
+```python Python
+examples = client.get_few_shot_examples(task="Parse CSV files", k=3)
+
+for ex in examples:
+    print(f"Task: {ex.task}")
+    print(f"Code: {ex.code_snippet}")
+```
+
+```typescript TypeScript
+const examples = await client.getFewShotExamples("Parse CSV files", 3);
+
+for (const ex of examples) {
+  console.log(`Task: ${ex.task}`);
+  console.log(`Code: ${ex.codeSnippet}`);
+}
+```
+
+</CodeGroup>
+
+---
+
+### get_task_patterns / getTaskPatterns
+
+Retrieve proven task-to-code mappings.
+
+<CodeGroup>
+
+```python Python
+patterns = client.get_task_patterns(
+    task="API integration",
+    min_thumbs_up=5,
+    top_k=20,
+)
+
+for p in patterns:
+    print(f"{p.task_pattern} -> {p.code_block_name}")
+```
+
+```typescript TypeScript
+const patterns = await client.getTaskPatterns({
+  task: "API integration",
+  minThumbsUp: 5,
+  topK: 20,
+});
+
+for (const p of patterns) {
+  console.log(`${p.taskPattern} -> ${p.codeBlockName}`);
+}
+```
+
+</CodeGroup>
+
+---
+
+## Storage Methods
+
+### upload_new_code_snips / uploadNewCodeSnips
+
+Upload new code snippets from an execution for future reuse.
+
+<CodeGroup>
+
+```python Python
+from raysurfer.types import FileWritten
+
+files = [
+    FileWritten(path="fetch_repos.py", content="def fetch(): ..."),
+    FileWritten(path="utils.py", content="def helper(): ..."),
+]
+
+result = client.upload_new_code_snips(
+    task="Fetch GitHub trending repos",
+    files_written=files,
+    succeeded=True,
+)
+
+print(f"Stored {result.code_blocks_stored} code blocks")
+```
+
+```typescript TypeScript
+const files = [
+  { path: "fetch_repos.ts", content: "function fetch() { ... }" },
+  { path: "utils.ts", content: "function helper() { ... }" },
+];
+
+const result = await client.uploadNewCodeSnips(
+  "Fetch GitHub trending repos",
+  files,
+  true // succeeded
+);
+
+console.log(`Stored ${result.codeBlocksStored} code blocks`);
+```
+
+</CodeGroup>
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `task` | `string` | The task that was executed |
+| `files_written` / `filesWritten` | `FileWritten[]` | Files created during execution |
+| `succeeded` | `boolean` | Whether the task completed successfully |
+
+---
+
+### store_code_block / storeCodeBlock
+
+Store a code block with full metadata (advanced usage).
+
+<CodeGroup>
+
+```python Python
+result = client.store_code_block(
+    name="GitHub User Fetcher",
+    source="def fetch_user(username): ...",
+    entrypoint="fetch_user",
+    language="python",
+    description="Fetches user data from GitHub API",
+    tags=["github", "api", "user"],
+    dependencies=["httpx"],
+)
+```
+
+```typescript TypeScript
+const result = await client.storeCodeBlock({
+  name: "GitHub User Fetcher",
+  source: "function fetchUser(username) { ... }",
+  entrypoint: "fetchUser",
+  language: "typescript",
+  description: "Fetches user data from GitHub API",
+  tags: ["github", "api", "user"],
+  dependencies: ["node-fetch"],
+});
+```
+
+</CodeGroup>
+
+#### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `name` | `string` | Human-readable name |
+| `source` | `string` | The code source |
+| `entrypoint` | `string` | Main function/method name |
+| `language` | `string` | Programming language |
+| `description` | `string` | Description of what the code does |
+| `input_schema` / `inputSchema` | `object` | JSON schema for inputs |
+| `output_schema` / `outputSchema` | `object` | JSON schema for outputs |
+| `language_version` / `languageVersion` | `string` | Language version |
+| `dependencies` | `string[]` | Required dependencies |
+| `tags` | `string[]` | Searchable tags |
+| `capabilities` | `string[]` | What the code can do |
+| `example_queries` / `exampleQueries` | `string[]` | Example task queries |
+
+---
+
+## Voting Methods
+
+### vote_code_snip / voteCodeSnip
+
+Vote on whether a cached code snippet was useful. This triggers background voting on the backend.
+
+<CodeGroup>
+
+```python Python
+client.vote_code_snip(
+    task="Fetch GitHub trending repos",
+    code_block_id="abc123",
+    code_block_name="github_fetcher",
+    code_block_description="Fetches trending repos",
+    succeeded=True,
+)
+```
+
+```typescript TypeScript
+await client.voteCodeSnip({
+  task: "Fetch GitHub trending repos",
+  codeBlockId: "abc123",
+  codeBlockName: "github_fetcher",
+  codeBlockDescription: "Fetches trending repos",
+  succeeded: true,
+});
+```
+
+</CodeGroup>
+
+<Note>
+  Voting happens automatically when you use `RaysurferClient`. You only need to call this directly when using the low-level API.
+</Note>
+
+---
+
+## Types
+
+### CodeBlock
+
+A stored code block with metadata.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Unique identifier |
+| `name` | `string` | Human-readable name |
+| `description` | `string` | What the code does |
+| `source` | `string` | The actual code |
+| `entrypoint` | `string` | Main function name |
+| `language` | `string` | Programming language |
+| `language_version` / `languageVersion` | `string \| null` | Language version |
+| `dependencies` | `string[]` | Required packages |
+| `tags` | `string[]` | Searchable tags |
+| `capabilities` | `string[]` | What it can do |
+| `input_schema` / `inputSchema` | `object` | Input JSON schema |
+| `output_schema` / `outputSchema` | `object` | Output JSON schema |
+
+### CodeBlockMatch
+
+A code block with retrieval scores.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code_block` / `codeBlock` | `CodeBlock` | The code block |
+| `score` | `number` | Semantic similarity score |
+| `verdict_score` / `verdictScore` | `number` | Quality rating (0-1) |
+| `thumbs_up` / `thumbsUp` | `number` | Positive votes |
+| `thumbs_down` / `thumbsDown` | `number` | Negative votes |
+
+### BestMatch
+
+The best matching code block with full scoring.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code_block` / `codeBlock` | `CodeBlock` | The code block |
+| `combined_score` / `combinedScore` | `number` | Overall score |
+| `vector_score` / `vectorScore` | `number` | Semantic similarity |
+| `verdict_score` / `verdictScore` | `number` | Quality rating |
+| `error_resilience` / `errorResilience` | `number` | Error handling score |
+| `thumbs_up` / `thumbsUp` | `number` | Positive votes |
+| `thumbs_down` / `thumbsDown` | `number` | Negative votes |
+
+### FileWritten
+
+A file written during agent execution.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `path` | `string` | File path |
+| `content` | `string` | File contents |
+
+### FewShotExample
+
+A few-shot example for prompting.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `task` | `string` | The task description |
+| `input_sample` / `inputSample` | `object` | Example input |
+| `output_sample` / `outputSample` | `any` | Example output |
+| `code_snippet` / `codeSnippet` | `string` | The code |
+
+### TaskPattern
+
+A proven task-to-code mapping.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `task_pattern` / `taskPattern` | `string` | Task description pattern |
+| `code_block_id` / `codeBlockId` | `string` | Associated code block |
+| `code_block_name` / `codeBlockName` | `string` | Code block name |
+| `thumbs_up` / `thumbsUp` | `number` | Positive votes |
+| `thumbs_down` / `thumbsDown` | `number` | Negative votes |
+| `verdict_score` / `verdictScore` | `number` | Quality rating |
+
+---
+
+## Enums
+
+### ExecutionState
+
+Technical execution outcome.
+
+| Value | Description |
+|-------|-------------|
+| `COMPLETED` | Execution finished successfully |
+| `ERRORED` | Execution threw an error |
+| `TIMED_OUT` | Execution exceeded time limit |
+| `CANCELLED` | Execution was cancelled |
+
+### AgentVerdict
+
+Agent's judgment on execution quality.
+
+| Value | Description |
+|-------|-------------|
+| `THUMBS_UP` | Execution was useful |
+| `THUMBS_DOWN` | Execution was not useful |
+| `PENDING` | Not yet evaluated |
+
+### SnipsDesired
+
+Scope of private snippets for retrieval.
+
+| Value | Required Tier | Description |
+|-------|---------------|-------------|
+| `company` | TEAM or ENTERPRISE | Organization-level snippets |
+| `client` | ENTERPRISE only | Client workspace snippets |
+
+---
+
+## Exceptions
+
+### RaySurferError
+
+Base exception for all Raysurfer errors.
+
+### APIError
+
+Raised when the API returns an error response.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `message` | `string` | Error message |
+| `status_code` / `statusCode` | `number` | HTTP status code |
+
+### AuthenticationError
+
+Raised when the API key is invalid or missing.

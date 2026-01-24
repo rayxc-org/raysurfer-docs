@@ -27,11 +27,6 @@
   },
   "anchors": [
     {
-      "name": "GitHub",
-      "icon": "github",
-      "url": "https://github.com/ryx2/raysurfer-python"
-    },
-    {
       "name": "PyPI",
       "icon": "python",
       "url": "https://pypi.org/project/raysurfer/"
@@ -49,7 +44,7 @@
     },
     {
       "group": "SDK Reference",
-      "pages": ["sdk/python", "sdk/typescript"]
+      "pages": ["sdk/python", "sdk/typescript", "api-reference"]
     }
   ],
   "footerSocials": {

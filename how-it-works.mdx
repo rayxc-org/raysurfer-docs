@@ -58,11 +58,48 @@ Every cached output is verified before reuse:
 
 Code snippets in Raysurfer are immutable—they cannot be edited after creation. When you need a modified version of existing code, a new snippet is created instead.
 
+This means:
+
+- **Edits create new snippets** — modifying cached code doesn't overwrite the original; it creates a new entry that surfaces for different types of requests
+- **Original code stays intact** — the original snippet remains available with its existing verdict scores
+- **Version history is automatic** — each iteration of a code pattern becomes its own snippet, and the best-performing version rises to the top through voting
+
 This design provides:
 
 - **Auditability** — complete history of all cached code
 - **Reproducibility** — retrieval results are consistent over time
 - **Quality tracking** — verdict scores stay tied to the exact code that earned them
+
+You can view all your snippets in the [dashboard](https://raysurfer.com/dashboard).
+
+## Snippet Scoring
+
+Every snippet has a verdict score that determines its priority in retrieval.
+
+### Automatic Voting
+
+The AI system automatically votes on each code execution:
+
+- **Success** — when cached code runs successfully and produces the expected output, it receives a thumbs up
+- **Failure** — when cached code fails or produces incorrect output, it receives a thumbs down
+
+This happens automatically in the background after each execution—you don't need to do anything.
+
+### Manual Voting
+
+You can also manually adjust scores in the [dashboard](https://raysurfer.com/dashboard):
+
+- Add positive score to promote high-quality snippets
+- Add negative score to demote problematic code
+- Override automatic votes when you know better than the AI
+
+The verdict score is calculated as:
+
+```
+verdict_score = thumbs_up / (thumbs_up + thumbs_down)
+```
+
+Snippets with higher verdict scores are prioritized during retrieval, ensuring your agent uses the most reliable code.
 
 ## Well-Documented Tool Schemas
 
