@@ -136,3 +136,56 @@ asyncio.run(main())
 ## Without Caching
 
 If `RAYSURFER_API_KEY` is not set, `RaysurferClient` behaves exactly like `ClaudeSDKClient` — no caching, just a pass-through wrapper.
+
+## Low-Level API
+
+For custom integrations, use the `RaySurfer` client directly with three core methods:
+
+```python
+from raysurfer import RaySurfer
+
+client = RaySurfer(api_key="your_api_key")
+
+# 1. Get cached code snippets for a task
+snips = client.get_code_snips(task="Fetch GitHub trending repos")
+for match in snips.code_blocks:
+    print(f"{match.code_block.name}: {match.score}")
+
+# 2. Upload new code snippets after execution
+from raysurfer.types import FileWritten
+
+files = [FileWritten(filename="fetch_repos.py", content="def fetch(): ...")]
+client.upload_new_code_snips(
+    task="Fetch GitHub trending repos",
+    files_written=files,
+    succeeded=True,
+)
+
+# 3. Vote on whether a cached snippet was useful
+client.vote_code_snip(
+    task="Fetch GitHub trending repos",
+    code_block_id="abc123",
+    code_block_name="github_fetcher",
+    code_block_description="Fetches trending repos from GitHub",
+    succeeded=True,
+)
+```
+
+### Async Version
+
+```python
+from raysurfer import AsyncRaySurfer
+
+async with AsyncRaySurfer(api_key="your_api_key") as client:
+    snips = await client.get_code_snips(task="Fetch GitHub trending repos")
+    await client.upload_new_code_snips(task, files, succeeded=True)
+    await client.vote_code_snip(task, code_block_id, name, description, succeeded=True)
+```
+
+### Method Reference
+
+| Method | Description |
+|--------|-------------|
+| `get_code_snips(task, top_k, min_verdict_score)` | Retrieve cached code snippets by semantic search |
+| `upload_new_code_snips(task, files_written, succeeded)` | Store new code files for future reuse |
+| `vote_code_snip(task, code_block_id, name, description, succeeded)` | Vote on snippet usefulness (triggers async backend voting) |
