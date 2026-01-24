@@ -3,6 +3,10 @@ title: Tool Compatibility
 description: "How to structure your tools for Raysurfer caching"
 ---
 
+<Warning>
+  Raysurfer is designed for agents that generate code and execute it in production. If your agent isn't doing that yet, you need to get onboard! Until then, Raysurfer is not for you.
+</Warning>
+
 ## The Requirement
 
 For Raysurfer to cache and replay your agent's outputs, **tools must be exposed as functions that can be called directly from code**.
