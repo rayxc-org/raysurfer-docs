@@ -249,7 +249,7 @@ const systemPrompt = "You are helpful." + result.addToLlmPrompt;
 | `top_k` / `topK` | `number` | `5` | Maximum number of files |
 | `min_verdict_score` / `minVerdictScore` | `number` | `0.3` | Minimum verdict score |
 | `prefer_complete` / `preferComplete` | `boolean` | `true` | Prefer longer/complete implementations |
-| `cache_dir` / `cacheDir` | `string` | `undefined` | Directory where files will be written. If provided, `add_to_llm_prompt` includes full paths. |
+| `cache_dir` / `cacheDir` | `string` | `.raysurfer_code` | Directory where files will be written. Used to generate full paths in `add_to_llm_prompt`. |
 
 #### Returns: `GetCodeFilesResponse`
 
