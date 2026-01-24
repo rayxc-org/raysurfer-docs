@@ -9,6 +9,7 @@ For Raysurfer to cache and replay your agent's outputs, **tools must be exposed 
 
 This means your agent's tool implementations should be:
 - Pure functions with clear inputs and outputs
+- Pure functions with clear, typed inputs and outputs—avoid `unknown`, `any`, or `Dict[str, Any]` types. The more specific your type annotations, the better the agent's code generation will perform.
 - Callable without side effects on the LLM context
 - Composable into multi-step workflows
 
@@ -40,6 +41,47 @@ Raysurfer caches the **code** your agent generates, not the raw outputs. For thi
 | **Callable from code** | Cached code needs to execute the same functions |
 | **Deterministic with same inputs** | Replayed code should produce consistent results |
 | **Exposed as importable functions** | The generated code needs to reference real functions |
+| **Strongly typed** | Specific types help the agent generate correct, reusable code |
+
+## Why Typing Matters
+
+The more specific your type annotations, the better the agent's code generation will perform. Avoid generic types like `unknown`, `any`, `object`, or `Dict[str, Any]`—these force the agent to guess at data structures, leading to brittle code that doesn't cache well.
+
+<CodeGroup>
+
+```python Good - Specific types
+from dataclasses import dataclass
+
+@dataclass
+class SalesRecord:
+    id: str
+    amount: float
+    quarter: str
+    region: str
+
+@dataclass
+class Report:
+    title: str
+    records: list[SalesRecord]
+    total: float
+
+def generate_report(records: list[SalesRecord], template: str) -> Report:
+    ...
+```
+
+```python Bad - Vague types
+def generate_report(records: list[dict], template: str) -> dict:
+    # Agent doesn't know the shape of records or return value
+    ...
+
+def process_data(data: Any) -> Any:
+    # Impossible to generate correct downstream code
+    ...
+```
+
+</CodeGroup>
+
+When types are specific, the agent generates code that correctly accesses fields like `record.amount` instead of guessing with `record["amount"]` or `record.get("amount", 0)`.
 
 ## Example: Good vs Bad
 
