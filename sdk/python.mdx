@@ -141,19 +141,19 @@ If `RAYSURFER_API_KEY` is not set, `RaysurferClient` behaves exactly like `Claud
 
 For custom integrations, use the `RaySurfer` client directly.
 
-### Complete Example with Anthropic API
-
-Retrieve cached code and use it to augment your LLM prompt:
+### Complete Low-Level Example with Anthropic API
 
 ```python
 import anthropic
 from raysurfer import RaySurfer
+from raysurfer.types import FileWritten
 
 client = RaySurfer(api_key="your_raysurfer_api_key")
+task = "Fetch GitHub trending repos"
 
-# Retrieve cached code files for a task
+# 1. Retrieve cached code files for a task
 result = client.get_code_files(
-    task="Fetch GitHub trending repos",
+    task=task,
     top_k=5,
     min_verdict_score=0.3,
 )
@@ -175,6 +175,23 @@ response = anthropic_client.messages.create(
 )
 
 print(response.content[0].text)
+
+# 2. Upload new code snippets after execution
+files = [FileWritten(path="fetch_repos.py", content="def fetch(): ...")]
+client.upload_new_code_snips(
+    task=task,
+    files_written=files,
+    succeeded=True,
+)
+
+# 3. Vote on whether a cached snippet was useful
+client.vote_code_snip(
+    task=task,
+    code_block_id=result.files[0].code_block_id,
+    code_block_name=result.files[0].filename,
+    code_block_description=result.files[0].description,
+    succeeded=True,
+)
 ```
 
 ### Response Fields
@@ -188,51 +205,34 @@ The `get_code_files()` response includes:
 | `total_found` | `int` | Total matches found |
 | `add_to_llm_prompt` | `str` | Pre-formatted string to append to your LLM system prompt |
 
-Each `CodeFile` contains `filename`, `source`, `description`, `verdict_score`, `thumbs_up`, `thumbs_down`, and `similarity_score`.
-
-### Core Methods
-
-```python
-from raysurfer import RaySurfer
-
-client = RaySurfer(api_key="your_api_key")
-
-# 1. Get cached code files (includes add_to_llm_prompt)
-result = client.get_code_files(task="Fetch GitHub trending repos")
-for file in result.files:
-    print(f"{file.filename}: {file.verdict_score}")
-
-# 2. Upload new code snippets after execution
-from raysurfer.types import FileWritten
-
-files = [FileWritten(path="fetch_repos.py", content="def fetch(): ...")]
-client.upload_new_code_snips(
-    task="Fetch GitHub trending repos",
-    files_written=files,
-    succeeded=True,
-)
-
-# 3. Vote on whether a cached snippet was useful
-client.vote_code_snip(
-    task="Fetch GitHub trending repos",
-    code_block_id="abc123",
-    code_block_name="github_fetcher",
-    code_block_description="Fetches trending repos from GitHub",
-    succeeded=True,
-)
-```
+Each `CodeFile` contains `code_block_id`, `filename`, `source`, `description`, `verdict_score`, `thumbs_up`, `thumbs_down`, and `similarity_score`.
 
 ### Async Version
 
 ```python
+import anthropic
 from raysurfer import AsyncRaySurfer
+from raysurfer.types import FileWritten
 
 async with AsyncRaySurfer(api_key="your_api_key") as client:
+    # 1. Retrieve cached code
     result = await client.get_code_files(task="Fetch GitHub trending repos")
-    print(result.add_to_llm_prompt)  # Use this to augment your LLM prompt
 
+    # 2. Use add_to_llm_prompt to augment your LLM call
+    augmented_prompt = "You are helpful." + result.add_to_llm_prompt
+
+    # 3. Upload new code after execution
+    files = [FileWritten(path="fetch_repos.py", content="def fetch(): ...")]
     await client.upload_new_code_snips(task, files, succeeded=True)
-    await client.vote_code_snip(task, code_block_id, name, description, succeeded=True)
+
+    # 4. Vote on snippet usefulness
+    await client.vote_code_snip(
+        task=task,
+        code_block_id=result.files[0].code_block_id,
+        code_block_name=result.files[0].filename,
+        code_block_description=result.files[0].description,
+        succeeded=True,
+    )
 ```
 
 ### Method Reference

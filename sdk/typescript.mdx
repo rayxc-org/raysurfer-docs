@@ -135,19 +135,18 @@ If `RAYSURFER_API_KEY` is not set, `RaysurferClient` behaves exactly like `Claud
 
 For custom integrations, use the `RaySurfer` client directly.
 
-### Complete Example with Anthropic API
-
-Retrieve cached code and use it to augment your LLM prompt:
+### Complete Low-Level Example with Anthropic API
 
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
 import { RaySurfer } from "raysurfer";
 
 const client = new RaySurfer({ apiKey: "your_raysurfer_api_key" });
+const task = "Fetch GitHub trending repos";
 
-// Retrieve cached code files for a task
+// 1. Retrieve cached code files for a task
 const result = await client.getCodeFiles({
-  task: "Fetch GitHub trending repos",
+  task,
   topK: 5,
   minVerdictScore: 0.3,
 });
@@ -169,6 +168,22 @@ const response = await anthropic.messages.create({
 });
 
 console.log(response.content[0].text);
+
+// 2. Upload new code snippets after execution
+await client.uploadNewCodeSnips(
+  task,
+  [{ path: "fetch_repos.ts", content: "function fetch() { ... }" }],
+  true // succeeded
+);
+
+// 3. Vote on whether a cached snippet was useful
+await client.voteCodeSnip({
+  task,
+  codeBlockId: result.files[0].codeBlockId,
+  codeBlockName: result.files[0].filename,
+  codeBlockDescription: result.files[0].description,
+  succeeded: true,
+});
 ```
 
 ### Response Fields
@@ -182,37 +197,7 @@ The `getCodeFiles()` response includes:
 | `totalFound` | `number` | Total matches found |
 | `addToLlmPrompt` | `string` | Pre-formatted string to append to your LLM system prompt |
 
-Each `CodeFile` contains `filename`, `source`, `description`, `verdictScore`, `thumbsUp`, `thumbsDown`, and `similarityScore`.
-
-### Core Methods
-
-```typescript
-import { RaySurfer } from "raysurfer";
-
-const client = new RaySurfer({ apiKey: "your_api_key" });
-
-// 1. Get cached code files (includes addToLlmPrompt)
-const result = await client.getCodeFiles({ task: "Fetch GitHub trending repos" });
-for (const file of result.files) {
-  console.log(`${file.filename}: ${file.verdictScore}`);
-}
-
-// 2. Upload new code snippets after execution
-await client.uploadNewCodeSnips(
-  "Fetch GitHub trending repos",
-  [{ path: "fetch_repos.ts", content: "function fetch() { ... }" }],
-  true // succeeded
-);
-
-// 3. Vote on whether a cached snippet was useful
-await client.voteCodeSnip({
-  task: "Fetch GitHub trending repos",
-  codeBlockId: "abc123",
-  codeBlockName: "github_fetcher",
-  codeBlockDescription: "Fetches trending repos from GitHub",
-  succeeded: true,
-});
-```
+Each `CodeFile` contains `codeBlockId`, `filename`, `source`, `description`, `verdictScore`, `thumbsUp`, `thumbsDown`, and `similarityScore`.
 
 ### Method Reference
 
