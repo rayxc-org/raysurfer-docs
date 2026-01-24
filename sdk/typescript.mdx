@@ -133,23 +133,74 @@ If `RAYSURFER_API_KEY` is not set, `RaysurferClient` behaves exactly like `Claud
 
 ## Low-Level API
 
-For custom integrations, use the `RaySurfer` client directly with three core methods:
+For custom integrations, use the `RaySurfer` client directly.
+
+### Complete Example with Anthropic API
+
+Retrieve cached code and use it to augment your LLM prompt:
+
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+import { RaySurfer } from "raysurfer";
+
+const client = new RaySurfer({ apiKey: "your_raysurfer_api_key" });
+
+// Retrieve cached code files for a task
+const result = await client.getCodeFiles({
+  task: "Fetch GitHub trending repos",
+  topK: 5,
+  minVerdictScore: 0.3,
+});
+
+// result.addToLlmPrompt contains a pre-formatted string like:
+// "\n\nYou have access to pre-written code files:\n- .raysurfer_code/github_fetcher.ts: Fetches trending repos\n..."
+
+// Augment your system prompt with cached code context
+const basePrompt = "You are a helpful coding assistant.";
+const augmentedPrompt = basePrompt + result.addToLlmPrompt;
+
+// Make your Anthropic API call with the augmented prompt
+const anthropic = new Anthropic();
+const response = await anthropic.messages.create({
+  model: "claude-sonnet-4-20250514",
+  max_tokens: 1024,
+  system: augmentedPrompt,
+  messages: [{ role: "user", content: "Fetch the top 10 trending GitHub repos" }],
+});
+
+console.log(response.content[0].text);
+```
+
+### Response Fields
+
+The `getCodeFiles()` response includes:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `files` | `CodeFile[]` | Retrieved code files with metadata |
+| `task` | `string` | The task that was searched |
+| `totalFound` | `number` | Total matches found |
+| `addToLlmPrompt` | `string` | Pre-formatted string to append to your LLM system prompt |
+
+Each `CodeFile` contains `filename`, `source`, `description`, `verdictScore`, `thumbsUp`, `thumbsDown`, and `similarityScore`.
+
+### Core Methods
 
 ```typescript
 import { RaySurfer } from "raysurfer";
 
 const client = new RaySurfer({ apiKey: "your_api_key" });
 
-// 1. Get cached code snippets for a task
-const snips = await client.getCodeSnips({ task: "Fetch GitHub trending repos" });
-for (const match of snips.codeBlocks) {
-  console.log(`${match.codeBlock.name}: ${match.score}`);
+// 1. Get cached code files (includes addToLlmPrompt)
+const result = await client.getCodeFiles({ task: "Fetch GitHub trending repos" });
+for (const file of result.files) {
+  console.log(`${file.filename}: ${file.verdictScore}`);
 }
 
 // 2. Upload new code snippets after execution
 await client.uploadNewCodeSnips(
   "Fetch GitHub trending repos",
-  [{ filename: "fetch_repos.ts", content: "function fetch() { ... }" }],
+  [{ path: "fetch_repos.ts", content: "function fetch() { ... }" }],
   true // succeeded
 );
 
@@ -167,6 +218,7 @@ await client.voteCodeSnip({
 
 | Method | Description |
 |--------|-------------|
+| `getCodeFiles({ task, topK?, minVerdictScore?, preferComplete?, cacheDir? })` | Retrieve cached code files with `addToLlmPrompt` for LLM augmentation |
 | `getCodeSnips({ task, topK?, minVerdictScore? })` | Retrieve cached code snippets by semantic search |
 | `uploadNewCodeSnips(task, filesWritten, succeeded)` | Store new code files for future reuse |
 | `voteCodeSnip({ task, codeBlockId, codeBlockName, codeBlockDescription, succeeded })` | Vote on snippet usefulness (triggers async backend voting) |
