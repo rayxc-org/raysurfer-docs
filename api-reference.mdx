@@ -202,7 +202,7 @@ if (result.bestMatch) {
 
 ### get_code_files / getCodeFiles
 
-Get code files ready to download to a sandbox environment.
+Get code files ready to download to a sandbox environment. Also returns a pre-formatted `add_to_llm_prompt` string that you can append directly to your LLM system prompt.
 
 <CodeGroup>
 
@@ -212,10 +212,14 @@ result = client.get_code_files(
     top_k=5,
     min_verdict_score=0.3,
     prefer_complete=True,
+    cache_dir="/path/to/cache",  # Optional: include full paths in prompt
 )
 
 for file in result.files:
     print(f"{file.filename}: {file.verdict_score}")
+
+# Use the pre-formatted prompt string
+system_prompt = "You are helpful." + result.add_to_llm_prompt
 ```
 
 ```typescript TypeScript
@@ -224,11 +228,15 @@ const result = await client.getCodeFiles({
   topK: 5,
   minVerdictScore: 0.3,
   preferComplete: true,
+  cacheDir: "/path/to/cache",  // Optional: include full paths in prompt
 });
 
 for (const file of result.files) {
   console.log(`${file.filename}: ${file.verdictScore}`);
 }
+
+// Use the pre-formatted prompt string
+const systemPrompt = "You are helpful." + result.addToLlmPrompt;
 ```
 
 </CodeGroup>
@@ -241,6 +249,16 @@ for (const file of result.files) {
 | `top_k` / `topK` | `number` | `5` | Maximum number of files |
 | `min_verdict_score` / `minVerdictScore` | `number` | `0.3` | Minimum verdict score |
 | `prefer_complete` / `preferComplete` | `boolean` | `true` | Prefer longer/complete implementations |
+| `cache_dir` / `cacheDir` | `string` | `undefined` | Directory where files will be written. If provided, `add_to_llm_prompt` includes full paths. |
+
+#### Returns: `GetCodeFilesResponse`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `files` | `CodeFile[]` | Retrieved code files with metadata |
+| `task` | `string` | The task that was searched |
+| `total_found` / `totalFound` | `number` | Total matches found |
+| `add_to_llm_prompt` / `addToLlmPrompt` | `string` | Pre-formatted string to append to LLM system prompt |
 
 ---
 
