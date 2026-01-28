@@ -43,6 +43,10 @@
       "pages": ["index", "quickstart", "how-it-works", "tool-compatibility"]
     },
     {
+      "group": "Rate Limits & Pricing",
+      "pages": ["rate-limits"]
+    },
+    {
       "group": "SDK Reference",
       "pages": ["sdk/python", "sdk/typescript", "api-reference"]
     }
