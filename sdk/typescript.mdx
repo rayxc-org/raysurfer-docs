@@ -209,5 +209,5 @@ Each `CodeFile` contains `codeBlockId`, `filename`, `source`, `description`, `ve
 |--------|-------------|
 | `getCodeFiles({ task, topK?, minVerdictScore?, preferComplete?, cacheDir? })` | Retrieve cached code files with `addToLlmPrompt` for LLM augmentation |
 | `getCodeSnips({ task, topK?, minVerdictScore? })` | Retrieve cached code snippets by semantic search |
-| `uploadNewCodeSnips(task, filesWritten, succeeded)` | Store new code files for future reuse |
+| `uploadNewCodeSnips(task, filesWritten, succeeded, cachedCodeBlocks?, autoVote?, executionLogs?)` | Store new code files for future reuse (auto-votes by default) |
 | `voteCodeSnip({ task, codeBlockId, codeBlockName, codeBlockDescription, succeeded })` | Vote on snippet usefulness (triggers async backend voting) |

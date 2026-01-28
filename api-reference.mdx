@@ -367,11 +367,17 @@ console.log(`Stored ${result.codeBlocksStored} code blocks`);
 
 #### Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `task` | `string` | The task that was executed |
-| `files_written` / `filesWritten` | `FileWritten[]` | Files created during execution |
-| `succeeded` | `boolean` | Whether the task completed successfully |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `task` | `string` | required | The task that was executed |
+| `files_written` / `filesWritten` | `FileWritten[]` | required | Files created during execution |
+| `succeeded` | `boolean` | required | Whether the task completed successfully |
+| `auto_vote` / `autoVote` | `boolean` | `true` | Auto-vote on newly stored blocks |
+| `execution_logs` / `executionLogs` | `string \| null` | `null` | Captured stdout/stderr for vote context |
+
+<Note>
+  When `auto_vote` is `true` (the default), each newly stored code block automatically receives a thumbs-up vote if the task succeeded. This provides an initial quality signal without waiting for the code to be reused and re-evaluated.
+</Note>
 
 ---
 

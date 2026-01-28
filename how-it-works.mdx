@@ -80,12 +80,12 @@ Every snippet has a verdict score that determines its priority in retrieval.
 
 ### Automatic Voting
 
-The AI system automatically votes on each code execution:
+The system automatically votes in two scenarios:
 
-- **Success** — when cached code runs successfully and produces the expected output, it receives a thumbs up
-- **Failure** — when cached code fails or produces incorrect output, it receives a thumbs down
+- **On cache reuse** — when cached code runs successfully and produces the expected output, it receives a thumbs up; failures receive a thumbs down
+- **On upload** — when new code is stored after a successful execution, it receives an automatic thumbs up (controlled by `auto_vote`, on by default)
 
-This happens automatically in the background after each execution—you don't need to do anything.
+Both happen in the background after each execution—you don't need to do anything. The SDK also captures execution logs (tool outputs) and sends them to the backend as context for voting.
 
 ### Manual Voting
 
