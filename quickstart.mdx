@@ -84,30 +84,54 @@ for await (const msg of client.raysurferQuery("Generate quarterly report")) {
 
 Options (`ClaudeAgentOptions`) come directly from `claude_agent_sdk` — no Raysurfer-specific options needed.
 
-## Verifying It Works
+## Verification Checklist
 
-The simplest way to verify Raysurfer is working:
+Follow these three steps to confirm caching is working and understand the similarity threshold for your use case.
 
-1. **First run**: Execute a unique input - this generates and caches the output
-2. **Second run**: Run the same input again - it should return instantly from cache
+### Step 1: Confirm Code Generation on First Run
 
-The speedup vs running the same agent via Claude SDK should be significant (~30x) since pulling cached code is much faster than regenerating tokens.
+Run your agent with a unique query for the first time. This run generates code from scratch via the Claude Agent SDK, so it will take the full generation time.
+
+```python
+await client.raysurfer_query("Generate a quarterly revenue report for Q3 2025")
+```
+
+Watch the output — you should see the agent generating code, executing tools, and producing results at normal speed. This first run populates the cache.
+
+### Step 2: Confirm Cache Hit on Second Run
+
+Run the **exact same query** again:
+
+```python
+await client.raysurfer_query("Generate a quarterly revenue report for Q3 2025")
+```
+
+This time, Raysurfer pulls the cached code file instead of regenerating it. You should see the result return near-instantly because the only synchronous work is fetching the cached code — everything else runs asynchronously.
+
+<Check>
+  If the second run completes dramatically faster than the first, caching is working. You're in the clear.
+</Check>
 
 <Tip>
-  You can also run the same query using `claude-agent-sdk` directly (without Raysurfer) to compare performance side-by-side. This makes it easy to measure the exact speedup you're getting from caching.
+  Run the same query using `claude-agent-sdk` directly (without Raysurfer) to get a baseline time, then compare it against the cached Raysurfer run to measure your exact speedup.
 </Tip>
 
-<Steps>
-  <Step title="Run your agent once">
-    The first execution generates output normally and caches it automatically.
-  </Step>
-  <Step title="Run the same query again">
-    The second execution retrieves from cache almost instantly.
-  </Step>
-  <Step title="Compare the times">
-    You should see a dramatic speedup on the cached run.
-  </Step>
-</Steps>
+### Step 3: Explore the Similarity Boundary
+
+Now try **similar but not identical** queries to see how far you can drift before you stop getting cache hits. Start close and gradually move further away:
+
+```python
+# Very similar — likely cache hit
+await client.raysurfer_query("Generate a quarterly revenue report for Q4 2025")
+
+# Moderately similar — may or may not hit cache
+await client.raysurfer_query("Generate a monthly revenue summary for Q3 2025")
+
+# Different intent — likely cache miss, generates fresh code
+await client.raysurfer_query("Build a customer churn analysis dashboard")
+```
+
+For each query, note whether the response time is near-instant (cache hit) or takes the full generation time (cache miss). This tells you how semantically similar your queries need to be to reuse the same cached workflow code.
 
 ## What Gets Cached?
 
