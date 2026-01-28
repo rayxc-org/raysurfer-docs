@@ -7,6 +7,14 @@ description: "How to structure your tools for Raysurfer caching"
   Raysurfer is designed for agents that generate code and execute it in production. If your agent isn't doing that yet, you need to get onboard! Until then, Raysurfer is not for you.
 </Warning>
 
+## When Raysurfer Works Best
+
+Raysurfer is optimal when your tools have **typed, structured outputs** as both their inputs and outputs. This lets cached code confidently access fields, call downstream tools, and compose multi-step workflows without ambiguity.
+
+If your tools pass **unstructured strings** between each other, that's fine—as long as your agent doesn't need the LLM to read or interpret those values between tool calls. For example, passing an opaque ID string from one tool to the next works perfectly because the code just forwards the value without inspecting it.
+
+However, if your agent relies on the LLM to **read and reason about unstructured intermediate values** between tool calls—deciding what to do next based on free-text output, parsing natural language responses, or branching on string content—you are better off using an iterative agent. Raysurfer caches the generated code block as a whole, so it can't replay workflows where the LLM needs to make decisions mid-execution based on unstructured data.
+
 ## The Requirement
 
 For Raysurfer to cache and replay your agent's outputs, **tools must be exposed as functions that can be called directly from code**.
