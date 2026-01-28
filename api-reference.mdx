@@ -26,8 +26,8 @@ options = ClaudeAgentOptions(
 )
 
 async with RaysurferClient(options) as client:
-    await client.raysurfer_query("Your task here")
-    async for msg in client.raysurfer_response():
+    await client.query("Your task here")
+    async for msg in client.response():
         print(msg)
 ```
 
@@ -42,7 +42,7 @@ const options: ClaudeAgentOptions = {
 
 const client = new RaysurferClient(options);
 
-for await (const msg of client.raysurferQuery("Your task here")) {
+for await (const msg of client.query("Your task here")) {
   console.log(msg);
 }
 ```
@@ -61,8 +61,8 @@ for await (const msg of client.raysurferQuery("Your task here")) {
 
 | Method | Description |
 |--------|-------------|
-| `raysurfer_query(prompt)` / `raysurferQuery(prompt)` | Send a query with automatic cache retrieval |
-| `raysurfer_response()` | Async generator yielding response messages (Python only) |
+| `query(prompt)` | Send a query with automatic cache retrieval |
+| `response()` | Async generator yielding response messages (Python only) |
 
 ---
 
@@ -580,6 +580,10 @@ Scope of private snippets for retrieval.
 
 ## Exceptions
 
+<Note>
+  Both SDKs include built-in retry logic with exponential backoff for transient failures (429, 5xx, network errors). You don't need to implement your own retry logic for these cases.
+</Note>
+
 ### RaySurferError
 
 Base exception for all Raysurfer errors.
@@ -596,3 +600,25 @@ Raised when the API returns an error response.
 ### AuthenticationError
 
 Raised when the API key is invalid or missing.
+
+### CacheUnavailableError
+
+Raised when the cache backend is unreachable or returns an unexpected error.
+
+### RateLimitError
+
+Raised when the API rate limit is exceeded. The SDK automatically retries with exponential backoff before raising this error.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `message` | `string` | Error message |
+| `retry_after` / `retryAfter` | `number \| null` | Seconds until rate limit resets |
+
+### ValidationError
+
+Raised when request validation fails.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `message` | `string` | Error message |
+| `field` | `string \| null` | The field that failed validation |

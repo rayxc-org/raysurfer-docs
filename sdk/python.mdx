@@ -37,8 +37,8 @@ options = ClaudeAgentOptions(
 )
 
 async with RaysurferClient(options) as client:
-    await client.raysurfer_query("Generate quarterly report")
-    async for msg in client.raysurfer_response():
+    await client.query("Generate quarterly report")
+    async for msg in client.response():
         print(msg)
 ```
 
@@ -47,8 +47,8 @@ async with RaysurferClient(options) as client:
 | Claude SDK | Raysurfer |
 |------------|-----------|
 | `ClaudeSDKClient(options)` | `RaysurferClient(options)` |
-| `await client.query(prompt)` | `await client.raysurfer_query(prompt)` |
-| `client.receive_response()` | `client.raysurfer_response()` |
+| `await client.query(prompt)` | `await client.query(prompt)` |
+| `client.receive_response()` | `client.response()` |
 
 ## Options
 
@@ -121,13 +121,13 @@ async def main():
 
     async with RaysurferClient(options) as client:
         # First run: generates and caches code
-        await client.raysurfer_query("Fetch GitHub trending repos")
-        async for msg in client.raysurfer_response():
+        await client.query("Fetch GitHub trending repos")
+        async for msg in client.response():
             print(msg)
 
         # Second run: retrieves from cache (instant)
-        await client.raysurfer_query("Fetch GitHub trending repos")
-        async for msg in client.raysurfer_response():
+        await client.query("Fetch GitHub trending repos")
+        async for msg in client.response():
             print(msg)
 
 asyncio.run(main())

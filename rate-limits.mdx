@@ -52,43 +52,38 @@ Each tier also sets limits on organization resources.
 
 ## Handling Rate Limits
 
-When rate limited, implement exponential backoff:
+Both SDKs include built-in retry logic with exponential backoff. When a `429` response is received, the SDK automatically retries up to 3 times before raising an error.
+
+If all retries are exhausted, a `RateLimitError` is raised:
 
 <CodeGroup>
 
 ```python Python
-import asyncio
 from raysurfer import RaySurfer
-from raysurfer.exceptions import APIError
+from raysurfer.exceptions import RateLimitError
 
 client = RaySurfer(api_key="your_api_key")
 
-async def fetch_with_retry(task: str, max_retries: int = 3):
-    for attempt in range(max_retries):
-        try:
-            return client.get_code_snips(task=task)
-        except APIError as e:
-            if e.status_code == 429 and attempt < max_retries - 1:
-                await asyncio.sleep(2 ** attempt)
-            else:
-                raise
+try:
+    result = client.get_code_snips(task="Fetch GitHub repos")
+except RateLimitError as e:
+    print(f"Rate limited after retries: {e}")
+    if e.retry_after:
+        print(f"Try again in {e.retry_after}s")
 ```
 
 ```typescript TypeScript
-import { RaySurfer, APIError } from "raysurfer";
+import { RaySurfer, RateLimitError } from "raysurfer";
 
 const client = new RaySurfer({ apiKey: "your_api_key" });
 
-async function fetchWithRetry(task: string, maxRetries = 3) {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      return await client.getCodeSnips({ task });
-    } catch (e) {
-      if (e instanceof APIError && e.statusCode === 429 && attempt < maxRetries - 1) {
-        await new Promise((r) => setTimeout(r, 2 ** attempt * 1000));
-      } else {
-        throw e;
-      }
+try {
+  const result = await client.getCodeSnips({ task: "Fetch GitHub repos" });
+} catch (e) {
+  if (e instanceof RateLimitError) {
+    console.log(`Rate limited after retries: ${e.message}`);
+    if (e.retryAfter) {
+      console.log(`Try again in ${e.retryAfter}ms`);
     }
   }
 }

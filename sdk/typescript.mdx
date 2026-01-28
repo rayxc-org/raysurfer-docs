@@ -38,7 +38,7 @@ const options: ClaudeAgentOptions = {
 
 const client = new RaysurferClient(options);
 
-for await (const msg of client.raysurferQuery("Generate quarterly report")) {
+for await (const msg of client.query("Generate quarterly report")) {
   console.log(msg);
 }
 ```
@@ -48,7 +48,7 @@ for await (const msg of client.raysurferQuery("Generate quarterly report")) {
 | Claude SDK | Raysurfer |
 |------------|-----------|
 | `new ClaudeSDKClient(options)` | `new RaysurferClient(options)` |
-| `client.query(prompt)` | `client.raysurferQuery(prompt)` |
+| `client.query(prompt)` | `client.query(prompt)` |
 
 ## Options
 
@@ -117,12 +117,12 @@ const options: ClaudeAgentOptions = {
 const client = new RaysurferClient(options);
 
 // First run: generates and caches code
-for await (const msg of client.raysurferQuery("Fetch GitHub trending repos")) {
+for await (const msg of client.query("Fetch GitHub trending repos")) {
   console.log(msg);
 }
 
 // Second run: retrieves from cache (instant)
-for await (const msg of client.raysurferQuery("Fetch GitHub trending repos")) {
+for await (const msg of client.query("Fetch GitHub trending repos")) {
   console.log(msg);
 }
 ```
