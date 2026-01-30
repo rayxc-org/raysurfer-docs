@@ -59,7 +59,6 @@ const client = new RaysurferClient({
   maxTurns: 10,
   workingDirectory: "/path/to/working/dir",
   // Raysurfer-specific options
-  publicSnips: false,
   snipsDesired: "company",
   namespace: "my-namespace",
   debug: false,
@@ -70,16 +69,15 @@ Caching is enabled automatically when `RAYSURFER_API_KEY` is set.
 
 ## Snippet Retrieval Scope
 
-Control which cached snippets are retrieved using `publicSnips` and `snipsDesired`:
+Control which cached snippets are retrieved using `snipsDesired`:
 
 ```typescript
 import { RaysurferClient } from "raysurfer";
 
-// Include both public and company snippets
+// Include company-level snippets
 const client = new RaysurferClient({
   allowedTools: ["Read", "Write", "Bash"],
-  publicSnips: true,        // Include public/shared snippets
-  snipsDesired: "company",  // Also include company-level snippets
+  snipsDesired: "company",  // Company-level snippets (Team/Enterprise)
 });
 
 // Enterprise: Retrieve client-specific snippets only
@@ -91,11 +89,8 @@ const enterpriseClient = new RaysurferClient({
 
 | Configuration | Required Tier |
 |--------------|---------------|
-| `publicSnips: true` only | FREE (default) |
 | `snipsDesired: "company"` | TEAM or ENTERPRISE |
 | `snipsDesired: "client"` | ENTERPRISE only |
-
-**Default behavior:** FREE tier gets public snippets only. TEAM/ENTERPRISE tiers get company snippets by default (no public). Add `publicSnips: true` to include public snippets on top of your tier's default.
 
 ## Full Example
 

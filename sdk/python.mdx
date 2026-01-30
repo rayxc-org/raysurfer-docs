@@ -71,7 +71,7 @@ Caching is enabled automatically when `RAYSURFER_API_KEY` is set.
 
 ## Snippet Retrieval Scope
 
-Control which cached snippets are retrieved using `public_snips` and `snips_desired`:
+Control which cached snippets are retrieved using `snips_desired`:
 
 ```python
 from raysurfer import RaysurferClient
@@ -81,11 +81,10 @@ options = ClaudeAgentOptions(
     allowed_tools=["Read", "Write", "Bash"],
 )
 
-# Include both public and company snippets
+# Include company-level snippets
 client = RaysurferClient(
     options,
-    public_snips=True,        # Include public/shared snippets
-    snips_desired="company",  # Also include company-level snippets
+    snips_desired="company",  # Company-level snippets (Team/Enterprise)
 )
 
 # Enterprise: Retrieve client-specific snippets only
@@ -97,11 +96,8 @@ client = RaysurferClient(
 
 | Configuration | Required Tier |
 |--------------|---------------|
-| `public_snips=True` only | FREE (default) |
 | `snips_desired="company"` | TEAM or ENTERPRISE |
 | `snips_desired="client"` | ENTERPRISE only |
-
-**Default behavior:** FREE tier gets public snippets only. TEAM/ENTERPRISE tiers get company snippets by default (no public). Add `public_snips=True` to include public snippets on top of your tier's default.
 
 ## Full Example
 

@@ -48,12 +48,11 @@ for await (const msg of client.query("Your task here")) {
 
 #### Constructor Parameters
 
-**Python** — `RaysurferClient(options, public_snips=False, snips_desired=None, namespace=None, debug=False)`:
+**Python** — `RaysurferClient(options, snips_desired=None, namespace=None, debug=False)`:
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `options` | `ClaudeAgentOptions` | Standard Claude Agent SDK options |
-| `public_snips` | `boolean` | Include public/shared snippets (default: `false`) |
 | `snips_desired` | `"company"` \| `"client"` | Scope of private snippets |
 | `namespace` | `string` | Custom namespace for storage/retrieval |
 | `debug` | `boolean` | Enable debug logging |
@@ -65,7 +64,6 @@ for await (const msg of client.query("Your task here")) {
 | `allowedTools` | `string[]` | Allowed Claude tools |
 | `systemPrompt` | `string` | System prompt |
 | `model` | `string` | Claude model ID |
-| `publicSnips` | `boolean` | Include public/shared snippets (default: `false`) |
 | `snipsDesired` | `"company"` \| `"client"` | Scope of private snippets |
 | `namespace` | `string` | Custom namespace for storage/retrieval |
 | `debug` | `boolean` | Enable debug logging |
@@ -116,7 +114,6 @@ const snips = await client.getCodeSnips({ task: "Fetch GitHub repos" });
 | `timeout` | `number` | Request timeout in seconds/ms |
 | `organization_id` / `organizationId` | `string` | Organization ID for team/enterprise namespacing |
 | `workspace_id` / `workspaceId` | `string` | Workspace ID for enterprise client namespacing |
-| `public_snips` / `publicSnips` | `boolean` | Include public snippets in retrieval |
 | `snips_desired` / `snipsDesired` | `"company"` \| `"client"` | Scope of private snippets |
 
 ---
