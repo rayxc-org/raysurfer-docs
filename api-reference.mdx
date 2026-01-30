@@ -33,14 +33,11 @@ async with RaysurferClient(options) as client:
 
 ```typescript TypeScript
 import { RaysurferClient } from "raysurfer";
-import { ClaudeAgentOptions } from "@anthropic-ai/claude-agent-sdk";
 
-const options: ClaudeAgentOptions = {
+const client = new RaysurferClient({
   allowedTools: ["Read", "Write", "Bash"],
   systemPrompt: "You are a helpful assistant.",
-};
-
-const client = new RaysurferClient(options);
+});
 
 for await (const msg of client.query("Your task here")) {
   console.log(msg);
@@ -51,11 +48,27 @@ for await (const msg of client.query("Your task here")) {
 
 #### Constructor Parameters
 
+**Python** — `RaysurferClient(options, public_snips=False, snips_desired=None, namespace=None, debug=False)`:
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `options` | `ClaudeAgentOptions` | Standard Claude Agent SDK options |
-| `public_snips` / `publicSnips` | `boolean` | Include public/shared snippets (default: `false`) |
-| `snips_desired` / `snipsDesired` | `"company"` \| `"client"` | Scope of private snippets |
+| `public_snips` | `boolean` | Include public/shared snippets (default: `false`) |
+| `snips_desired` | `"company"` \| `"client"` | Scope of private snippets |
+| `namespace` | `string` | Custom namespace for storage/retrieval |
+| `debug` | `boolean` | Enable debug logging |
+
+**TypeScript** — `new RaysurferClient(options)` where options is a single object:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `allowedTools` | `string[]` | Allowed Claude tools |
+| `systemPrompt` | `string` | System prompt |
+| `model` | `string` | Claude model ID |
+| `publicSnips` | `boolean` | Include public/shared snippets (default: `false`) |
+| `snipsDesired` | `"company"` \| `"client"` | Scope of private snippets |
+| `namespace` | `string` | Custom namespace for storage/retrieval |
+| `debug` | `boolean` | Enable debug logging |
 
 #### Methods
 
@@ -343,6 +356,7 @@ result = client.upload_new_code_snips(
     task="Fetch GitHub trending repos",
     files_written=files,
     succeeded=True,
+    execution_logs="Fetched 10 trending repos successfully",
 )
 
 print(f"Stored {result.code_blocks_stored} code blocks")
@@ -355,9 +369,12 @@ const files = [
 ];
 
 const result = await client.uploadNewCodeSnips(
-  "Fetch GitHub trending repos",
-  files,
-  true // succeeded
+  "Fetch GitHub trending repos",       // task
+  files,                                // code files
+  true,                                 // succeeded
+  undefined,                            // cachedCodeBlocks
+  true,                                 // autoVote (default)
+  "Fetched 10 trending repos successfully", // execution logs
 );
 
 console.log(`Stored ${result.codeBlocksStored} code blocks`);
@@ -463,7 +480,7 @@ await client.voteCodeSnip({
 </CodeGroup>
 
 <Note>
-  Voting happens automatically when you use `RaysurferClient`. You only need to call this directly when using the low-level API.
+  Voting is triggered automatically by `upload_new_code_snips` / `uploadNewCodeSnips` when `auto_vote` is `true` (the default), and also by the high-level `RaysurferClient`. Use `vote_code_snip` / `voteCodeSnip` directly only when you need manual voting control.
 </Note>
 
 ---

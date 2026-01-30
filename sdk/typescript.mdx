@@ -21,22 +21,19 @@ Get your key from the [dashboard](https://raysurfer.com/dashboard/api-keys).
 
 ## Usage
 
-Swap your client class and method names. Options come directly from `@anthropic-ai/claude-agent-sdk`:
+Swap your import and client class name. Options use the same field names:
 
 ```typescript
 // Before
-import { ClaudeSDKClient, ClaudeAgentOptions } from "@anthropic-ai/claude-agent-sdk";
+import { ClaudeSDKClient } from "@anthropic-ai/claude-agent-sdk";
 
 // After
 import { RaysurferClient } from "raysurfer";
-import { ClaudeAgentOptions } from "@anthropic-ai/claude-agent-sdk";
 
-const options: ClaudeAgentOptions = {
+const client = new RaysurferClient({
   allowedTools: ["Read", "Write", "Bash"],
   systemPrompt: "You are a helpful assistant.",
-};
-
-const client = new RaysurferClient(options);
+});
 
 for await (const msg of client.query("Generate quarterly report")) {
   console.log(msg);
@@ -52,19 +49,21 @@ for await (const msg of client.query("Generate quarterly report")) {
 
 ## Options
 
-Options are passed through directly from `@anthropic-ai/claude-agent-sdk`. All standard options work:
+Options mirror the Claude Agent SDK fields. All standard options work:
 
 ```typescript
-import { ClaudeAgentOptions } from "@anthropic-ai/claude-agent-sdk";
-
-const options: ClaudeAgentOptions = {
+const client = new RaysurferClient({
   allowedTools: ["Read", "Write", "Bash"],
   systemPrompt: "You are a helpful assistant.",
   model: "claude-opus-4-5-20250514",
   maxTurns: 10,
-  cwd: "/path/to/working/dir",
-  // ... all other ClaudeAgentOptions fields
-};
+  workingDirectory: "/path/to/working/dir",
+  // Raysurfer-specific options
+  publicSnips: false,
+  snipsDesired: "company",
+  namespace: "my-namespace",
+  debug: false,
+});
 ```
 
 Caching is enabled automatically when `RAYSURFER_API_KEY` is set.
@@ -75,20 +74,17 @@ Control which cached snippets are retrieved using `publicSnips` and `snipsDesire
 
 ```typescript
 import { RaysurferClient } from "raysurfer";
-import { ClaudeAgentOptions } from "@anthropic-ai/claude-agent-sdk";
-
-const options: ClaudeAgentOptions = {
-  allowedTools: ["Read", "Write", "Bash"],
-};
 
 // Include both public and company snippets
-const client = new RaysurferClient(options, {
+const client = new RaysurferClient({
+  allowedTools: ["Read", "Write", "Bash"],
   publicSnips: true,        // Include public/shared snippets
   snipsDesired: "company",  // Also include company-level snippets
 });
 
 // Enterprise: Retrieve client-specific snippets only
-const enterpriseClient = new RaysurferClient(options, {
+const enterpriseClient = new RaysurferClient({
+  allowedTools: ["Read", "Write", "Bash"],
   snipsDesired: "client",   // Client workspace snippets (Enterprise only)
 });
 ```
@@ -105,16 +101,13 @@ const enterpriseClient = new RaysurferClient(options, {
 
 ```typescript
 import { RaysurferClient } from "raysurfer";
-import { ClaudeAgentOptions } from "@anthropic-ai/claude-agent-sdk";
 
 process.env.RAYSURFER_API_KEY = "your_api_key";
 
-const options: ClaudeAgentOptions = {
+const client = new RaysurferClient({
   allowedTools: ["Read", "Write", "Bash"],
   systemPrompt: "You are a helpful assistant.",
-};
-
-const client = new RaysurferClient(options);
+});
 
 // First run: generates and caches code
 for await (const msg of client.query("Fetch GitHub trending repos")) {
@@ -174,13 +167,18 @@ const response = await anthropic.messages.create({
 console.log(response.content[0].text);
 
 // 2. Upload new code snippets after execution
+//    Voting is triggered automatically when autoVote is true (default)
 await client.uploadNewCodeSnips(
-  task,
-  [{ path: "fetch_repos.ts", content: "function fetch() { ... }" }],
-  true // succeeded
+  task,                                                         // user query
+  [{ path: "fetch_repos.ts", content: "function fetch() { ... }" }], // code files
+  true,                                                         // succeeded
+  undefined,                                                    // cachedCodeBlocks
+  true,                                                         // autoVote (default)
+  "Fetched 10 trending repos successfully",                     // execution logs
 );
 
-// 3. Vote on whether a cached snippet was useful
+// 3. (Optional) Vote on a cached snippet manually
+//    Only needed if you want explicit control — uploadNewCodeSnips already votes by default
 await client.voteCodeSnip({
   task,
   codeBlockId: result.files[0].codeBlockId,

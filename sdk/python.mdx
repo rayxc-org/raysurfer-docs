@@ -181,14 +181,17 @@ response = anthropic_client.messages.create(
 print(response.content[0].text)
 
 # 2. Upload new code snippets after execution
+#    Voting is triggered automatically when auto_vote is True (default)
 files = [FileWritten(path="fetch_repos.py", content="def fetch(): ...")]
 client.upload_new_code_snips(
     task=task,
     files_written=files,
     succeeded=True,
+    execution_logs="Fetched 10 trending repos successfully",
 )
 
-# 3. Vote on whether a cached snippet was useful
+# 3. (Optional) Vote on a cached snippet manually
+#    Only needed if you want explicit control — upload_new_code_snips already votes by default
 client.vote_code_snip(
     task=task,
     code_block_id=result.files[0].code_block_id,
@@ -225,11 +228,16 @@ async with AsyncRaySurfer(api_key="your_api_key") as client:
     # 2. Use add_to_llm_prompt to augment your LLM call
     augmented_prompt = "You are helpful." + result.add_to_llm_prompt
 
-    # 3. Upload new code after execution
+    # 3. Upload new code after execution (voting triggered by default)
     files = [FileWritten(path="fetch_repos.py", content="def fetch(): ...")]
-    await client.upload_new_code_snips(task, files, succeeded=True)
+    await client.upload_new_code_snips(
+        task=task,
+        files_written=files,
+        succeeded=True,
+        execution_logs="Fetched 10 trending repos successfully",
+    )
 
-    # 4. Vote on snippet usefulness
+    # 4. (Optional) Vote on snippet manually — only if you need explicit control
     await client.vote_code_snip(
         task=task,
         code_block_id=result.files[0].code_block_id,
