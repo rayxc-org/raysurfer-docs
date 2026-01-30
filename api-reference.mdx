@@ -120,32 +120,38 @@ const snips = await client.getCodeSnips({ task: "Fetch GitHub repos" });
 
 ## Retrieval Methods
 
-### get_code_snips / getCodeSnips
+### search
 
-Retrieve cached code snippets by task description using semantic search.
+Unified search for cached code snippets. Replaces the separate `get_code_snips`, `retrieve_best`, and `get_code_files` methods.
 
 <CodeGroup>
 
 ```python Python
-snips = client.get_code_snips(
+result = client.search(
     task="Fetch GitHub trending repos",
-    top_k=10,
-    min_verdict_score=0.0,
+    top_k=5,
+    min_verdict_score=0.3,
+    prefer_complete=True,
 )
 
-for match in snips.code_blocks:
-    print(f"{match.code_block.name}: {match.score}")
+for match in result.matches:
+    print(f"{match.code_block.name}: {match.combined_score}")
+    print(f"  File: {match.filename}")
+    print(f"  Verdict: {match.verdict_score:.0%}")
 ```
 
 ```typescript TypeScript
-const snips = await client.getCodeSnips({
+const result = await client.search({
   task: "Fetch GitHub trending repos",
-  topK: 10,
-  minVerdictScore: 0.0,
+  topK: 5,
+  minVerdictScore: 0.3,
+  preferComplete: true,
 });
 
-for (const match of snips.codeBlocks) {
-  console.log(`${match.codeBlock.name}: ${match.score}`);
+for (const match of result.matches) {
+  console.log(`${match.codeBlock.name}: ${match.combinedScore}`);
+  console.log(`  File: ${match.filename}`);
+  console.log(`  Verdict: ${Math.round(match.verdictScore * 100)}%`);
 }
 ```
 
@@ -156,64 +162,37 @@ for (const match of snips.codeBlocks) {
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `task` | `string` | required | Natural language task description |
-| `top_k` / `topK` | `number` | `10` | Maximum number of results |
-| `min_verdict_score` / `minVerdictScore` | `number` | `0.0` | Minimum verdict score filter |
+| `top_k` / `topK` | `number` | `5` | Maximum number of results |
+| `min_verdict_score` / `minVerdictScore` | `number` | `0.3` | Minimum verdict score filter |
+| `prefer_complete` / `preferComplete` | `boolean` | `false` | Prefer longer/more complete implementations |
+| `input_schema` / `inputSchema` | `object` | `null` | Optional input schema filter |
 
-#### Returns: `RetrieveCodeBlockResponse`
+#### Returns: `SearchResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `code_blocks` / `codeBlocks` | `CodeBlockMatch[]` | Matching code blocks with scores |
+| `matches` | `SearchMatch[]` | Matching code blocks with full scoring |
 | `total_found` / `totalFound` | `number` | Total matches found |
+| `cache_hit` / `cacheHit` | `boolean` | Whether results were served from cache |
+| `search_namespaces` / `searchNamespaces` | `string[]` | Namespaces that were searched |
 
 ---
 
-### retrieve_best / retrieveBest
+### get_code_snips / getCodeSnips (convenience wrapper)
 
-Get the single best code block for a task using verdict-aware scoring.
+Convenience wrapper around `search()`. Returns results in the legacy `RetrieveCodeBlockResponse` format.
 
-<CodeGroup>
+---
 
-```python Python
-result = client.retrieve_best(
-    task="Fetch GitHub trending repos",
-    top_k=10,
-    min_verdict_score=0.0,
-)
+### retrieve_best / retrieveBest (convenience wrapper)
 
-if result.best_match:
-    print(f"Best: {result.best_match.code_block.name}")
-    print(f"Score: {result.best_match.combined_score}")
-```
-
-```typescript TypeScript
-const result = await client.retrieveBest({
-  task: "Fetch GitHub trending repos",
-  topK: 10,
-  minVerdictScore: 0.0,
-});
-
-if (result.bestMatch) {
-  console.log(`Best: ${result.bestMatch.codeBlock.name}`);
-  console.log(`Score: ${result.bestMatch.combinedScore}`);
-}
-```
-
-</CodeGroup>
-
-#### Returns: `RetrieveBestResponse`
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `best_match` / `bestMatch` | `BestMatch \| null` | The highest-scoring code block |
-| `alternative_candidates` / `alternativeCandidates` | `AlternativeCandidate[]` | Other good matches |
-| `retrieval_confidence` / `retrievalConfidence` | `string` | Confidence level |
+Convenience wrapper around `search()`. Returns the single best match in the legacy `RetrieveBestResponse` format. The old `retrieval_confidence` string field is derived from the numeric `combined_score`.
 
 ---
 
 ### get_code_files / getCodeFiles
 
-Get code files ready to download to a sandbox environment. Also returns a pre-formatted `add_to_llm_prompt` string that you can append directly to your LLM system prompt.
+Get code files ready to download to a sandbox environment. Delegates to `search()` internally. Also returns a pre-formatted `add_to_llm_prompt` string (generated client-side) that you can append directly to your LLM system prompt.
 
 <CodeGroup>
 
@@ -503,31 +482,23 @@ A stored code block with metadata.
 | `input_schema` / `inputSchema` | `object` | Input JSON schema |
 | `output_schema` / `outputSchema` | `object` | Output JSON schema |
 
-### CodeBlockMatch
+### SearchMatch
 
-A code block with retrieval scores.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `code_block` / `codeBlock` | `CodeBlock` | The code block |
-| `score` | `number` | Semantic similarity score |
-| `verdict_score` / `verdictScore` | `number` | Quality rating (0-1) |
-| `thumbs_up` / `thumbsUp` | `number` | Positive votes |
-| `thumbs_down` / `thumbsDown` | `number` | Negative votes |
-
-### BestMatch
-
-The best matching code block with full scoring.
+A code block match from unified search.
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `code_block` / `codeBlock` | `CodeBlock` | The code block |
-| `combined_score` / `combinedScore` | `number` | Overall score |
+| `combined_score` / `combinedScore` | `number` | Overall score (0.6 x similarity + 0.25 x verdict + 0.15 x confidence + resilience) |
 | `vector_score` / `vectorScore` | `number` | Semantic similarity |
 | `verdict_score` / `verdictScore` | `number` | Quality rating |
 | `error_resilience` / `errorResilience` | `number` | Error handling score |
 | `thumbs_up` / `thumbsUp` | `number` | Positive votes |
 | `thumbs_down` / `thumbsDown` | `number` | Negative votes |
+| `filename` | `string` | Generated filename |
+| `language` | `string` | Programming language |
+| `entrypoint` | `string` | Main function name |
+| `dependencies` | `string[]` | Required packages |
 
 ### FileWritten
 

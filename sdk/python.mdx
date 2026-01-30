@@ -247,6 +247,7 @@ async with AsyncRaySurfer(api_key="your_api_key") as client:
 
 | Method | Description |
 |--------|-------------|
+| `search(task, top_k, min_verdict_score, prefer_complete)` | Unified search for cached code (recommended) |
 | `get_code_files(task, top_k, min_verdict_score, prefer_complete, cache_dir)` | Retrieve cached code files with `add_to_llm_prompt` for LLM augmentation |
 | `get_code_snips(task, top_k, min_verdict_score)` | Retrieve cached code snippets by semantic search |
 | `upload_new_code_snips(task, files_written, succeeded, auto_vote, execution_logs)` | Store new code files for future reuse (auto-votes by default) |
