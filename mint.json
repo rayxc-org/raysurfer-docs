@@ -40,7 +40,7 @@
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["index", "quickstart", "how-it-works", "tool-compatibility"]
+      "pages": ["index", "quickstart", "how-it-works", "tool-compatibility", "agents"]
     },
     {
       "group": "Rate Limits & Pricing",
