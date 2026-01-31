@@ -1,6 +1,6 @@
 ---
 title: TypeScript SDK
-description: "Drop-in replacement for Claude Agent SDK"
+description: "Drop-in replacement for Claude Agent SDK with automatic caching"
 ---
 
 ## Installation
@@ -21,165 +21,180 @@ Get your key from the [dashboard](https://raysurfer.com/dashboard/api-keys).
 
 ## Usage
 
-Swap your import and client class name. Options use the same field names:
+Swap your import — everything else stays the same:
 
 ```typescript
 // Before
-import { ClaudeSDKClient } from "@anthropic-ai/claude-agent-sdk";
+import { query } from "@anthropic-ai/claude-agent-sdk";
 
 // After
-import { RaysurferClient } from "raysurfer";
+import { query } from "raysurfer";
 
-const client = new RaysurferClient({
-  allowedTools: ["Read", "Write", "Bash"],
+for await (const message of query({
+  prompt: "Fetch data from GitHub API",
+  options: {
+    model: "claude-opus-4-5-20250514",
+    systemPrompt: "You are a helpful assistant.",
+  },
+})) {
+  console.log(message);
+}
+```
+
+All Claude SDK types are re-exported from `raysurfer`, so you don't need a
+separate import:
+
+```typescript
+import {
+  query,
+  type Options,
+  type SDKMessage,
+  type Query,
+} from "raysurfer";
+```
+
+## How It Works
+
+1. **On query**: Retrieves cached code blocks matching your task
+2. **Injects into prompt**: Agent sees proven code snippets
+3. **After success**: New code is cached for next time
+
+Caching is enabled automatically when `RAYSURFER_API_KEY` is set. Without it,
+behaves exactly like the original SDK.
+
+## Class-based API
+
+For users who prefer a class-based interface:
+
+```typescript
+import { ClaudeSDKClient } from "raysurfer";
+
+const client = new ClaudeSDKClient({
+  model: "claude-opus-4-5-20250514",
   systemPrompt: "You are a helpful assistant.",
 });
 
-for await (const msg of client.query("Generate quarterly report")) {
+for await (const msg of client.query("Fetch data from GitHub API")) {
   console.log(msg);
 }
 ```
 
-## Method Mapping
+<Note>
+  `RaysurferClient` is also exported as an alias for `ClaudeSDKClient` —
+  use whichever name you prefer.
+</Note>
 
-| Claude SDK | Raysurfer |
-|------------|-----------|
-| `new ClaudeSDKClient(options)` | `new RaysurferClient(options)` |
-| `client.query(prompt)` | `client.query(prompt)` |
+## System Prompt Preset
 
-## Options
-
-Options mirror the Claude Agent SDK fields. All standard options work:
+Use the Claude Code preset system prompt with appended instructions:
 
 ```typescript
-const client = new RaysurferClient({
-  allowedTools: ["Read", "Write", "Bash"],
-  systemPrompt: "You are a helpful assistant.",
-  model: "claude-opus-4-5-20250514",
-  maxTurns: 10,
-  workingDirectory: "/path/to/working/dir",
-  // Raysurfer-specific options
-  snipsDesired: "company",
-  namespace: "my-namespace",
-  debug: false,
-});
+for await (const message of query({
+  prompt: "Refactor the auth module",
+  options: {
+    systemPrompt: {
+      type: "preset",
+      preset: "claude_code",
+      append: "Always explain your reasoning.",
+    },
+  },
+})) {
+  console.log(message);
+}
 ```
 
-Caching is enabled automatically when `RAYSURFER_API_KEY` is set.
+## Query Control Methods
+
+The `query()` function returns a `Query` object with full control methods:
+
+```typescript
+const q = query({ prompt: "Build a REST API" });
+
+await q.interrupt();
+await q.setPermissionMode("acceptEdits");
+await q.setModel("claude-sonnet-4-5-20250929");
+await q.setMaxThinkingTokens(4096);
+const models = await q.supportedModels();
+const info = await q.accountInfo();
+q.close();
+```
 
 ## Snippet Retrieval Scope
 
-Control which cached snippets are retrieved using `snipsDesired`:
+Control which cached snippets are retrieved:
 
 ```typescript
-import { RaysurferClient } from "raysurfer";
+import { ClaudeSDKClient } from "raysurfer";
 
-// Include company-level snippets
-const client = new RaysurferClient({
-  allowedTools: ["Read", "Write", "Bash"],
-  snipsDesired: "company",  // Company-level snippets (Team/Enterprise)
+// Include company-level snippets (Team/Enterprise)
+const client = new ClaudeSDKClient({
+  snipsDesired: "company",
 });
 
-// Enterprise: Retrieve client-specific snippets only
-const enterpriseClient = new RaysurferClient({
-  allowedTools: ["Read", "Write", "Bash"],
-  snipsDesired: "client",   // Client workspace snippets (Enterprise only)
+// Enterprise: client-specific snippets only
+const enterpriseClient = new ClaudeSDKClient({
+  snipsDesired: "client",
 });
 ```
 
 | Configuration | Required Tier |
 |--------------|---------------|
+| Default (public only) | FREE |
 | `snipsDesired: "company"` | TEAM or ENTERPRISE |
 | `snipsDesired: "client"` | ENTERPRISE only |
 
-## Full Example
-
-```typescript
-import { RaysurferClient } from "raysurfer";
-
-process.env.RAYSURFER_API_KEY = "your_api_key";
-
-const client = new RaysurferClient({
-  allowedTools: ["Read", "Write", "Bash"],
-  systemPrompt: "You are a helpful assistant.",
-});
-
-// First run: generates and caches code
-for await (const msg of client.query("Fetch GitHub trending repos")) {
-  console.log(msg);
-}
-
-// Second run: retrieves from cache (instant)
-for await (const msg of client.query("Fetch GitHub trending repos")) {
-  console.log(msg);
-}
-```
-
-## Without Caching
-
-If `RAYSURFER_API_KEY` is not set, `RaysurferClient` behaves exactly like `ClaudeSDKClient` — no caching, just a pass-through wrapper.
-
 ## Low-Level API
 
-For custom integrations, use the `RaySurfer` client directly.
-
-### Complete Low-Level Example with Anthropic API
+For custom integrations, use the `RaySurfer` client directly:
 
 ```typescript
-import Anthropic from "@anthropic-ai/sdk";
 import { RaySurfer } from "raysurfer";
 
-const client = new RaySurfer({ apiKey: "your_raysurfer_api_key" });
-const task = "Fetch GitHub trending repos";
+const client = new RaySurfer({ apiKey: "your_api_key" });
 
-// 1. Retrieve cached code files for a task
-const result = await client.getCodeFiles({
-  task,
-  topK: 5,
-  minVerdictScore: 0.3,
+// 1. Get cached code snippets for a task
+const snips = await client.getCodeSnips({
+  task: "Fetch GitHub trending repos",
 });
+for (const match of snips.codeBlocks) {
+  console.log(`${match.codeBlock.name}: ${match.score}`);
+}
 
-// result.addToLlmPrompt contains a pre-formatted string like:
-// "
-//
-// You have access to pre-written code files:
-// - .raysurfer_code/github_fetcher.ts: Fetches trending repos
-// ..."
-
-// Augment your system prompt with cached code context
-const basePrompt = "You are a helpful coding assistant.";
-const augmentedPrompt = basePrompt + result.addToLlmPrompt;
-
-// Make your Anthropic API call with the augmented prompt
-const anthropic = new Anthropic();
-const response = await anthropic.messages.create({
-  model: "claude-opus-4-5-20250514",
-  max_tokens: 1024,
-  system: augmentedPrompt,
-  messages: [{ role: "user", content: "Fetch the top 10 trending GitHub repos" }],
+// Or use the unified search endpoint
+const searchResult = await client.search({
+  task: "Fetch GitHub trending repos",
 });
-
-console.log(response.content[0].text);
+for (const match of searchResult.matches) {
+  console.log(`${match.codeBlock.name}: ${match.combinedScore}`);
+}
 
 // 2. Upload new code snippets after execution
-//    Voting is triggered automatically when autoVote is true (default)
 await client.uploadNewCodeSnips(
-  task,                                                         // user query
-  [{ path: "fetch_repos.ts", content: "function fetch() { ... }" }], // code files
-  true,                                                         // succeeded
-  undefined,                                                    // cachedCodeBlocks
-  true,                                                         // autoVote (default)
-  "Fetched 10 trending repos successfully",                     // execution logs
+  "Fetch GitHub trending repos",
+  [{ path: "fetch_repos.ts", content: "function fetch() { ... }" }],
+  true // succeeded
 );
 
-// 3. (Optional) Vote on a cached snippet manually
-//    Only needed if you want explicit control — uploadNewCodeSnips already votes by default
+// 3. Vote on whether a cached snippet was useful
 await client.voteCodeSnip({
-  task,
-  codeBlockId: result.files[0].codeBlockId,
-  codeBlockName: result.files[0].filename,
-  codeBlockDescription: result.files[0].description,
+  task: "Fetch GitHub trending repos",
+  codeBlockId: "abc123",
+  codeBlockName: "github_fetcher",
+  codeBlockDescription: "Fetches trending repos from GitHub",
   succeeded: true,
+});
+```
+
+### Low-Level Client Options
+
+```typescript
+const client = new RaySurfer({
+  apiKey: "your_api_key",
+  baseUrl: "https://api.raysurfer.com", // optional
+  timeout: 30000, // optional, in ms
+  organizationId: "org_xxx", // optional, for team namespacing
+  workspaceId: "ws_xxx", // optional, for enterprise namespacing
+  snipsDesired: "company", // optional, snippet scope
 });
 ```
 
@@ -192,9 +207,10 @@ The `getCodeFiles()` response includes:
 | `files` | `CodeFile[]` | Retrieved code files with metadata |
 | `task` | `string` | The task that was searched |
 | `totalFound` | `number` | Total matches found |
-| `addToLlmPrompt` | `string` | Pre-formatted string to append to your LLM system prompt |
+| `addToLlmPrompt` | `string` | Pre-formatted string to append to LLM system prompt |
 
-Each `CodeFile` contains `codeBlockId`, `filename`, `source`, `description`, `verdictScore`, `thumbsUp`, `thumbsDown`, and `similarityScore`.
+Each `CodeFile` contains `codeBlockId`, `filename`, `source`, `description`,
+`verdictScore`, `thumbsUp`, `thumbsDown`, and `similarityScore`.
 
 ### Method Reference
 
