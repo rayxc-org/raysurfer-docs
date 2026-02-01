@@ -1,0 +1,54 @@
+---
+title: Integrations
+description: "Connect Raysurfer code caching to your tools — CLI, MCP, Claude Code skill, or plugin"
+---
+
+Raysurfer offers four integration paths depending on how you work. Each one connects to the same caching backend and API.
+
+## Choose Your Integration
+
+<CardGroup cols={2}>
+  <Card title="CLI" icon="terminal" href="/integrations/cli">
+    Standalone command-line tool for searching, uploading, and voting on cached code. Works anywhere Python runs.
+  </Card>
+  <Card title="MCP Server" icon="plug" href="/integrations/mcp">
+    Model Context Protocol server that gives Claude direct access to your code cache as native tools.
+  </Card>
+  <Card title="Claude Code Skill" icon="wand-magic-sparkles" href="/integrations/skill">
+    SKILL.md that teaches Claude to automatically check the cache before coding and upload results after.
+  </Card>
+  <Card title="Claude Code Plugin" icon="puzzle-piece" href="/integrations/plugin">
+    One-command install that bundles the skill, hooks, and MCP server together.
+  </Card>
+</CardGroup>
+
+## Comparison
+
+| Feature | CLI | MCP | Skill | Plugin |
+|---------|-----|-----|-------|--------|
+| Search cached code | Yes | Yes | Yes | Yes |
+| Upload code | Yes | Yes | Yes | Yes |
+| Vote on quality | Yes | Yes | Yes | Yes |
+| Auto-check cache before coding | No | No | Yes | Yes |
+| Auto-upload after success | No | No | Yes | Yes |
+| Works outside Claude Code | Yes | Yes | No | No |
+| One-command install | No | No | No | Yes |
+| Requires Node.js | No | Yes | No | Yes |
+| Requires Python | Yes | No | No | No |
+
+## Quick Setup
+
+All integrations require a `RAYSURFER_API_KEY`. Get yours from the [dashboard](https://raysurfer.com/dashboard/api-keys):
+
+```bash
+export RAYSURFER_API_KEY=your_key_here
+```
+
+## GitHub Repositories
+
+| Integration | Repository |
+|-------------|-----------|
+| CLI | [rayxc-org/raysurfer-code-caching-cli](https://github.com/rayxc-org/raysurfer-code-caching-cli) |
+| MCP Server | [rayxc-org/raysurfer-code-caching-mcp](https://github.com/rayxc-org/raysurfer-code-caching-mcp) |
+| Skill | [rayxc-org/raysurfer-code-caching-skill](https://github.com/rayxc-org/raysurfer-code-caching-skill) |
+| Plugin | [rayxc-org/raysurfer-code-caching-tool](https://github.com/rayxc-org/raysurfer-code-caching-tool) |

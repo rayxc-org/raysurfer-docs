@@ -1,0 +1,153 @@
+---
+title: CLI
+description: "Search, upload, and vote on cached code from the command line"
+---
+
+The Raysurfer CLI (`raysurfer`) is a standalone Python tool for interacting with the code cache. Use it in scripts, CI pipelines, or directly from your terminal.
+
+<Note>
+  Source: [rayxc-org/raysurfer-code-caching-cli](https://github.com/rayxc-org/raysurfer-code-caching-cli)
+</Note>
+
+## Installation
+
+<CodeGroup>
+
+```bash pip
+pip install raysurfer-code-caching-cli
+```
+
+```bash uv
+uv pip install raysurfer-code-caching-cli
+```
+
+</CodeGroup>
+
+## Setup
+
+```bash
+export RAYSURFER_API_KEY=your_key_here
+```
+
+## Commands
+
+### Search
+
+Find cached code matching a task description:
+
+```bash
+raysurfer search "Generate a quarterly revenue report"
+```
+
+Show the source code from the top match:
+
+```bash
+raysurfer search "Generate a quarterly revenue report" --show-code
+```
+
+Get JSON output for scripting:
+
+```bash
+raysurfer search "Generate a quarterly revenue report" --json
+```
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--top-k`, `-k` | Maximum results | 5 |
+| `--min-score`, `-s` | Minimum verdict score (0-1) | 0.3 |
+| `--show-code`, `-c` | Display source from top match | off |
+| `--json`, `-j` | Output as JSON | off |
+
+### Upload
+
+Upload code files to the cache after a successful execution:
+
+```bash
+raysurfer upload "Generate a quarterly revenue report" --file report.py
+```
+
+Upload multiple files:
+
+```bash
+raysurfer upload "Build a dashboard" --file app.py --file utils.py
+```
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--file`, `-f` | File to upload (repeatable) | required |
+| `--succeeded/--failed` | Whether the execution succeeded | succeeded |
+| `--no-auto-vote` | Disable automatic upvote on upload | off |
+
+### Vote
+
+Provide feedback on cached code quality:
+
+```bash
+# Upvote
+raysurfer vote cb_abc123 --up
+
+# Downvote
+raysurfer vote cb_abc123 --down
+```
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--up/--down` | Upvote or downvote | up |
+| `--task`, `-t` | Original task description | none |
+
+### Patterns
+
+Get proven task-to-code mappings:
+
+```bash
+raysurfer patterns "data analysis"
+```
+
+### Examples
+
+Get few-shot examples for prompting:
+
+```bash
+raysurfer examples "data analysis"
+```
+
+### Version
+
+```bash
+raysurfer version
+raysurfer version --json
+```
+
+## Python Library
+
+The CLI also exports sync and async clients for use in your own code:
+
+<CodeGroup>
+
+```python Sync
+from raysurfer_cli.client import RaysurferClient
+
+with RaysurferClient() as client:
+    result = client.search(task="Generate a quarterly report")
+    for match in result.matches:
+        print(match.code_block.name, match.combined_score)
+```
+
+```python Async
+from raysurfer_cli.client import AsyncRaysurferClient
+
+async with AsyncRaysurferClient() as client:
+    result = await client.search(task="Generate a quarterly report")
+    for match in result.matches:
+        print(match.code_block.name, match.combined_score)
+```
+
+</CodeGroup>
+
+## Configuration
+
+| Environment Variable | Description | Default |
+|---------------------|-------------|---------|
+| `RAYSURFER_API_KEY` | API key (required) | none |
+| `RAYSURFER_BASE_URL` | API base URL | `https://api.raysurfer.com` |
+| `RAYSURFER_TIMEOUT` | Request timeout in seconds | 30 |

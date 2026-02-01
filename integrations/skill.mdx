@@ -1,0 +1,87 @@
+---
+title: Claude Code Skill
+description: "Teach Claude to automatically check the cache before coding and upload results after"
+---
+
+The Raysurfer skill is a `SKILL.md` file that teaches Claude Code to automatically use the code cache. Claude checks for cached code before generating new code and uploads successful results for future reuse.
+
+<Note>
+  Source: [rayxc-org/raysurfer-code-caching-skill](https://github.com/rayxc-org/raysurfer-code-caching-skill)
+</Note>
+
+## Installation
+
+Clone the skill into your Claude Code skills directory:
+
+<CodeGroup>
+
+```bash Personal (all projects)
+git clone https://github.com/rayxc-org/raysurfer-code-caching-skill.git \
+  ~/.claude/skills/raysurfer
+```
+
+```bash Project-level
+git clone https://github.com/rayxc-org/raysurfer-code-caching-skill.git \
+  .claude/skills/raysurfer
+```
+
+</CodeGroup>
+
+Set your API key:
+
+```bash
+export RAYSURFER_API_KEY=your_key_here
+```
+
+## How It Works
+
+Once installed, the skill auto-invokes when Claude detects a coding task. The workflow:
+
+<Steps>
+  <Step title="Search the cache">
+    Before generating code, Claude calls the Raysurfer API to check if similar code already exists.
+  </Step>
+  <Step title="Use or generate">
+    If a high-quality match is found (score >= 0.7, positive votes), Claude uses the cached code directly. Otherwise, it generates new code normally.
+  </Step>
+  <Step title="Vote">
+    After using cached code, Claude upvotes it if it worked or downvotes it if it had issues.
+  </Step>
+  <Step title="Upload">
+    After successfully generating new code, Claude uploads it to the cache for future reuse.
+  </Step>
+</Steps>
+
+## Manual Invocation
+
+You can also invoke the skill explicitly:
+
+```
+/raysurfer Generate a quarterly revenue report
+```
+
+Or trigger an upload:
+
+```
+/raysurfer upload
+```
+
+## What the Skill Contains
+
+```
+raysurfer-code-caching-skill/
+├── SKILL.md                   # Instructions Claude follows
+└── references/
+    └── api-reference.md       # API endpoint docs for Claude
+```
+
+The skill uses `curl` commands to call the API directly, so it works without the CLI or MCP server installed. It only needs `RAYSURFER_API_KEY` set in your environment.
+
+## Customization
+
+The skill is a plain markdown file. Fork the repo and edit `SKILL.md` to:
+
+- Adjust the cache hit threshold (default: `combined_score >= 0.7`)
+- Change which tools Claude is allowed to use
+- Add project-specific caching rules
+- Modify the upload criteria

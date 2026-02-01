@@ -1,0 +1,152 @@
+---
+title: MCP Server
+description: "Give Claude direct access to your code cache via Model Context Protocol"
+---
+
+The Raysurfer MCP server exposes code caching as native tools inside Claude Code, Claude Desktop, and any MCP-compatible client.
+
+<Note>
+  Source: [rayxc-org/raysurfer-code-caching-mcp](https://github.com/rayxc-org/raysurfer-code-caching-mcp)
+</Note>
+
+## Installation
+
+Add to Claude Code in one command:
+
+<CodeGroup>
+
+```bash npx
+claude mcp add raysurfer -- npx -y raysurfer-code-caching-mcp
+```
+
+```bash bunx
+claude mcp add raysurfer -- bunx raysurfer-code-caching-mcp
+```
+
+</CodeGroup>
+
+Set your API key:
+
+```bash
+export RAYSURFER_API_KEY=your_key_here
+```
+
+### Claude Desktop
+
+Add to your Claude Desktop config file:
+
+<CodeGroup>
+
+```json macOS
+// ~/Library/Application Support/Claude/claude_desktop_config.json
+{
+  "mcpServers": {
+    "raysurfer": {
+      "command": "npx",
+      "args": ["-y", "raysurfer-code-caching-mcp"],
+      "env": {
+        "RAYSURFER_API_KEY": "your_key_here"
+      }
+    }
+  }
+}
+```
+
+```json Windows
+// %APPDATA%\Claude\claude_desktop_config.json
+{
+  "mcpServers": {
+    "raysurfer": {
+      "command": "npx",
+      "args": ["-y", "raysurfer-code-caching-mcp"],
+      "env": {
+        "RAYSURFER_API_KEY": "your_key_here"
+      }
+    }
+  }
+}
+```
+
+</CodeGroup>
+
+### Project-Level (.mcp.json)
+
+Add to your project root to share with your team:
+
+```json
+{
+  "mcpServers": {
+    "raysurfer": {
+      "command": "npx",
+      "args": ["-y", "raysurfer-code-caching-mcp"],
+      "env": {
+        "RAYSURFER_API_KEY": "${RAYSURFER_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+## Tools
+
+The server exposes 4 tools that Claude can call directly:
+
+### raysurfer_search
+
+Search for cached code matching a task description.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `task` | string | Yes | — | Natural language task description |
+| `top_k` | number | No | 5 | Maximum results (1-100) |
+| `min_score` | number | No | 0.3 | Minimum verdict score (0-1) |
+
+### raysurfer_upload
+
+Upload code from a successful execution.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `task` | string | Yes | — | What the code accomplishes |
+| `files` | array | Yes | — | Files with `path` and `content` keys |
+| `succeeded` | boolean | No | true | Whether the execution succeeded |
+
+### raysurfer_vote
+
+Vote on cached code usefulness.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `code_block_id` | string | Yes | — | ID of the code block |
+| `up` | boolean | No | true | Upvote (true) or downvote (false) |
+| `task` | string | No | — | Original task for context |
+
+### raysurfer_patterns
+
+Get proven task-to-code mappings.
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `task` | string | No | — | Filter patterns by task |
+| `top_k` | number | No | 10 | Maximum results |
+
+## Resources
+
+| URI | Description |
+|-----|-------------|
+| `raysurfer://help` | Help text about tools and recommended workflow |
+| `raysurfer://status` | Connection status and API reachability |
+
+## Verify Installation
+
+Check the server is running inside Claude Code:
+
+```
+/mcp
+```
+
+You should see `raysurfer` listed with a green status. Then ask Claude:
+
+> Search the Raysurfer cache for code that generates a quarterly report.
+
+Claude will call `raysurfer_search` and show you the results.

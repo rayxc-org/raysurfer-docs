@@ -43,15 +43,19 @@
       "pages": ["index", "quickstart", "how-it-works", "tool-compatibility", "reading-for-agents"]
     },
     {
-      "group": "Rate Limits & Pricing",
-      "pages": ["rate-limits"]
+      "group": "Integrations",
+      "pages": ["integrations/overview", "integrations/cli", "integrations/mcp", "integrations/skill", "integrations/plugin"]
     },
     {
       "group": "SDK Reference",
       "pages": ["sdk/python", "sdk/typescript", "api-reference"]
+    },
+    {
+      "group": "Rate Limits & Pricing",
+      "pages": ["rate-limits"]
     }
   ],
   "footerSocials": {
-    "github": "https://github.com/ryx2/raysurfer-python"
+    "github": "https://github.com/rayxc-org"
   }
 }

@@ -1,0 +1,87 @@
+---
+title: Claude Code Plugin
+description: "One-command install that bundles the skill, hooks, and MCP server"
+---
+
+The Raysurfer plugin is the easiest way to get full code caching integration in Claude Code. It bundles the skill, lifecycle hooks, and MCP server configuration into a single installable package.
+
+<Note>
+  Source: [rayxc-org/raysurfer-code-caching-tool](https://github.com/rayxc-org/raysurfer-code-caching-tool)
+</Note>
+
+## Installation
+
+```bash
+claude plugin add https://github.com/rayxc-org/raysurfer-code-caching-tool
+```
+
+Set your API key:
+
+```bash
+export RAYSURFER_API_KEY=your_key_here
+```
+
+That's it. The plugin automatically:
+
+- Teaches Claude to check the cache before generating code (via the bundled skill)
+- Runs a hook after Claude finishes responding (via lifecycle hooks)
+- Configures the MCP server for direct tool access (via `.mcp.json`)
+
+## What's Inside
+
+```
+raysurfer-code-caching-tool/
+├── .claude-plugin/
+│   └── plugin.json              # Plugin manifest
+├── skills/
+│   └── raysurfer/
+│       ├── SKILL.md             # Auto-invoked caching skill
+│       └── references/
+│           └── api-reference.md # API docs for Claude
+├── hooks/
+│   └── hooks.json               # Stop hook for upload
+├── scripts/
+│   ├── check-cache.sh           # Cache lookup helper
+│   └── upload-result.sh         # Upload trigger
+├── .mcp.json                    # MCP server config
+└── CLAUDE.md                    # Plugin context
+```
+
+### Skill
+
+The bundled `/raysurfer` skill auto-invokes when Claude detects coding tasks. It searches the cache before generating code and uploads successful results afterward. See [Skill docs](/integrations/skill) for details.
+
+### Hooks
+
+The plugin registers a `Stop` hook that fires after Claude finishes responding. This triggers a lightweight script that logs the event for observability.
+
+### MCP Server
+
+The `.mcp.json` configures the `raysurfer-code-caching-mcp` package, giving Claude direct tool access to `raysurfer_search`, `raysurfer_upload`, `raysurfer_vote`, and `raysurfer_patterns`. See [MCP docs](/integrations/mcp) for details.
+
+## Verify
+
+After installing, check the plugin is active:
+
+```
+/raysurfer search for code that builds a dashboard
+```
+
+Claude should search the Raysurfer cache and report results. You can also check MCP status:
+
+```
+/mcp
+```
+
+## Plugin vs Individual Components
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **Plugin** (this page) | One-command install, everything bundled | Requires Claude Code |
+| **Skill** alone | Lightweight, no npm dependency | No MCP tools, no hooks |
+| **MCP** alone | Direct tool access for Claude | No auto-invoke workflow |
+| **CLI** alone | Works everywhere, scriptable | Manual only, no Claude integration |
+
+<Tip>
+  For most users, the plugin is the right choice. Use individual components only if you need fine-grained control or work outside Claude Code.
+</Tip>
