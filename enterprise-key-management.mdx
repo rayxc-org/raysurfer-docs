@@ -1,0 +1,137 @@
+---
+title: "Enterprise Key Management"
+description: "Self-service API key creation, listing, and revocation for enterprise organizations"
+---
+
+<Warning>
+  These endpoints are **enterprise-only**. Your API key must belong to an enterprise-tier organization, and you must be an **admin** or **owner** of that organization to use them. No global admin key is required.
+</Warning>
+
+Enterprise org admins can create, list, and revoke API keys for members of their organization using these three endpoints. The caller's identity and org are derived from the API key in the `Authorization` header.
+
+---
+
+## Create a key for an org member
+
+Creates an API key for a user (by email), adding them to the organization if they aren't already a member.
+
+```bash
+curl -X POST https://api.raysurfer.com/api/keys/org/create \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "dev@example.com",
+    "key_name": "Dev laptop",
+    "role": "member"
+  }'
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `email` | string | required | Email of the target user |
+| `key_name` | string | required | Display name for the key |
+| `role` | string | `"member"` | `"member"` or `"admin"` — only org owners can assign `"admin"` |
+
+**Response:**
+
+```json
+{
+  "id": "a1b2c3d4-...",
+  "name": "Dev laptop",
+  "key": "rs_live_abc123...",
+  "key_prefix": "rs_live_abc123456789",
+  "user_email": "dev@example.com",
+  "organization_id": "org-uuid-...",
+  "organization_name": "Acme Corp",
+  "is_new_member": true,
+  "created_at": "2025-06-01T12:00:00Z"
+}
+```
+
+<Note>
+  The full API key is only returned once at creation time. Store it securely — it cannot be retrieved again.
+</Note>
+
+**Rate limit:** 20 requests/minute
+
+---
+
+## List all keys in the org
+
+Returns all active (non-revoked) API keys in the caller's organization, including the key prefix, user email, and timestamps.
+
+```bash
+curl -X POST https://api.raysurfer.com/api/keys/org/list \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+No request body is needed — the org is derived from the caller's API key.
+
+**Response:**
+
+```json
+{
+  "keys": [
+    {
+      "id": "a1b2c3d4-...",
+      "name": "Dev laptop",
+      "key_prefix": "rs_live_abc123456789",
+      "user_email": "dev@example.com",
+      "user_id": "user-uuid-...",
+      "created_at": "2025-06-01T12:00:00Z",
+      "last_used_at": "2025-06-10T09:30:00Z"
+    }
+  ],
+  "organization_id": "org-uuid-..."
+}
+```
+
+**Rate limit:** 30 requests/minute
+
+---
+
+## Revoke a key
+
+Revokes an API key by ID. The key must belong to the caller's organization — you cannot revoke keys from other orgs.
+
+```bash
+curl -X POST https://api.raysurfer.com/api/keys/org/revoke \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key_id": "a1b2c3d4-..."
+  }'
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `key_id` | string | UUID of the key to revoke |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "key_id": "a1b2c3d4-..."
+}
+```
+
+Returns `404` if the key is not found, already revoked, or belongs to a different organization.
+
+**Rate limit:** 10 requests/minute
+
+---
+
+## Error codes
+
+| Status | Code | Meaning |
+|--------|------|---------|
+| 401 | `auth/missing_api_key` | No API key provided |
+| 401 | `auth/invalid_api_key` | Key is invalid or revoked |
+| 403 | `permission/not_org_member` | Caller's key is not linked to an org |
+| 403 | `permission/enterprise_required` | Org is not on the enterprise tier |
+| 403 | `permission/admin_key_required` | Caller is not an admin/owner of the org |
+| 403 | `permission/only_owner_can_promote` | Only owners can assign the admin role |
+| 400 | `validation/member_limit_reached` | Org has hit its member cap |
+| 404 | `not_found/api_key` | Key not found or already revoked |

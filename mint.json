@@ -51,6 +51,10 @@
       "pages": ["sdk/python", "sdk/typescript", "sdk/curl", "api-reference"]
     },
     {
+      "group": "Enterprise",
+      "pages": ["enterprise-key-management"]
+    },
+    {
       "group": "Rate Limits & Pricing",
       "pages": ["rate-limits"]
     }

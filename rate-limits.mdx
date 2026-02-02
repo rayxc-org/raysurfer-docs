@@ -1,9 +1,26 @@
 ---
-title: Rate Limits
-description: "Request quotas and rate limits per plan tier"
+title: "Rate Limits & Pricing"
+description: "Plans, pricing, request quotas, and rate limits"
 ---
 
-Raysurfer enforces two layers of rate limiting: **request quotas** (per plan tier) and **HTTP rate limits** (per endpoint).
+## Pricing
+
+| | **Free** | **Pro** | **Enterprise** |
+|---|---|---|---|
+| **Price** | $0 | $49/month | Custom — [contact sales](mailto:raymond@raysurfer.com) |
+| **Namespace** | Shared (community) | Dedicated (per org) | Dedicated (per org + per workspace) |
+| **Max members** | 1 | 10 | 100 |
+| **Max workspaces** | 0 | 0 | 50 |
+| **Stored embeddings** | 500 | Unlimited | Unlimited |
+| **Self-service key management** | — | — | Yes |
+
+All paid plans include priority support and access to the analytics dashboard.
+
+<Tip>
+  Start free, upgrade when you need a private namespace or team access. [See pricing →](https://raysurfer.com/pricing)
+</Tip>
+
+---
 
 ## Request Quotas
 
@@ -11,9 +28,9 @@ Each plan tier has a maximum number of API requests per billing period. Once exc
 
 | Tier | Quota | Period | Reset |
 |------|-------|--------|-------|
-| **Free** | 100 requests | Monthly | 1st of each month |
+| **Free** | 500 requests | Monthly | 1st of each month |
 | **Pro** | 10,000 requests | Daily | Midnight UTC |
-| **Enterprise** | 100,000 requests | Daily | Midnight UTC |
+| **Enterprise** | Custom | Custom | Custom |
 
 ### Quota Exceeded Response
 
@@ -22,11 +39,11 @@ When you exceed your quota, the API returns:
 ```json
 {
   "error": "quota_exceeded",
-  "message": "You have used 100/100 requests this month. Upgrade your plan for higher limits.",
+  "message": "You have used 500/500 requests this month. Upgrade your plan for higher limits.",
   "tier": "free",
-  "limit": 100,
+  "limit": 500,
   "period": "monthly",
-  "usage": 100
+  "usage": 500
 }
 ```
 
@@ -92,5 +109,5 @@ try {
 </CodeGroup>
 
 <Note>
-  Need higher limits? [Contact us](https://raysurfer.com/pricing) to discuss Enterprise plans with custom quotas.
+  Need higher limits? [Contact us](mailto:raymond@raysurfer.com) to discuss Enterprise plans with custom quotas and self-service key management.
 </Note>
