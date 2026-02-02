@@ -374,6 +374,67 @@ console.log(`Stored ${result.codeBlocksStored} code blocks`);
 
 ---
 
+### upload_bulk_code_snips / uploadBulkCodeSnips
+
+Bulk upload prompts, logs, and code files for sandboxed grading. The backend runs a grader that votes thumbs up/down for each code file.
+
+<CodeGroup>
+
+```python Python
+from raysurfer.types import FileWritten, LogFile
+
+files = [
+    FileWritten(path="app.py", content="def main(): ..."),
+    FileWritten(path="utils.py", content="def helper(): ..."),
+]
+
+logs = [
+    LogFile(path="logs/run.log", content="Task completed", encoding="utf-8"),
+]
+
+result = client.upload_bulk_code_snips(
+    prompts=["Build a CLI tool", "Add CSV support"],
+    files_written=files,
+    log_files=logs,
+    auto_vote=True,
+)
+
+print(result.message)
+```
+
+```typescript TypeScript
+const files = [
+  { path: "app.ts", content: "function main() { ... }" },
+  { path: "utils.ts", content: "function helper() { ... }" },
+];
+
+const logs = [
+  { path: "logs/run.log", content: "Task completed", encoding: "utf-8" },
+];
+
+const result = await client.uploadBulkCodeSnips(
+  ["Build a CLI tool", "Add CSV support"],
+  files,
+  logs,
+  true,
+);
+
+console.log(result.message);
+```
+
+</CodeGroup>
+
+#### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `prompts` | `string[]` | required | Ordered list of raw user prompts |
+| `files_written` / `filesWritten` | `FileWritten[]` | required | Code files to store and grade |
+| `log_files` / `logFiles` | `LogFile[]` | `null` | Log files (any format; use `encoding: "base64"` for binary) |
+| `auto_vote` / `autoVote` | `boolean` | `true` | Run the sandboxed grader and apply votes |
+
+---
+
 ### store_code_block / storeCodeBlock
 
 Store a code block with full metadata (advanced usage).

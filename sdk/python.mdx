@@ -142,7 +142,7 @@ For custom integrations, use the `RaySurfer` client directly.
 ```python
 import anthropic
 from raysurfer import RaySurfer
-from raysurfer.types import FileWritten
+from raysurfer.types import FileWritten, LogFile
 
 client = RaySurfer(api_key="your_raysurfer_api_key")
 task = "Fetch GitHub trending repos"
@@ -184,6 +184,15 @@ client.upload_new_code_snips(
     files_written=files,
     succeeded=True,
     execution_logs="Fetched 10 trending repos successfully",
+)
+
+# 2b. Bulk upload prompts/logs/code for sandboxed grading
+logs = [LogFile(path="logs/run.log", content="Task completed", encoding="utf-8")]
+client.upload_bulk_code_snips(
+    prompts=["Build a CLI tool", "Add CSV support"],
+    files_written=[FileWritten(path="cli.py", content="def main(): ...")],
+    log_files=logs,
+    auto_vote=True,
 )
 
 # 3. (Optional) Vote on a cached snippet manually
@@ -251,4 +260,5 @@ async with AsyncRaySurfer(api_key="your_api_key") as client:
 | `get_code_files(task, top_k, min_verdict_score, prefer_complete, cache_dir)` | Retrieve cached code files with `add_to_llm_prompt` for LLM augmentation |
 | `get_code_snips(task, top_k, min_verdict_score)` | Retrieve cached code snippets by semantic search |
 | `upload_new_code_snips(task, files_written, succeeded, auto_vote, execution_logs)` | Store new code files for future reuse (auto-votes by default) |
+| `upload_bulk_code_snips(prompts, files_written, log_files, auto_vote)` | Bulk upload prompts/logs/code for sandboxed grading (votes each file) |
 | `vote_code_snip(task, code_block_id, name, description, succeeded)` | Vote on snippet usefulness (triggers async backend voting) |
