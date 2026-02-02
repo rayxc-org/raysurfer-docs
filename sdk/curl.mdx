@@ -1,0 +1,298 @@
+---
+title: "cURL / REST API"
+description: "Use the Raysurfer API directly with curl or any HTTP client — no SDK required"
+---
+
+All Raysurfer functionality is available over plain HTTP. Every request uses `POST` with a JSON body (except health check and deletion).
+
+## Authentication
+
+Include your API key in the `Authorization` header:
+
+```bash
+-H "Authorization: Bearer $RAYSURFER_API_KEY"
+```
+
+### Optional headers
+
+| Header | Description |
+|--------|-------------|
+| `X-Raysurfer-Org-Id` | Organization ID (team/enterprise) |
+| `X-Raysurfer-Workspace-Id` | Workspace ID (enterprise only) |
+| `X-Raysurfer-Snips-Desired` | `"company"` or `"client"` — scope of private snippets |
+| `X-Raysurfer-Namespace` | Custom namespace override |
+
+---
+
+## Base URL
+
+```
+https://api.raysurfer.com
+```
+
+---
+
+## Retrieve
+
+### Search for code snippets
+
+The primary retrieval endpoint. Returns cached code blocks ranked by semantic similarity, community votes, and error resilience.
+
+```bash
+curl -X POST https://api.raysurfer.com/api/retrieve/search \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Fetch GitHub trending repos",
+    "top_k": 5,
+    "min_verdict_score": 0.3,
+    "prefer_complete": false
+  }'
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `task` | string | required | Natural language task description |
+| `top_k` | integer | `5` | Max results to return |
+| `min_verdict_score` | float | `0.3` | Minimum quality threshold (0–1) |
+| `prefer_complete` | boolean | `false` | Rank longer implementations higher |
+| `input_schema` | object | `null` | Optional input schema filter |
+
+**Response:**
+
+```json
+{
+  "matches": [
+    {
+      "code_block": {
+        "id": "abc123",
+        "name": "github_fetcher",
+        "description": "Fetches trending repos from GitHub",
+        "source": "import httpx\n\ndef fetch_trending():\n    ...",
+        "entrypoint": "fetch_trending",
+        "language": "python",
+        "dependencies": ["httpx"]
+      },
+      "combined_score": 0.85,
+      "vector_score": 0.82,
+      "verdict_score": 0.90,
+      "error_resilience": 0.75,
+      "thumbs_up": 12,
+      "thumbs_down": 1,
+      "filename": "github_fetcher.py",
+      "language": "python",
+      "entrypoint": "fetch_trending",
+      "dependencies": ["httpx"]
+    }
+  ],
+  "total_found": 3,
+  "cache_hit": false,
+  "search_namespaces": ["code_blocks", "task_patterns"]
+}
+```
+
+### Get few-shot examples
+
+```bash
+curl -X POST https://api.raysurfer.com/api/retrieve/few-shot-examples \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Parse CSV files",
+    "k": 3
+  }'
+```
+
+### Get task patterns
+
+```bash
+curl -X POST https://api.raysurfer.com/api/retrieve/task-patterns \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "API integration",
+    "min_thumbs_up": 5,
+    "top_k": 20
+  }'
+```
+
+### Query execution history
+
+```bash
+curl -X POST https://api.raysurfer.com/api/retrieve/executions \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code_block_id": "abc123",
+    "limit": 10
+  }'
+```
+
+---
+
+## Store
+
+### Upload code from an execution (recommended)
+
+The simplest way to store code. Send the files your agent wrote and the task it was solving. The backend auto-detects language, entrypoint, and tags, then optionally votes on quality.
+
+```bash
+curl -X POST https://api.raysurfer.com/api/store/execution-result \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Parse CSV and generate a summary chart",
+    "files_written": [
+      {"path": "parser.py", "content": "import csv\n\ndef parse(path):\n    ..."},
+      {"path": "chart.py", "content": "import matplotlib.pyplot as plt\n\ndef plot(data):\n    ..."}
+    ],
+    "succeeded": true,
+    "auto_vote": true,
+    "execution_logs": "Parsed 150 rows, chart saved to output.png"
+  }'
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `task` | string | required | The task the agent was solving |
+| `files_written` | array | required | `[{"path": "...", "content": "..."}]` |
+| `succeeded` | boolean | required | Whether the task completed successfully |
+| `auto_vote` | boolean | `true` | Auto-vote on each stored block |
+| `execution_logs` | string | `null` | Stdout/stderr for vote context |
+| `run_url` | string | `null` | Link to the finished run log |
+
+### Bulk upload with grading
+
+Upload multiple prompts and files. The backend grades each file independently.
+
+```bash
+curl -X POST https://api.raysurfer.com/api/store/bulk-execution-result \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompts": ["Build a CLI tool", "Add CSV export"],
+    "files_written": [
+      {"path": "cli.py", "content": "import click\n..."},
+      {"path": "export.py", "content": "import csv\n..."}
+    ],
+    "log_files": [
+      {"path": "logs/run.log", "content": "Task completed", "encoding": "utf-8"}
+    ],
+    "auto_vote": true
+  }'
+```
+
+### Store a code block (advanced)
+
+Store a single code block with full metadata. Use this when you need fine-grained control over what's stored.
+
+```bash
+curl -X POST https://api.raysurfer.com/api/store/code-block \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "GitHub User Fetcher",
+    "source": "import httpx\n\ndef fetch_user(username: str) -> dict:\n    resp = httpx.get(f\"https://api.github.com/users/{username}\")\n    return resp.json()",
+    "entrypoint": "fetch_user",
+    "language": "python",
+    "description": "Fetches user profile data from the GitHub API",
+    "tags": ["github", "api"],
+    "dependencies": ["httpx"],
+    "example_queries": ["get github user info", "fetch github profile"]
+  }'
+```
+
+### Delete a code block
+
+```bash
+curl -X DELETE https://api.raysurfer.com/api/store/code-block/CODE_BLOCK_ID \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY"
+```
+
+### Check background task status
+
+```bash
+curl https://api.raysurfer.com/api/store/status/TASK_ID \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY"
+```
+
+---
+
+## Vote
+
+Record whether cached code was useful. This feeds back into the scoring system so better code surfaces higher.
+
+```bash
+curl -X POST https://api.raysurfer.com/api/store/cache-usage \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Fetch GitHub trending repos",
+    "code_block_id": "abc123",
+    "code_block_name": "github_fetcher",
+    "code_block_description": "Fetches trending repos from GitHub",
+    "succeeded": true
+  }'
+```
+
+<Note>
+  Voting happens automatically when you use `auto_vote: true` in the store endpoints. Use the vote endpoint directly only when you need manual control — for example, when code was retrieved from cache and you want to report whether it worked.
+</Note>
+
+---
+
+## Health check
+
+```bash
+curl https://api.raysurfer.com/health
+```
+
+**Response:**
+
+```json
+{"status": "healthy", "redis": "connected"}
+```
+
+---
+
+## Error responses
+
+All errors return a JSON body with a `detail` field:
+
+```json
+{"detail": "Invalid API key"}
+```
+
+| Status | Meaning |
+|--------|---------|
+| 401 | Invalid or missing API key |
+| 404 | Resource not found |
+| 422 | Validation error (check request body) |
+| 429 | Rate limit exceeded — check `Retry-After` header |
+| 500 | Server error |
+
+---
+
+## Full example: search then upload
+
+A complete workflow — pull cached code, use it, then push results back:
+
+```bash
+# 1. Search for relevant cached code
+curl -s -X POST https://api.raysurfer.com/api/retrieve/search \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"task": "Send a Slack notification", "top_k": 3}' | jq .
+
+# 2. After your agent runs, upload the code it wrote
+curl -s -X POST https://api.raysurfer.com/api/store/execution-result \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Send a Slack notification",
+    "files_written": [
+      {"path": "notify.py", "content": "import requests\n\ndef send_slack(msg):\n    requests.post(WEBHOOK, json={\"text\": msg})"}
+    ],
+    "succeeded": true
+  }' | jq .
+```
