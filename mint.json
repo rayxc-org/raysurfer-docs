@@ -52,7 +52,7 @@
     },
     {
       "group": "Enterprise",
-      "pages": ["enterprise-key-management"]
+      "pages": ["enterprise-key-management", "enterprise-multi-tenant"]
     },
     {
       "group": "Rate Limits & Pricing",
