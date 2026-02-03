@@ -58,9 +58,48 @@ That's it. All uploads and retrievals are now isolated to that customer.
 
 ---
 
+## Low-Level API
+
+For direct API access, pass `workspace_id` when creating the client:
+
+<CodeGroup>
+
+```python Python
+from raysurfer import AsyncRaySurfer
+
+async with AsyncRaySurfer(api_key="rs_...", workspace_id="acme") as client:
+    # All operations are isolated to Acme's workspace
+    files = await client.get_code_files(task="Process data")
+    await client.upload_new_code_snip(
+        task="Process data",
+        file_written={"path": "processor.py", "content": "..."},
+        succeeded=True,
+    )
+```
+
+```typescript TypeScript
+import { RaySurfer } from "raysurfer";
+
+const client = new RaySurfer({ apiKey: "rs_...", workspaceId: "acme" });
+
+// All operations are isolated to Acme's workspace
+const files = await client.getCodeFiles({ task: "Process data" });
+await client.uploadNewCodeSnip(
+  "Process data",
+  { path: "processor.ts", content: "..." },
+  true,
+);
+```
+
+</CodeGroup>
+
+---
+
 ## Example: Multi-Tenant App
 
-```python
+<CodeGroup>
+
+```python Python
 from raysurfer import RaysurferClient
 from claude_agent_sdk import ClaudeAgentOptions
 
@@ -73,6 +112,24 @@ async def handle_customer_request(customer_id: str, task: str):
         async for msg in client.response():
             yield msg
 ```
+
+```typescript TypeScript
+import { RaysurferClient } from "raysurfer";
+
+async function* handleCustomerRequest(customerId: string, task: string) {
+  // Just pass the customer ID directly as workspaceId
+  const client = new RaysurferClient({
+    allowedTools: ["Read", "Write", "Bash"],
+    workspaceId: customerId,
+  });
+
+  for await (const msg of client.query(task)) {
+    yield msg;
+  }
+}
+```
+
+</CodeGroup>
 
 ---
 
