@@ -21,14 +21,7 @@ from another.
 
 ## Setup
 
-### 1. Create Workspaces
-
-Contact support to provision a workspace for each of your customers. You'll
-get a `workspace_id` for each one.
-
-### 2. Pass the Workspace ID
-
-When handling a request for a specific customer, just pass their workspace ID:
+Just pass your customer's ID as the `workspace_id`:
 
 <CodeGroup>
 
@@ -39,7 +32,7 @@ from claude_agent_sdk import ClaudeAgentOptions
 options = ClaudeAgentOptions(allowed_tools=["Read", "Write", "Bash"])
 
 # Acme's requests use Acme's workspace
-async with RaysurferClient(options, workspace_id="ws_acme...") as client:
+async with RaysurferClient(options, workspace_id="acme") as client:
     await client.query("Process shipment data")
     async for msg in client.response():
         print(msg)
@@ -51,7 +44,7 @@ import { RaysurferClient } from "raysurfer";
 // Acme's requests use Acme's workspace
 const client = new RaysurferClient({
   allowedTools: ["Read", "Write", "Bash"],
-  workspaceId: "ws_acme...",
+  workspaceId: "acme",
 });
 
 for await (const msg of client.query("Process shipment data")) {
@@ -71,16 +64,11 @@ That's it. All uploads and retrievals are now isolated to that customer.
 from raysurfer import RaysurferClient
 from claude_agent_sdk import ClaudeAgentOptions
 
-# Map your customer IDs to workspace IDs
-WORKSPACES = {
-    "acme": "ws_abc123...",
-    "beta": "ws_def456...",
-}
-
 async def handle_customer_request(customer_id: str, task: str):
     options = ClaudeAgentOptions(allowed_tools=["Read", "Write", "Bash"])
 
-    async with RaysurferClient(options, workspace_id=WORKSPACES[customer_id]) as client:
+    # Just pass the customer ID directly as workspace_id
+    async with RaysurferClient(options, workspace_id=customer_id) as client:
         await client.query(task)
         async for msg in client.response():
             yield msg
