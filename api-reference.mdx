@@ -314,23 +314,20 @@ for (const p of patterns) {
 
 ## Storage Methods
 
-### upload_new_code_snips / uploadNewCodeSnips
+### upload_new_code_snip / uploadNewCodeSnip
 
-Upload new code snippets from an execution for future reuse.
+Upload a single code file from an execution for future reuse.
 
 <CodeGroup>
 
 ```python Python
 from raysurfer.types import FileWritten
 
-files = [
-    FileWritten(path="fetch_repos.py", content="def fetch(): ..."),
-    FileWritten(path="utils.py", content="def helper(): ..."),
-]
+file = FileWritten(path="fetch_repos.py", content="def fetch(): ...")
 
-result = client.upload_new_code_snips(
+result = client.upload_new_code_snip(
     task="Fetch GitHub trending repos",
-    files_written=files,
+    file_written=file,
     succeeded=True,
     execution_logs="Fetched 10 trending repos successfully",
 )
@@ -339,14 +336,11 @@ print(f"Stored {result.code_blocks_stored} code blocks")
 ```
 
 ```typescript TypeScript
-const files = [
-  { path: "fetch_repos.ts", content: "function fetch() { ... }" },
-  { path: "utils.ts", content: "function helper() { ... }" },
-];
+const file = { path: "fetch_repos.ts", content: "function fetch() { ... }" };
 
-const result = await client.uploadNewCodeSnips(
+const result = await client.uploadNewCodeSnip(
   "Fetch GitHub trending repos",       // task
-  files,                                // code files
+  file,                                 // code file
   true,                                 // succeeded
   undefined,                            // cachedCodeBlocks
   true,                                 // autoVote (default)
@@ -363,7 +357,7 @@ console.log(`Stored ${result.codeBlocksStored} code blocks`);
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `task` | `string` | required | The task that was executed |
-| `files_written` / `filesWritten` | `FileWritten[]` | required | Files created during execution |
+| `file_written` / `fileWritten` | `FileWritten` | required | The file created during execution |
 | `succeeded` | `boolean` | required | Whether the task completed successfully |
 | `auto_vote` / `autoVote` | `boolean` | `true` | Auto-vote on newly stored blocks |
 | `execution_logs` / `executionLogs` | `string \| null` | `null` | Captured stdout/stderr for vote context |
@@ -517,7 +511,7 @@ await client.voteCodeSnip({
 </CodeGroup>
 
 <Note>
-  Voting is triggered automatically by `upload_new_code_snips` / `uploadNewCodeSnips` when `auto_vote` is `true` (the default), and also by the high-level `RaysurferClient`. Use `vote_code_snip` / `voteCodeSnip` directly only when you need manual voting control.
+  Voting is triggered automatically by `upload_new_code_snip` / `uploadNewCodeSnip` when `auto_vote` is `true` (the default), and also by the high-level `RaysurferClient`. Use `vote_code_snip` / `voteCodeSnip` directly only when you need manual voting control.
 </Note>
 
 ---

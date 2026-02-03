@@ -176,12 +176,12 @@ response = anthropic_client.messages.create(
 
 print(response.content[0].text)
 
-# 2. Upload new code snippets after execution
+# 2. Upload a new code file after execution
 #    Voting is triggered automatically when auto_vote is True (default)
-files = [FileWritten(path="fetch_repos.py", content="def fetch(): ...")]
-client.upload_new_code_snips(
+file = FileWritten(path="fetch_repos.py", content="def fetch(): ...")
+client.upload_new_code_snip(
     task=task,
-    files_written=files,
+    file_written=file,
     succeeded=True,
     execution_logs="Fetched 10 trending repos successfully",
 )
@@ -196,7 +196,7 @@ client.upload_bulk_code_snips(
 )
 
 # 3. (Optional) Vote on a cached snippet manually
-#    Only needed if you want explicit control — upload_new_code_snips already votes by default
+#    Only needed if you want explicit control — upload_new_code_snip already votes by default
 client.vote_code_snip(
     task=task,
     code_block_id=result.files[0].code_block_id,
@@ -233,11 +233,11 @@ async with AsyncRaySurfer(api_key="your_api_key") as client:
     # 2. Use add_to_llm_prompt to augment your LLM call
     augmented_prompt = "You are helpful." + result.add_to_llm_prompt
 
-    # 3. Upload new code after execution (voting triggered by default)
-    files = [FileWritten(path="fetch_repos.py", content="def fetch(): ...")]
-    await client.upload_new_code_snips(
+    # 3. Upload a new code file after execution (voting triggered by default)
+    file = FileWritten(path="fetch_repos.py", content="def fetch(): ...")
+    await client.upload_new_code_snip(
         task=task,
-        files_written=files,
+        file_written=file,
         succeeded=True,
         execution_logs="Fetched 10 trending repos successfully",
     )
@@ -259,6 +259,6 @@ async with AsyncRaySurfer(api_key="your_api_key") as client:
 | `search(task, top_k, min_verdict_score, prefer_complete)` | Unified search for cached code (recommended) |
 | `get_code_files(task, top_k, min_verdict_score, prefer_complete, cache_dir)` | Retrieve cached code files with `add_to_llm_prompt` for LLM augmentation |
 | `get_code_snips(task, top_k, min_verdict_score)` | Retrieve cached code snippets by semantic search |
-| `upload_new_code_snips(task, files_written, succeeded, auto_vote, execution_logs)` | Store new code files for future reuse (auto-votes by default) |
+| `upload_new_code_snip(task, file_written, succeeded, auto_vote, execution_logs)` | Store a single code file for future reuse (auto-votes by default) |
 | `upload_bulk_code_snips(prompts, files_written, log_files, auto_vote)` | Bulk upload prompts/logs/code for sandboxed grading (votes each file) |
 | `vote_code_snip(task, code_block_id, name, description, succeeded)` | Vote on snippet usefulness (triggers async backend voting) |
