@@ -1,64 +1,21 @@
 ---
 title: "Multi-Tenant Isolation"
-description: "Isolate cached code snippets per customer using workspace namespaces"
+description: "Isolate cached snippets per customer with workspaces"
 ---
 
 <Warning>
-  Multi-tenant isolation is an **enterprise-only** feature. Your organization
-  must be on the Enterprise tier to use workspace-level namespacing.
+  Multi-tenant isolation is an **enterprise-only** feature.
 </Warning>
 
 ## Overview
 
-Enterprise customers serving multiple end-customers often need complete data
-isolation between customers. Raysurfer provides **workspace-level namespace
-isolation** that guarantees snippets from one customer can never leak to
-another.
+If you're building a product that serves multiple customers, you need their
+cached snippets to be completely isolated. Customer A should never see
+Customer B's code.
 
-Each workspace gets its own dedicated Pinecone namespace:
-
-| Tier | Namespace Pattern | Isolation |
-|------|-------------------|-----------|
-| Free | `user_{uuid}_code_blocks` | Per-user |
-| Pro | `org_{uuid}_code_blocks` | Per-organization |
-| **Enterprise** | `org_{uuid}_client_{slug}_code_blocks` | **Per-workspace** |
-
-When you configure `workspace_id` + `snips_desired="client"`, all uploads AND
-retrievals are scoped to that workspace's namespace. Customer ACME's shipment
-data can never appear in Customer BETA's cache results.
-
----
-
-## How It Works
-
-### Namespace Isolation
-
-```
-Your Organization (Enterprise)
-├── Workspace: acme
-│   └── Namespace: org_xxx_client_acme_code_blocks
-│       └── Only ACME's snippets stored/retrieved here
-│
-├── Workspace: beta
-│   └── Namespace: org_xxx_client_beta_code_blocks
-│       └── Only BETA's snippets stored/retrieved here
-│
-└── Workspace: gamma
-    └── Namespace: org_xxx_client_gamma_code_blocks
-        └── Only GAMMA's snippets stored/retrieved here
-```
-
-Each namespace is a completely separate vector space in Pinecone. There is no
-cross-namespace search or retrieval — isolation is enforced at the storage
-layer.
-
-### What Gets Isolated
-
-- Code block storage (uploads)
-- Code block retrieval (search/get)
-- Execution records
-- Task patterns
-- Few-shot examples
+Raysurfer workspaces provide this isolation. Each workspace is a completely
+separate cache — snippets uploaded to one workspace can never be retrieved
+from another.
 
 ---
 
@@ -66,52 +23,12 @@ layer.
 
 ### 1. Create Workspaces
 
-Contact support to provision workspaces for each of your end-customers. You'll
-receive a `workspace_id` for each one:
+Contact support to provision a workspace for each of your customers. You'll
+get a `workspace_id` for each one.
 
-| Customer | Workspace Slug | Workspace ID |
-|----------|---------------|--------------|
-| Acme Corp | `acme` | `ws_abc123...` |
-| Beta Inc | `beta` | `ws_def456...` |
-| Gamma LLC | `gamma` | `ws_ghi789...` |
+### 2. Pass the Workspace ID
 
-### 2. Configure SDK Per-Customer
-
-When serving a request for a specific customer, just pass their workspace ID:
-
-<CodeGroup>
-
-```python Python
-from raysurfer import AsyncRaySurfer
-
-# For Customer: Acme Corp
-client = AsyncRaySurfer(
-    api_key="rs_...",
-    workspace_id="ws_abc123...",  # Acme's workspace
-)
-
-# All operations now isolated to Acme's namespace
-result = await client.search(task="Process shipment data")
-```
-
-```typescript TypeScript
-import { RaySurfer } from "raysurfer";
-
-// For Customer: Acme Corp
-const client = new RaySurfer({
-  apiKey: "rs_...",
-  workspaceId: "ws_abc123...",  // Acme's workspace
-});
-
-// All operations now isolated to Acme's namespace
-const result = await client.search({ task: "Process shipment data" });
-```
-
-</CodeGroup>
-
-### 3. High-Level Client
-
-The same works with `RaysurferClient`:
+When handling a request for a specific customer, just pass their workspace ID:
 
 <CodeGroup>
 
@@ -119,13 +36,11 @@ The same works with `RaysurferClient`:
 from raysurfer import RaysurferClient
 from claude_agent_sdk import ClaudeAgentOptions
 
-options = ClaudeAgentOptions(
-    allowed_tools=["Read", "Write", "Bash"],
-)
+options = ClaudeAgentOptions(allowed_tools=["Read", "Write", "Bash"])
 
-# Just pass the workspace ID
-async with RaysurferClient(options, workspace_id="ws_abc123...") as client:
-    await client.query("Process shipment data for order #12345")
+# Acme's requests use Acme's workspace
+async with RaysurferClient(options, workspace_id="ws_acme...") as client:
+    await client.query("Process shipment data")
     async for msg in client.response():
         print(msg)
 ```
@@ -133,105 +48,58 @@ async with RaysurferClient(options, workspace_id="ws_abc123...") as client:
 ```typescript TypeScript
 import { RaysurferClient } from "raysurfer";
 
-// Just pass the workspace ID
+// Acme's requests use Acme's workspace
 const client = new RaysurferClient({
   allowedTools: ["Read", "Write", "Bash"],
-  workspaceId: "ws_abc123...",
+  workspaceId: "ws_acme...",
 });
 
-for await (const msg of client.query("Process shipment data for order #12345")) {
+for await (const msg of client.query("Process shipment data")) {
   console.log(msg);
 }
 ```
 
 </CodeGroup>
 
+That's it. All uploads and retrievals are now isolated to that customer.
+
 ---
 
-## Multi-Tenant Architecture Pattern
-
-A typical multi-tenant deployment looks like this:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Your Application                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│   Request from Acme ──► workspace_id = "ws_abc123..."       │
-│                         snips_desired = "client"             │
-│                              │                               │
-│                              ▼                               │
-│                    ┌─────────────────┐                       │
-│                    │  RaySurfer SDK  │                       │
-│                    └────────┬────────┘                       │
-│                              │                               │
-│              ┌───────────────┼───────────────┐              │
-│              ▼               ▼               ▼              │
-│   ┌──────────────┐ ┌──────────────┐ ┌──────────────┐       │
-│   │ Acme's Cache │ │ Beta's Cache │ │Gamma's Cache │       │
-│   │  (isolated)  │ │  (isolated)  │ │  (isolated)  │       │
-│   └──────────────┘ └──────────────┘ └──────────────┘       │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Example: Per-Request Client Initialization
+## Example: Multi-Tenant App
 
 ```python
-from raysurfer import AsyncRaySurfer
+from raysurfer import RaysurferClient
+from claude_agent_sdk import ClaudeAgentOptions
 
-# Mapping of customer IDs to workspace IDs
-CUSTOMER_WORKSPACES = {
+# Map your customer IDs to workspace IDs
+WORKSPACES = {
     "acme": "ws_abc123...",
     "beta": "ws_def456...",
-    "gamma": "ws_ghi789...",
 }
 
-async def handle_request(customer_id: str, task: str):
-    """Handle a request with customer-specific isolation."""
-    workspace_id = CUSTOMER_WORKSPACES[customer_id]
+async def handle_customer_request(customer_id: str, task: str):
+    options = ClaudeAgentOptions(allowed_tools=["Read", "Write", "Bash"])
 
-    async with AsyncRaySurfer(
-        api_key="rs_...",
-        workspace_id=workspace_id,
-    ) as client:
-        # All cache operations isolated to this customer
-        result = await client.search(task=task)
-        return result
+    async with RaysurferClient(options, workspace_id=WORKSPACES[customer_id]) as client:
+        await client.query(task)
+        async for msg in client.response():
+            yield msg
 ```
-
----
-
-## Scoping Options
-
-| Configuration | What It Does | Use Case |
-|--------------|--------------|----------|
-| No workspace | Default org namespace | Team sharing snippets |
-| `workspace_id` | **Per-workspace isolation** | **Multi-tenant SaaS** |
 
 ---
 
 ## FAQ
 
-### Can snippets ever leak between workspaces?
+### Can snippets leak between workspaces?
 
-No. Each workspace has a completely separate Pinecone namespace. The backend
-enforces namespace boundaries at the storage layer — there is no code path that
-allows cross-workspace access.
+No. Workspaces are completely isolated. There is no code path that allows
+cross-workspace access.
 
 ### What if I don't set a workspace_id?
 
-Without `workspace_id`, the SDK uses your organization's shared namespace. All
-users in your org share the same cache — fine for internal use, but not for
-multi-tenant scenarios.
+Your organization's shared cache is used. All users in your org see the same
+snippets — fine for internal use, but not for multi-tenant scenarios.
 
 ### Can I query multiple workspaces at once?
 
-No. Each SDK client instance is scoped to a single workspace. To search across
-workspaces, you would need to make separate requests with different
-`workspace_id` values.
-
-### How do I migrate existing snippets to a workspace?
-
-Contact support. We can migrate snippets from your org namespace to specific
-workspace namespaces.
+No. Each client is scoped to one workspace. Query separately if needed.
