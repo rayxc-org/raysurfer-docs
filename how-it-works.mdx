@@ -83,7 +83,7 @@ Every snippet has a verdict score that determines its priority in retrieval.
 The system automatically votes in two scenarios:
 
 - **On cache reuse** — when cached code runs successfully and produces the expected output, it receives a thumbs up; failures receive a thumbs down
-- **On upload** — when new code is stored after a successful execution, it receives an automatic thumbs up (controlled by `auto_vote`, on by default)
+- **On upload** — when new code is stored after a successful execution, Raysurfer's AI evaluates and votes on it (controlled by `use_raysurfer_ai_voting`, on by default). You can also provide your own votes via `user_vote` / `user_votes`, which skips AI voting.
 
 Both happen in the background after each execution—you don't need to do anything. The SDK also captures execution logs (tool outputs) and sends them to the backend as context for voting.
 

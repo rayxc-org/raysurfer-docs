@@ -147,7 +147,7 @@ curl -X POST https://api.raysurfer.com/api/store/execution-result \
       {"path": "chart.py", "content": "import matplotlib.pyplot as plt\n\ndef plot(data):\n    ..."}
     ],
     "succeeded": true,
-    "auto_vote": true,
+    "use_raysurfer_ai_voting": true,
     "execution_logs": "Parsed 150 rows, chart saved to output.png"
   }'
 ```
@@ -157,7 +157,8 @@ curl -X POST https://api.raysurfer.com/api/store/execution-result \
 | `task` | string | required | The task the agent was solving |
 | `files_written` | array | required | `[{"path": "...", "content": "..."}]` |
 | `succeeded` | boolean | required | Whether the task completed successfully |
-| `auto_vote` | boolean | `true` | Auto-vote on each stored block |
+| `use_raysurfer_ai_voting` | boolean | `true` | Let Raysurfer AI vote on stored blocks. Ignored when `user_vote` is provided. |
+| `user_vote` | integer | `null` | User-provided vote: `1` = thumbs up, `-1` = thumbs down. Skips AI voting. |
 | `execution_logs` | string | `null` | Stdout/stderr for vote context |
 | `run_url` | string | `null` | Link to the finished run log |
 
@@ -178,7 +179,7 @@ curl -X POST https://api.raysurfer.com/api/store/bulk-execution-result \
     "log_files": [
       {"path": "logs/run.log", "content": "Task completed", "encoding": "utf-8"}
     ],
-    "auto_vote": true
+    "use_raysurfer_ai_voting": true
   }'
 ```
 
@@ -236,7 +237,7 @@ curl -X POST https://api.raysurfer.com/api/store/cache-usage \
 ```
 
 <Note>
-  Voting happens automatically when you use `auto_vote: true` in the store endpoints. Use the vote endpoint directly only when you need manual control — for example, when code was retrieved from cache and you want to report whether it worked.
+  Voting happens automatically when `use_raysurfer_ai_voting` is `true` (the default) in the store endpoints. You can also provide `user_vote` or `user_votes` to vote yourself — AI voting is skipped when user votes are provided. Use the vote endpoint directly only when you need manual control over cached code blocks.
 </Note>
 
 ---

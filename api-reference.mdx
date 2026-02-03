@@ -325,11 +325,20 @@ from raysurfer.types import FileWritten
 
 file = FileWritten(path="fetch_repos.py", content="def fetch(): ...")
 
+# Let Raysurfer AI vote (default behavior)
 result = client.upload_new_code_snip(
     task="Fetch GitHub trending repos",
     file_written=file,
     succeeded=True,
     execution_logs="Fetched 10 trending repos successfully",
+)
+
+# Or provide your own vote (AI voting is automatically skipped)
+result = client.upload_new_code_snip(
+    task="Fetch GitHub trending repos",
+    file_written=file,
+    succeeded=True,
+    user_vote=1,  # 1 = thumbs up, -1 = thumbs down
 )
 
 print(f"Stored {result.code_blocks_stored} code blocks")
@@ -338,13 +347,25 @@ print(f"Stored {result.code_blocks_stored} code blocks")
 ```typescript TypeScript
 const file = { path: "fetch_repos.ts", content: "function fetch() { ... }" };
 
+// Let Raysurfer AI vote (default behavior)
 const result = await client.uploadNewCodeSnip(
   "Fetch GitHub trending repos",       // task
   file,                                 // code file
   true,                                 // succeeded
   undefined,                            // cachedCodeBlocks
-  true,                                 // autoVote (default)
+  true,                                 // useRaysurferAiVoting (default)
+  undefined,                            // userVote
   "Fetched 10 trending repos successfully", // execution logs
+);
+
+// Or provide your own vote (AI voting is automatically skipped)
+const result2 = await client.uploadNewCodeSnip(
+  "Fetch GitHub trending repos",
+  file,
+  true,
+  undefined,                            // cachedCodeBlocks
+  true,                                 // useRaysurferAiVoting (ignored when userVote set)
+  1,                                    // userVote: 1 = thumbs up, -1 = thumbs down
 );
 
 console.log(`Stored ${result.codeBlocksStored} code blocks`);
@@ -359,11 +380,12 @@ console.log(`Stored ${result.codeBlocksStored} code blocks`);
 | `task` | `string` | required | The task that was executed |
 | `file_written` / `fileWritten` | `FileWritten` | required | The file created during execution |
 | `succeeded` | `boolean` | required | Whether the task completed successfully |
-| `auto_vote` / `autoVote` | `boolean` | `true` | Auto-vote on newly stored blocks |
+| `use_raysurfer_ai_voting` / `useRaysurferAiVoting` | `boolean` | `true` | Let Raysurfer AI vote on stored blocks. Ignored when `user_vote` is provided. |
+| `user_vote` / `userVote` | `int \| null` | `null` | User-provided vote: `1` for thumbs up, `-1` for thumbs down. When provided, AI voting is automatically skipped. |
 | `execution_logs` / `executionLogs` | `string \| null` | `null` | Captured stdout/stderr for vote context |
 
 <Note>
-  When `auto_vote` is `true` (the default), each newly stored code block automatically receives a thumbs-up vote if the task succeeded. This provides an initial quality signal without waiting for the code to be reused and re-evaluated.
+  When `use_raysurfer_ai_voting` is `true` (the default) and no `user_vote` is provided, each newly stored code block is automatically evaluated by Raysurfer's AI. If you provide a `user_vote`, AI voting is skipped entirely — your vote is applied directly.
 </Note>
 
 ---
@@ -386,11 +408,22 @@ logs = [
     LogFile(path="logs/run.log", content="Task completed", encoding="utf-8"),
 ]
 
+# Let Raysurfer AI grade each file (default behavior)
 result = client.upload_bulk_code_snips(
     prompts=["Build a CLI tool", "Add CSV support"],
     files_written=files,
     log_files=logs,
-    auto_vote=True,
+)
+
+# Or provide your own votes (AI grading is automatically skipped)
+result = client.upload_bulk_code_snips(
+    prompts=["Build a CLI tool", "Add CSV support"],
+    files_written=files,
+    log_files=logs,
+    user_votes={
+        "app.py": 1,     # thumbs up
+        "utils.py": -1,  # thumbs down
+    },
 )
 
 print(result.message)
@@ -406,11 +439,20 @@ const logs = [
   { path: "logs/run.log", content: "Task completed", encoding: "utf-8" },
 ];
 
+// Let Raysurfer AI grade each file (default behavior)
 const result = await client.uploadBulkCodeSnips(
   ["Build a CLI tool", "Add CSV support"],
   files,
   logs,
-  true,
+);
+
+// Or provide your own votes (AI grading is automatically skipped)
+const result2 = await client.uploadBulkCodeSnips(
+  ["Build a CLI tool", "Add CSV support"],
+  files,
+  logs,
+  true,                                    // useRaysurferAiVoting (ignored when userVotes set)
+  { "app.ts": 1, "utils.ts": -1 },        // userVotes
 );
 
 console.log(result.message);
@@ -425,7 +467,12 @@ console.log(result.message);
 | `prompts` | `string[]` | required | Ordered list of raw user prompts |
 | `files_written` / `filesWritten` | `FileWritten[]` | required | Code files to store and grade |
 | `log_files` / `logFiles` | `LogFile[]` | `null` | Log files (any format; use `encoding: "base64"` for binary) |
-| `auto_vote` / `autoVote` | `boolean` | `true` | Run the sandboxed grader and apply votes |
+| `use_raysurfer_ai_voting` / `useRaysurferAiVoting` | `boolean` | `true` | Let Raysurfer AI grade and vote on stored blocks. Ignored when `user_votes` is provided. |
+| `user_votes` / `userVotes` | `dict[str, int] \| null` | `null` | Dict of filename to vote (`1` = thumbs up, `-1` = thumbs down). When provided, AI grading is automatically skipped. |
+
+<Note>
+  When providing `user_votes`, the keys should match the file paths in `files_written`. You don't need to vote on every file — only the files you include will receive votes. AI grading is entirely skipped when `user_votes` is provided.
+</Note>
 
 ---
 
@@ -511,7 +558,7 @@ await client.voteCodeSnip({
 </CodeGroup>
 
 <Note>
-  Voting is triggered automatically by `upload_new_code_snip` / `uploadNewCodeSnip` when `auto_vote` is `true` (the default), and also by the high-level `RaysurferClient`. Use `vote_code_snip` / `voteCodeSnip` directly only when you need manual voting control.
+  Voting is triggered automatically by `upload_new_code_snip` / `uploadNewCodeSnip` when `use_raysurfer_ai_voting` is `true` (the default), and also by the high-level `RaysurferClient`. You can provide `user_vote` / `user_votes` to vote yourself (AI voting is skipped). Use `vote_code_snip` / `voteCodeSnip` directly only for voting on cached blocks after reuse.
 </Note>
 
 ---

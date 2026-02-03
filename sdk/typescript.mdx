@@ -227,6 +227,6 @@ Each `CodeFile` contains `codeBlockId`, `filename`, `source`, `description`,
 | `search({ task, topK?, minVerdictScore?, preferComplete? })` | Unified search for cached code (recommended) |
 | `getCodeFiles({ task, topK?, minVerdictScore?, preferComplete?, cacheDir? })` | Retrieve cached code files with `addToLlmPrompt` for LLM augmentation |
 | `getCodeSnips({ task, topK?, minVerdictScore? })` | Retrieve cached code snippets by semantic search |
-| `uploadNewCodeSnip(task, fileWritten, succeeded, cachedCodeBlocks?, autoVote?, executionLogs?)` | Store a single code file for future reuse (auto-votes by default) |
-| `uploadBulkCodeSnips(prompts, filesWritten, logFiles?, autoVote?)` | Bulk upload prompts/logs/code for sandboxed grading (votes each file) |
+| `uploadNewCodeSnip(task, fileWritten, succeeded, cachedCodeBlocks?, useRaysurferAiVoting?, userVote?, executionLogs?)` | Store a single code file (AI votes by default, or provide your own vote) |
+| `uploadBulkCodeSnips(prompts, filesWritten, logFiles?, useRaysurferAiVoting?, userVotes?)` | Bulk upload for grading (AI votes by default, or provide per-file votes) |
 | `voteCodeSnip({ task, codeBlockId, codeBlockName, codeBlockDescription, succeeded })` | Vote on snippet usefulness (triggers async backend voting) |

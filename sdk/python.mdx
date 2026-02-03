@@ -177,7 +177,7 @@ response = anthropic_client.messages.create(
 print(response.content[0].text)
 
 # 2. Upload a new code file after execution
-#    Voting is triggered automatically when auto_vote is True (default)
+#    AI voting is triggered automatically when use_raysurfer_ai_voting is True (default)
 file = FileWritten(path="fetch_repos.py", content="def fetch(): ...")
 client.upload_new_code_snip(
     task=task,
@@ -192,7 +192,6 @@ client.upload_bulk_code_snips(
     prompts=["Build a CLI tool", "Add CSV support"],
     files_written=[FileWritten(path="cli.py", content="def main(): ...")],
     log_files=logs,
-    auto_vote=True,
 )
 
 # 3. (Optional) Vote on a cached snippet manually
@@ -259,6 +258,6 @@ async with AsyncRaySurfer(api_key="your_api_key") as client:
 | `search(task, top_k, min_verdict_score, prefer_complete)` | Unified search for cached code (recommended) |
 | `get_code_files(task, top_k, min_verdict_score, prefer_complete, cache_dir)` | Retrieve cached code files with `add_to_llm_prompt` for LLM augmentation |
 | `get_code_snips(task, top_k, min_verdict_score)` | Retrieve cached code snippets by semantic search |
-| `upload_new_code_snip(task, file_written, succeeded, auto_vote, execution_logs)` | Store a single code file for future reuse (auto-votes by default) |
-| `upload_bulk_code_snips(prompts, files_written, log_files, auto_vote)` | Bulk upload prompts/logs/code for sandboxed grading (votes each file) |
+| `upload_new_code_snip(task, file_written, succeeded, use_raysurfer_ai_voting, user_vote, execution_logs)` | Store a single code file (AI votes by default, or provide your own vote) |
+| `upload_bulk_code_snips(prompts, files_written, log_files, use_raysurfer_ai_voting, user_votes)` | Bulk upload for grading (AI votes by default, or provide per-file votes) |
 | `vote_code_snip(task, code_block_id, name, description, succeeded)` | Vote on snippet usefulness (triggers async backend voting) |
