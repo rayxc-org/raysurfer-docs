@@ -48,14 +48,12 @@ for await (const msg of client.query("Your task here")) {
 
 #### Constructor Parameters
 
-**Python** — `RaysurferClient(options, organization_id=None, workspace_id=None, snips_desired=None, namespace=None, debug=False)`:
+**Python** — `RaysurferClient(options, workspace_id=None, namespace=None, debug=False)`:
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `options` | `ClaudeAgentOptions` | Standard Claude Agent SDK options |
-| `organization_id` | `string` | Organization ID for team/enterprise namespacing |
-| `workspace_id` | `string` | Workspace ID for enterprise client namespacing |
-| `snips_desired` | `"company"` \| `"client"` | Scope of private snippets |
+| `workspace_id` | `string` | Workspace ID for per-customer isolation (enterprise) |
 | `namespace` | `string` | Custom namespace for storage/retrieval |
 | `debug` | `boolean` | Enable debug logging |
 
@@ -66,9 +64,7 @@ for await (const msg of client.query("Your task here")) {
 | `allowedTools` | `string[]` | Allowed Claude tools |
 | `systemPrompt` | `string` | System prompt |
 | `model` | `string` | Claude model ID |
-| `organizationId` | `string` | Organization ID for team/enterprise namespacing |
-| `workspaceId` | `string` | Workspace ID for enterprise client namespacing |
-| `snipsDesired` | `"company"` \| `"client"` | Scope of private snippets |
+| `workspaceId` | `string` | Workspace ID for per-customer isolation (enterprise) |
 | `namespace` | `string` | Custom namespace for storage/retrieval |
 | `debug` | `boolean` | Enable debug logging |
 

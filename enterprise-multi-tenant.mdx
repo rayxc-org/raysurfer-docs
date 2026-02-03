@@ -77,8 +77,7 @@ receive a `workspace_id` for each one:
 
 ### 2. Configure SDK Per-Customer
 
-When serving a request for a specific customer, initialize the SDK with their
-workspace ID:
+When serving a request for a specific customer, just pass their workspace ID:
 
 <CodeGroup>
 
@@ -88,9 +87,7 @@ from raysurfer import AsyncRaySurfer
 # For Customer: Acme Corp
 client = AsyncRaySurfer(
     api_key="rs_...",
-    organization_id="your-org-uuid",
-    workspace_id="ws_abc123...",      # Acme's workspace
-    snips_desired="client",            # Scope to workspace namespace
+    workspace_id="ws_abc123...",  # Acme's workspace
 )
 
 # All operations now isolated to Acme's namespace
@@ -103,9 +100,7 @@ import { RaySurfer } from "raysurfer";
 // For Customer: Acme Corp
 const client = new RaySurfer({
   apiKey: "rs_...",
-  organizationId: "your-org-uuid",
-  workspaceId: "ws_abc123...",        // Acme's workspace
-  snipsDesired: "client",              // Scope to workspace namespace
+  workspaceId: "ws_abc123...",  // Acme's workspace
 });
 
 // All operations now isolated to Acme's namespace
@@ -116,7 +111,7 @@ const result = await client.search({ task: "Process shipment data" });
 
 ### 3. High-Level Client
 
-The same configuration works with the high-level `RaysurferClient`:
+The same works with `RaysurferClient`:
 
 <CodeGroup>
 
@@ -128,13 +123,8 @@ options = ClaudeAgentOptions(
     allowed_tools=["Read", "Write", "Bash"],
 )
 
-# Initialize with customer-specific workspace
-async with RaysurferClient(
-    options,
-    organization_id="your-org-uuid",
-    workspace_id="ws_abc123...",      # Acme's workspace
-    snips_desired="client",
-) as client:
+# Just pass the workspace ID
+async with RaysurferClient(options, workspace_id="ws_abc123...") as client:
     await client.query("Process shipment data for order #12345")
     async for msg in client.response():
         print(msg)
@@ -143,12 +133,10 @@ async with RaysurferClient(
 ```typescript TypeScript
 import { RaysurferClient } from "raysurfer";
 
-// Initialize with customer-specific workspace
+// Just pass the workspace ID
 const client = new RaysurferClient({
   allowedTools: ["Read", "Write", "Bash"],
-  organizationId: "your-org-uuid",
-  workspaceId: "ws_abc123...",        // Acme's workspace
-  snipsDesired: "client",
+  workspaceId: "ws_abc123...",
 });
 
 for await (const msg of client.query("Process shipment data for order #12345")) {
@@ -205,9 +193,7 @@ async def handle_request(customer_id: str, task: str):
 
     async with AsyncRaySurfer(
         api_key="rs_...",
-        organization_id="your-org-uuid",
         workspace_id=workspace_id,
-        snips_desired="client",
     ) as client:
         # All cache operations isolated to this customer
         result = await client.search(task=task)
@@ -220,10 +206,8 @@ async def handle_request(customer_id: str, task: str):
 
 | Configuration | What It Does | Use Case |
 |--------------|--------------|----------|
-| No org/workspace | Per-user namespace | Individual developers |
-| `organization_id` only | Shared org namespace | Team sharing snippets |
-| `organization_id` + `snips_desired="company"` | Org-wide snippets | Company-wide code reuse |
-| `organization_id` + `workspace_id` + `snips_desired="client"` | **Per-workspace isolation** | **Multi-tenant SaaS** |
+| No workspace | Default org namespace | Team sharing snippets |
+| `workspace_id` | **Per-workspace isolation** | **Multi-tenant SaaS** |
 
 ---
 
@@ -235,11 +219,11 @@ No. Each workspace has a completely separate Pinecone namespace. The backend
 enforces namespace boundaries at the storage layer — there is no code path that
 allows cross-workspace access.
 
-### What happens if I don't set `snips_desired="client"`?
+### What if I don't set a workspace_id?
 
-Without `snips_desired="client"`, the SDK defaults to organization-level
-namespacing. All users in your org would share the same cache, which defeats
-the purpose of workspace isolation.
+Without `workspace_id`, the SDK uses your organization's shared namespace. All
+users in your org share the same cache — fine for internal use, but not for
+multi-tenant scenarios.
 
 ### Can I query multiple workspaces at once?
 
