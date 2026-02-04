@@ -168,12 +168,13 @@ for (const match of searchResult.matches) {
   console.log(`${match.codeBlock.name}: ${match.combinedScore}`);
 }
 
-// 2. Upload a new code file after execution
-await client.uploadNewCodeSnip(
-  "Fetch GitHub trending repos",
-  { path: "fetch_repos.ts", content: "function fetch() { ... }" },
-  true // succeeded
-);
+// 2. Upload a new code file after execution (with dependency versions)
+await client.uploadNewCodeSnip({
+  task: "Fetch GitHub trending repos",
+  fileWritten: { path: "fetch_repos.ts", content: "function fetch() { ... }" },
+  succeeded: true,
+  dependencies: { "node-fetch": "3.3.0", "zod": "3.22.0" },
+});
 
 // 2b. Bulk upload prompts/logs/code for sandboxed grading
 await client.uploadBulkCodeSnips(
@@ -227,6 +228,6 @@ Each `CodeFile` contains `codeBlockId`, `filename`, `source`, `description`,
 | `search({ task, topK?, minVerdictScore?, preferComplete? })` | Unified search for cached code (recommended) |
 | `getCodeFiles({ task, topK?, minVerdictScore?, preferComplete?, cacheDir? })` | Retrieve cached code files with `addToLlmPrompt` for LLM augmentation |
 | `getCodeSnips({ task, topK?, minVerdictScore? })` | Retrieve cached code snippets by semantic search |
-| `uploadNewCodeSnip(task, fileWritten, succeeded, cachedCodeBlocks?, useRaysurferAiVoting?, userVote?, executionLogs?)` | Store a single code file (AI votes by default, or provide your own vote) |
+| `uploadNewCodeSnip(task, fileWritten, succeeded, cachedCodeBlocks?, useRaysurferAiVoting?, userVote?, executionLogs?, dependencies?)` | Store a single code file with optional dependency versions |
 | `uploadBulkCodeSnips(prompts, filesWritten, logFiles?, useRaysurferAiVoting?, userVotes?)` | Bulk upload for grading (AI votes by default, or provide per-file votes) |
 | `voteCodeSnip({ task, codeBlockId, codeBlockName, codeBlockDescription, succeeded })` | Vote on snippet usefulness (triggers async backend voting) |

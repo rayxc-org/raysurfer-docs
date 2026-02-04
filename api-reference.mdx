@@ -383,6 +383,7 @@ console.log(`Stored ${result.codeBlocksStored} code blocks`);
 | `use_raysurfer_ai_voting` / `useRaysurferAiVoting` | `boolean` | `true` | Let Raysurfer AI vote on stored blocks. Ignored when `user_vote` is provided. |
 | `user_vote` / `userVote` | `int \| null` | `null` | User-provided vote: `1` for thumbs up, `-1` for thumbs down. When provided, AI voting is automatically skipped. |
 | `execution_logs` / `executionLogs` | `string \| null` | `null` | Captured stdout/stderr for vote context |
+| `dependencies` | `dict[str, str]` / `Record<string, string>` | `null` | Package dependencies with versions (e.g., `{"pandas": "2.1.0"}`) |
 
 <Note>
   When `use_raysurfer_ai_voting` is `true` (the default) and no `user_vote` is provided, each newly stored code block is automatically evaluated by Raysurfer's AI. If you provide a `user_vote`, AI voting is skipped entirely — your vote is applied directly.
@@ -490,7 +491,7 @@ result = client.store_code_block(
     language="python",
     description="Fetches user data from GitHub API",
     tags=["github", "api", "user"],
-    dependencies=["httpx"],
+    dependencies={"httpx": "0.27.0", "pydantic": "2.5.0"},
 )
 ```
 
@@ -502,7 +503,7 @@ const result = await client.storeCodeBlock({
   language: "typescript",
   description: "Fetches user data from GitHub API",
   tags: ["github", "api", "user"],
-  dependencies: ["node-fetch"],
+  dependencies: { "node-fetch": "3.3.0" },
 });
 ```
 
@@ -520,7 +521,7 @@ const result = await client.storeCodeBlock({
 | `input_schema` / `inputSchema` | `object` | JSON schema for inputs |
 | `output_schema` / `outputSchema` | `object` | JSON schema for outputs |
 | `language_version` / `languageVersion` | `string` | Language version |
-| `dependencies` | `string[]` | Required dependencies |
+| `dependencies` | `dict[str, str]` / `Record<string, string>` | Package name to version mapping (e.g., `{"pandas": "2.1.0"}`) |
 | `tags` | `string[]` | Searchable tags |
 | `capabilities` | `string[]` | What the code can do |
 | `example_queries` / `exampleQueries` | `string[]` | Example task queries |
@@ -578,7 +579,7 @@ A stored code block with metadata.
 | `entrypoint` | `string` | Main function name |
 | `language` | `string` | Programming language |
 | `language_version` / `languageVersion` | `string \| null` | Language version |
-| `dependencies` | `string[]` | Required packages |
+| `dependencies` | `dict[str, str]` / `Record<string, string>` | Package name to version mapping (e.g., `{"pandas": "2.1.0"}`) |
 | `tags` | `string[]` | Searchable tags |
 | `capabilities` | `string[]` | What it can do |
 | `input_schema` / `inputSchema` | `object` | Input JSON schema |
@@ -600,7 +601,7 @@ A code block match from unified search.
 | `filename` | `string` | Generated filename |
 | `language` | `string` | Programming language |
 | `entrypoint` | `string` | Main function name |
-| `dependencies` | `string[]` | Required packages |
+| `dependencies` | `dict[str, str]` / `Record<string, string>` | Package name to version mapping |
 
 ### FileWritten
 
