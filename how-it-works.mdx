@@ -138,3 +138,31 @@ return out4
 ```
 
 Each function extracts specific properties from the previous result—`out1[2]`, `out2.files[-1]`, `out3.length`—demonstrating why well-documented schemas matter for cache reuse.
+
+## Public Snippets
+
+Raysurfer maintains a curated collection of public snippets sourced from popular open-source GitHub repositories. These are validated code patterns that any user can include in their retrieval results.
+
+Enable public snippets by setting `public_snips` in the SDK constructor:
+
+<CodeGroup>
+
+```python Python
+from raysurfer import RaySurfer
+
+client = RaySurfer(api_key="your_key", public_snips=True)
+result = client.search(task="Parse CSV and generate chart")
+```
+
+```typescript TypeScript
+import { RaySurfer } from "raysurfer";
+
+const client = new RaySurfer({ apiKey: "your_key", publicSnips: true });
+const result = await client.search({ task: "Parse CSV and generate chart" });
+```
+
+</CodeGroup>
+
+Public snippets are read-only — they cannot be edited or deleted by users. They are curated by the Raysurfer team and ranked alongside your private snippets using the same scoring system.
+
+Also available via the [CLI](/integrations/cli) (`--public` flag) and [MCP server](/integrations/mcp) (`public_snips` parameter).

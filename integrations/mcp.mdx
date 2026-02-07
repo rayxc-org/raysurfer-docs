@@ -3,71 +3,112 @@ title: MCP Server
 description: "Give Claude direct access to your code cache via Model Context Protocol"
 ---
 
-The Raysurfer MCP server exposes code caching as native tools inside Claude Code, Claude Desktop, and any MCP-compatible client.
+The Raysurfer MCP server exposes code caching as native tools inside Claude Code, Claude Desktop, Cursor, VS Code, Windsurf, and any MCP-compatible client.
+
+No install required — runs via `npx`.
 
 <Note>
   Source: [rayxc-org/raysurfer-code-caching-mcp](https://github.com/rayxc-org/raysurfer-code-caching-mcp)
 </Note>
 
-## Installation
+## Setup
 
-Add to Claude Code in one command:
+Get your API key from the [dashboard](https://raysurfer.com/dashboard/api-keys).
 
-<CodeGroup>
-
-```bash npx
-claude mcp add raysurfer -- npx -y raysurfer-code-caching-mcp
-```
-
-```bash bunx
-claude mcp add raysurfer -- bunx raysurfer-code-caching-mcp
-```
-
-</CodeGroup>
-
-Set your API key:
+### Claude Code
 
 ```bash
-export RAYSURFER_API_KEY=your_key_here
+claude mcp add raysurfer -e RAYSURFER_API_KEY=YOUR_API_KEY -- npx -y raysurfer-code-caching-mcp
+```
+
+Add `--scope user` to make it available across all projects:
+
+```bash
+claude mcp add raysurfer --scope user -e RAYSURFER_API_KEY=YOUR_API_KEY -- npx -y raysurfer-code-caching-mcp
 ```
 
 ### Claude Desktop
 
-Add to your Claude Desktop config file:
+Add to your `claude_desktop_config.json`:
 
-<CodeGroup>
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
-```json macOS
-// ~/Library/Application Support/Claude/claude_desktop_config.json
+```json
 {
   "mcpServers": {
     "raysurfer": {
       "command": "npx",
       "args": ["-y", "raysurfer-code-caching-mcp"],
       "env": {
-        "RAYSURFER_API_KEY": "your_key_here"
+        "RAYSURFER_API_KEY": "YOUR_API_KEY"
       }
     }
   }
 }
 ```
 
-```json Windows
-// %APPDATA%\Claude\claude_desktop_config.json
+### Cursor
+
+Add to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project):
+
+```json
 {
   "mcpServers": {
     "raysurfer": {
       "command": "npx",
       "args": ["-y", "raysurfer-code-caching-mcp"],
       "env": {
-        "RAYSURFER_API_KEY": "your_key_here"
+        "RAYSURFER_API_KEY": "YOUR_API_KEY"
       }
     }
   }
 }
 ```
 
-</CodeGroup>
+### VS Code
+
+Add to `.vscode/mcp.json`:
+
+```json
+{
+  "inputs": [
+    {
+      "password": true,
+      "id": "raysurfer-api-key",
+      "type": "promptString",
+      "description": "Raysurfer API Key"
+    }
+  ],
+  "servers": {
+    "raysurfer": {
+      "command": "npx",
+      "args": ["-y", "raysurfer-code-caching-mcp"],
+      "env": {
+        "RAYSURFER_API_KEY": "${input:raysurfer-api-key}"
+      }
+    }
+  }
+}
+```
+
+### Windsurf
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "raysurfer": {
+      "command": "npx",
+      "args": ["-y", "raysurfer-code-caching-mcp"],
+      "env": {
+        "RAYSURFER_API_KEY": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
 
 ### Project-Level (.mcp.json)
 
@@ -87,6 +128,20 @@ Add to your project root to share with your team:
 }
 ```
 
+## Verify Installation
+
+For Claude Code, check the server is running:
+
+```
+claude mcp list
+```
+
+You should see `raysurfer` listed. Then ask Claude:
+
+> Search the Raysurfer cache for code that generates a quarterly report.
+
+Claude will call `raysurfer_search` and show you the results.
+
 ## Tools
 
 The server exposes 4 tools that Claude can call directly:
@@ -100,6 +155,7 @@ Search for cached code matching a task description.
 | `task` | string | Yes | — | Natural language task description |
 | `top_k` | number | No | 5 | Maximum results (1-100) |
 | `min_score` | number | No | 0.3 | Minimum verdict score (0-1) |
+| `public_snips` | boolean | No | false | Include community public snippets in results |
 
 ### raysurfer_upload
 
@@ -108,7 +164,7 @@ Upload code from a successful execution.
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `task` | string | Yes | — | What the code accomplishes |
-| `files` | array | Yes | — | Files with `path` and `content` keys |
+| `file` | object | Yes | — | File with `path` and `content` keys |
 | `succeeded` | boolean | No | true | Whether the execution succeeded |
 
 ### raysurfer_vote
@@ -136,17 +192,3 @@ Get proven task-to-code mappings.
 |-----|-------------|
 | `raysurfer://help` | Help text about tools and recommended workflow |
 | `raysurfer://status` | Connection status and API reachability |
-
-## Verify Installation
-
-Check the server is running inside Claude Code:
-
-```
-/mcp
-```
-
-You should see `raysurfer` listed with a green status. Then ask Claude:
-
-> Search the Raysurfer cache for code that generates a quarterly report.
-
-Claude will call `raysurfer_search` and show you the results.

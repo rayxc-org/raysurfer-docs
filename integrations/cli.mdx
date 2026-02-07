@@ -51,10 +51,17 @@ Get JSON output for scripting:
 raysurfer search "Generate a quarterly revenue report" --json
 ```
 
+Include community public snippets in results:
+
+```bash
+raysurfer search "Generate a quarterly revenue report" --public
+```
+
 | Flag | Description | Default |
 |------|-------------|---------|
 | `--top-k`, `-k` | Maximum results | 5 |
 | `--min-score`, `-s` | Minimum verdict score (0-1) | 0.3 |
+| `--public`, `-p` | Include community public snippets | off |
 | `--show-code`, `-c` | Display source from top match | off |
 | `--json`, `-j` | Output as JSON | off |
 
