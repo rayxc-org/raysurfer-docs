@@ -47,13 +47,12 @@ for await (const msg of client.query("Your task here")) {
 
 #### Constructor Parameters
 
-**Python** — `RaysurferClient(options, workspace_id=None, namespace=None, debug=False)`:
+**Python** — `RaysurferClient(options, workspace_id=None, debug=False)`:
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `options` | `ClaudeAgentOptions` | Standard Claude Agent SDK options |
 | `workspace_id` | `string` | Workspace ID for per-customer isolation (enterprise) |
-| `namespace` | `string` | Custom namespace for storage/retrieval |
 | `debug` | `boolean` | Enable debug logging |
 
 **TypeScript** — `new RaysurferClient(options)` where options is a single object:
@@ -64,7 +63,6 @@ for await (const msg of client.query("Your task here")) {
 | `systemPrompt` | `string` | System prompt |
 | `model` | `string` | Claude model ID |
 | `workspaceId` | `string` | Workspace ID for per-customer isolation (enterprise) |
-| `namespace` | `string` | Custom namespace for storage/retrieval |
 | `debug` | `boolean` | Enable debug logging |
 
 #### Methods
@@ -131,10 +129,9 @@ result = client.search(
 )
 
 for match in result.matches:
-    print(f"{match.code_block.name}: {match.combined_score}")
+    print(f"{match.code_block.name}: {match.score}")
     print(f"  File: {match.filename}")
     print(f"  Source: {match.code_block.source[:80]}...")
-    print(f"  Verdict: {match.verdict_score:.0%}")
 ```
 
 ```typescript TypeScript
@@ -146,10 +143,9 @@ const result = await client.search({
 });
 
 for (const match of result.matches) {
-  console.log(`${match.codeBlock.name}: ${match.combinedScore}`);
+  console.log(`${match.codeBlock.name}: ${match.score}`);
   console.log(`  File: ${match.filename}`);
   console.log(`  Source: ${match.codeBlock.source.slice(0, 80)}...`);
-  console.log(`  Verdict: ${Math.round(match.verdictScore * 100)}%`);
 }
 ```
 
@@ -161,7 +157,7 @@ for (const match of result.matches) {
 |-----------|------|---------|-------------|
 | `task` | `string` | required | Natural language task description |
 | `top_k` / `topK` | `number` | `5` | Maximum number of results |
-| `min_verdict_score` / `minVerdictScore` | `number` | `0.3` | Minimum verdict score filter |
+| `min_verdict_score` / `minVerdictScore` | `number` | `0.3` | Minimum quality score filter |
 | `prefer_complete` / `preferComplete` | `boolean` | `false` | Prefer longer/more complete implementations |
 | `input_schema` / `inputSchema` | `object` | `null` | Optional input schema filter |
 
@@ -370,10 +366,9 @@ Returned by [`search()`](#search).
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `matches` | [SearchMatch](#searchmatch)`[]` | Matching code blocks with full scoring |
+| `matches` | [SearchMatch](#searchmatch)`[]` | Matching code blocks with scoring |
 | `total_found` / `totalFound` | `int` | Total matches found |
 | `cache_hit` / `cacheHit` | `boolean` | Whether results were served from cache |
-| `search_namespaces` / `searchNamespaces` | `string[]` | Namespaces that were searched |
 
 ---
 
@@ -419,15 +414,12 @@ Returned by [`vote_code_snip()`](#vote_code_snip--votecodesnip).
 
 ### SearchMatch
 
-A single result from [`search()`](#search). Contains a full [CodeBlock](#codeblock) plus scoring metadata.
+A single result from [`search()`](#search). Contains a full [CodeBlock](#codeblock) plus a relevance score.
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `code_block` / `codeBlock` | [CodeBlock](#codeblock) | The matched code block with full source and metadata |
-| `combined_score` / `combinedScore` | `float` | Overall relevance score (0–1). Formula: `0.6 * similarity + 0.25 * verdict + 0.15 * confidence + resilience` |
-| `vector_score` / `vectorScore` | `float` | Semantic similarity between your task and the code block (0–1) |
-| `verdict_score` / `verdictScore` | `float` | Community quality rating: `thumbs_up / (thumbs_up + thumbs_down)`, defaults to `0.3` if unrated |
-| `error_resilience` / `errorResilience` | `float` | Score for how well the code handles errors (0–1) |
+| `score` | `float` | Overall relevance score (0–1) |
 | `thumbs_up` / `thumbsUp` | `int` | Total positive votes on this code block |
 | `thumbs_down` / `thumbsDown` | `int` | Total negative votes on this code block |
 | `filename` | `string` | Generated filename (e.g., `"github_fetcher.py"`) |
