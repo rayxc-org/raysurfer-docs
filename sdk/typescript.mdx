@@ -143,6 +143,20 @@ const enterpriseClient = new ClaudeSDKClient({
 | `snipsDesired: "company"` | TEAM or ENTERPRISE |
 | `snipsDesired: "client"` | ENTERPRISE only |
 
+## Public Snippets
+
+Include community public snippets (crawled from GitHub) alongside your private snippets:
+
+```typescript
+// High-level
+const client = new ClaudeSDKClient({ publicSnips: true });
+
+// Low-level
+const rs = new RaySurfer({ apiKey: "...", publicSnips: true });
+```
+
+See [How It Works — Public Snippets](/how-it-works#public-snippets) for details.
+
 ## Low-Level API
 
 For custom integrations, use the `RaySurfer` client directly:
@@ -204,6 +218,7 @@ const client = new RaySurfer({
   organizationId: "org_xxx", // optional, for team namespacing
   workspaceId: "ws_xxx", // optional, for enterprise namespacing
   snipsDesired: "company", // optional, snippet scope
+  publicSnips: true, // optional, include community snippets
 });
 ```
 
@@ -218,16 +233,57 @@ The `getCodeFiles()` response includes:
 | `totalFound` | `number` | Total matches found |
 | `addToLlmPrompt` | `string` | Pre-formatted string to append to LLM system prompt |
 
-Each `CodeFile` contains `codeBlockId`, `filename`, `source`, `description`,
-`verdictScore`, `thumbsUp`, `thumbsDown`, and `similarityScore`.
+Each `CodeFile` contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `codeBlockId` | `string` | Unique identifier of the code block |
+| `filename` | `string` | Generated filename (e.g., `"github_fetcher.ts"`) |
+| `source` | `string` | Full source code |
+| `entrypoint` | `string` | Main function to call |
+| `description` | `string` | What the code does |
+| `inputSchema` | `Record<string, unknown>` | JSON schema for inputs |
+| `outputSchema` | `Record<string, unknown>` | JSON schema for outputs |
+| `language` | `string` | Programming language |
+| `dependencies` | `Record<string, string>` | Package name to version mapping |
+| `verdictScore` | `number` | Quality rating (thumbsUp / total, 0.3 if unrated) |
+| `thumbsUp` | `number` | Positive votes |
+| `thumbsDown` | `number` | Negative votes |
+| `similarityScore` | `number` | Semantic similarity (0–1) |
+| `combinedScore` | `number` | Combined score (similarity * 0.6 + verdict * 0.4) |
+
+### Search Response
+
+The `search()` method returns a `SearchResponse`:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `matches` | `SearchMatch[]` | Matching code blocks with full scoring |
+| `totalFound` | `number` | Total matches found |
+| `cacheHit` | `boolean` | Whether results were served from cache |
+| `searchNamespaces` | `string[]` | Namespaces that were searched |
+
+Each `SearchMatch` contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `codeBlock` | `CodeBlock` | The code block (has `id`, `name`, `description`, `source`, `entrypoint`, `language`, `dependencies`, `tags`) |
+| `combinedScore` | `number` | Overall relevance score (0–1) |
+| `vectorScore` | `number` | Semantic similarity score |
+| `verdictScore` | `number` | Community quality rating |
+| `errorResilience` | `number` | Error handling robustness score |
+| `thumbsUp` | `number` | Positive votes |
+| `thumbsDown` | `number` | Negative votes |
+| `filename` | `string` | Generated filename for the code |
+| `language` | `string` | Programming language |
+| `entrypoint` | `string` | Main function name |
+| `dependencies` | `Record<string, string>` | Package name to version mapping (e.g., `{"node-fetch": "3.3.0"}`) |
 
 ### Method Reference
 
 | Method | Description |
 |--------|-------------|
-| `search({ task, topK?, minVerdictScore?, preferComplete? })` | Unified search for cached code (recommended) |
-| `getCodeFiles({ task, topK?, minVerdictScore?, preferComplete?, cacheDir? })` | Retrieve cached code files with `addToLlmPrompt` for LLM augmentation |
-| `getCodeSnips({ task, topK?, minVerdictScore? })` | Retrieve cached code snippets by semantic search |
-| `uploadNewCodeSnip(task, fileWritten, succeeded, cachedCodeBlocks?, useRaysurferAiVoting?, userVote?, executionLogs?, dependencies?)` | Store a single code file with optional dependency versions |
-| `uploadBulkCodeSnips(prompts, filesWritten, logFiles?, useRaysurferAiVoting?, userVotes?)` | Bulk upload for grading (AI votes by default, or provide per-file votes) |
-| `voteCodeSnip({ task, codeBlockId, codeBlockName, codeBlockDescription, succeeded })` | Vote on snippet usefulness (triggers async backend voting) |
+| `search({ task, topK?, minVerdictScore?, preferComplete? })` | Search for cached code snippets |
+| `uploadNewCodeSnip({ task, fileWritten, succeeded, ... })` | Store a code file for future reuse |
+| `uploadBulkCodeSnips({ prompts, filesWritten, ... })` | Bulk upload for grading |
+| `voteCodeSnip({ task, codeBlockId, codeBlockName, codeBlockDescription, succeeded })` | Vote on snippet usefulness |

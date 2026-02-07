@@ -1,14 +1,13 @@
 ---
 title: API Reference
 description: "Complete reference for all publicly exposed SDK functions and types"
-mode: "wide"
 ---
 
-This page documents all publicly exposed functions and types in the Raysurfer SDK.
+This page documents all publicly exposed functions and types in the Raysurfer SDK. Every type is defined down to primitive fields.
+
+---
 
 ## High-Level Client
-
-The primary way to use Raysurfer is through the drop-in replacement client.
 
 ### RaysurferClient
 
@@ -79,8 +78,6 @@ for await (const msg of client.query("Your task here")) {
 
 ## Low-Level API Client
 
-For custom integrations, use the direct API client.
-
 ### RaySurfer / AsyncRaySurfer
 
 <CodeGroup>
@@ -93,14 +90,14 @@ client = RaySurfer(api_key="your_api_key")
 
 # Async client
 async with AsyncRaySurfer(api_key="your_api_key") as client:
-    snips = await client.get_code_snips(task="Fetch GitHub repos")
+    result = await client.search(task="Fetch GitHub repos")
 ```
 
 ```typescript TypeScript
 import { RaySurfer } from "raysurfer";
 
 const client = new RaySurfer({ apiKey: "your_api_key" });
-const snips = await client.getCodeSnips({ task: "Fetch GitHub repos" });
+const result = await client.search({ task: "Fetch GitHub repos" });
 ```
 
 </CodeGroup>
@@ -115,14 +112,13 @@ const snips = await client.getCodeSnips({ task: "Fetch GitHub repos" });
 | `organization_id` / `organizationId` | `string` | Organization ID for team/enterprise namespacing |
 | `workspace_id` / `workspaceId` | `string` | Workspace ID for enterprise client namespacing |
 | `snips_desired` / `snipsDesired` | `"company"` \| `"client"` | Scope of private snippets |
+| `public_snips` / `publicSnips` | `boolean` | Include community public snippets |
 
 ---
 
-## Retrieval Methods
+## search
 
-### search
-
-Unified search for cached code snippets. Replaces the separate `get_code_snips`, `retrieve_best`, and `get_code_files` methods.
+Search for cached code snippets by task description.
 
 <CodeGroup>
 
@@ -137,6 +133,7 @@ result = client.search(
 for match in result.matches:
     print(f"{match.code_block.name}: {match.combined_score}")
     print(f"  File: {match.filename}")
+    print(f"  Source: {match.code_block.source[:80]}...")
     print(f"  Verdict: {match.verdict_score:.0%}")
 ```
 
@@ -151,13 +148,14 @@ const result = await client.search({
 for (const match of result.matches) {
   console.log(`${match.codeBlock.name}: ${match.combinedScore}`);
   console.log(`  File: ${match.filename}`);
+  console.log(`  Source: ${match.codeBlock.source.slice(0, 80)}...`);
   console.log(`  Verdict: ${Math.round(match.verdictScore * 100)}%`);
 }
 ```
 
 </CodeGroup>
 
-#### Parameters
+### Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -167,156 +165,17 @@ for (const match of result.matches) {
 | `prefer_complete` / `preferComplete` | `boolean` | `false` | Prefer longer/more complete implementations |
 | `input_schema` / `inputSchema` | `object` | `null` | Optional input schema filter |
 
-#### Returns: `SearchResponse`
+### Returns: [SearchResponse](#searchresponse)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `matches` | `SearchMatch[]` | Matching code blocks with full scoring |
-| `total_found` / `totalFound` | `number` | Total matches found |
-| `cache_hit` / `cacheHit` | `boolean` | Whether results were served from cache |
-| `search_namespaces` / `searchNamespaces` | `string[]` | Namespaces that were searched |
+<Tip>
+  **LLM prompt augmentation**: The convenience method `get_code_files()` / `getCodeFiles()` wraps `search()` and returns an `add_to_llm_prompt` string you can append directly to your system prompt. It's the same search results, just pre-formatted for LLM injection.
+</Tip>
 
 ---
 
-### get_code_snips / getCodeSnips (convenience wrapper)
+## upload_new_code_snip / uploadNewCodeSnip
 
-Convenience wrapper around `search()`. Returns results in the legacy `RetrieveCodeBlockResponse` format.
-
----
-
-### retrieve_best / retrieveBest (convenience wrapper)
-
-Convenience wrapper around `search()`. Returns the single best match in the legacy `RetrieveBestResponse` format. The old `retrieval_confidence` string field is derived from the numeric `combined_score`.
-
----
-
-### get_code_files / getCodeFiles
-
-Get code files ready to download to a sandbox environment. Delegates to `search()` internally. Also returns a pre-formatted `add_to_llm_prompt` string (generated client-side) that you can append directly to your LLM system prompt.
-
-<CodeGroup>
-
-```python Python
-result = client.get_code_files(
-    task="Fetch GitHub user data",
-    top_k=5,
-    min_verdict_score=0.3,
-    prefer_complete=True,
-    cache_dir="/path/to/cache",  # Optional: include full paths in prompt
-)
-
-for file in result.files:
-    print(f"{file.filename}: {file.verdict_score}")
-
-# Use the pre-formatted prompt string
-system_prompt = "You are helpful." + result.add_to_llm_prompt
-```
-
-```typescript TypeScript
-const result = await client.getCodeFiles({
-  task: "Fetch GitHub user data",
-  topK: 5,
-  minVerdictScore: 0.3,
-  preferComplete: true,
-  cacheDir: "/path/to/cache",  // Optional: include full paths in prompt
-});
-
-for (const file of result.files) {
-  console.log(`${file.filename}: ${file.verdictScore}`);
-}
-
-// Use the pre-formatted prompt string
-const systemPrompt = "You are helpful." + result.addToLlmPrompt;
-```
-
-</CodeGroup>
-
-#### Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `task` | `string` | required | Natural language task description |
-| `top_k` / `topK` | `number` | `5` | Maximum number of files |
-| `min_verdict_score` / `minVerdictScore` | `number` | `0.3` | Minimum verdict score |
-| `prefer_complete` / `preferComplete` | `boolean` | `true` | Prefer longer/complete implementations |
-| `cache_dir` / `cacheDir` | `string` | `.raysurfer_code` | Directory where files will be written. Used to generate full paths in `add_to_llm_prompt`. |
-
-#### Returns: `GetCodeFilesResponse`
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `files` | `CodeFile[]` | Retrieved code files with metadata |
-| `task` | `string` | The task that was searched |
-| `total_found` / `totalFound` | `number` | Total matches found |
-| `add_to_llm_prompt` / `addToLlmPrompt` | `string` | Pre-formatted string to append to LLM system prompt |
-
----
-
-### get_few_shot_examples / getFewShotExamples
-
-Retrieve few-shot examples for code generation prompting.
-
-<CodeGroup>
-
-```python Python
-examples = client.get_few_shot_examples(task="Parse CSV files", k=3)
-
-for ex in examples:
-    print(f"Task: {ex.task}")
-    print(f"Code: {ex.code_snippet}")
-```
-
-```typescript TypeScript
-const examples = await client.getFewShotExamples("Parse CSV files", 3);
-
-for (const ex of examples) {
-  console.log(`Task: ${ex.task}`);
-  console.log(`Code: ${ex.codeSnippet}`);
-}
-```
-
-</CodeGroup>
-
----
-
-### get_task_patterns / getTaskPatterns
-
-Retrieve proven task-to-code mappings.
-
-<CodeGroup>
-
-```python Python
-patterns = client.get_task_patterns(
-    task="API integration",
-    min_thumbs_up=5,
-    top_k=20,
-)
-
-for p in patterns:
-    print(f"{p.task_pattern} -> {p.code_block_name}")
-```
-
-```typescript TypeScript
-const patterns = await client.getTaskPatterns({
-  task: "API integration",
-  minThumbsUp: 5,
-  topK: 20,
-});
-
-for (const p of patterns) {
-  console.log(`${p.taskPattern} -> ${p.codeBlockName}`);
-}
-```
-
-</CodeGroup>
-
----
-
-## Storage Methods
-
-### upload_new_code_snip / uploadNewCodeSnip
-
-Upload a single code file from an execution for future reuse.
+Upload a code file from an execution for future reuse.
 
 <CodeGroup>
 
@@ -348,42 +207,39 @@ print(f"Stored {result.code_blocks_stored} code blocks")
 const file = { path: "fetch_repos.ts", content: "function fetch() { ... }" };
 
 // Let Raysurfer AI vote (default behavior)
-const result = await client.uploadNewCodeSnip(
-  "Fetch GitHub trending repos",       // task
-  file,                                 // code file
-  true,                                 // succeeded
-  undefined,                            // cachedCodeBlocks
-  true,                                 // useRaysurferAiVoting (default)
-  undefined,                            // userVote
-  "Fetched 10 trending repos successfully", // execution logs
-);
+const result = await client.uploadNewCodeSnip({
+  task: "Fetch GitHub trending repos",
+  fileWritten: file,
+  succeeded: true,
+  executionLogs: "Fetched 10 trending repos successfully",
+});
 
 // Or provide your own vote (AI voting is automatically skipped)
-const result2 = await client.uploadNewCodeSnip(
-  "Fetch GitHub trending repos",
-  file,
-  true,
-  undefined,                            // cachedCodeBlocks
-  true,                                 // useRaysurferAiVoting (ignored when userVote set)
-  1,                                    // userVote: 1 = thumbs up, -1 = thumbs down
-);
+const result2 = await client.uploadNewCodeSnip({
+  task: "Fetch GitHub trending repos",
+  fileWritten: file,
+  succeeded: true,
+  userVote: 1, // 1 = thumbs up, -1 = thumbs down
+});
 
 console.log(`Stored ${result.codeBlocksStored} code blocks`);
 ```
 
 </CodeGroup>
 
-#### Parameters
+### Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `task` | `string` | required | The task that was executed |
-| `file_written` / `fileWritten` | `FileWritten` | required | The file created during execution |
+| `file_written` / `fileWritten` | [FileWritten](#filewritten) | required | The file created during execution |
 | `succeeded` | `boolean` | required | Whether the task completed successfully |
 | `use_raysurfer_ai_voting` / `useRaysurferAiVoting` | `boolean` | `true` | Let Raysurfer AI vote on stored blocks. Ignored when `user_vote` is provided. |
 | `user_vote` / `userVote` | `int \| null` | `null` | User-provided vote: `1` for thumbs up, `-1` for thumbs down. When provided, AI voting is automatically skipped. |
 | `execution_logs` / `executionLogs` | `string \| null` | `null` | Captured stdout/stderr for vote context |
 | `dependencies` | `dict[str, str]` / `Record<string, string>` | `null` | Package dependencies with versions (e.g., `{"pandas": "2.1.0"}`) |
+
+### Returns: [SubmitExecutionResultResponse](#submitexecutionresultresponse)
 
 <Note>
   When `use_raysurfer_ai_voting` is `true` (the default) and no `user_vote` is provided, each newly stored code block is automatically evaluated by Raysurfer's AI. If you provide a `user_vote`, AI voting is skipped entirely — your vote is applied directly.
@@ -391,9 +247,9 @@ console.log(`Stored ${result.codeBlocksStored} code blocks`);
 
 ---
 
-### upload_bulk_code_snips / uploadBulkCodeSnips
+## upload_bulk_code_snips / uploadBulkCodeSnips
 
-Bulk upload prompts, logs, and code files for sandboxed grading. The backend runs a grader that votes thumbs up/down for each code file.
+Bulk upload prompts, logs, and code files for sandboxed grading.
 
 <CodeGroup>
 
@@ -426,8 +282,6 @@ result = client.upload_bulk_code_snips(
         "utils.py": -1,  # thumbs down
     },
 )
-
-print(result.message)
 ```
 
 ```typescript TypeScript
@@ -441,96 +295,38 @@ const logs = [
 ];
 
 // Let Raysurfer AI grade each file (default behavior)
-const result = await client.uploadBulkCodeSnips(
-  ["Build a CLI tool", "Add CSV support"],
-  files,
-  logs,
-);
+const result = await client.uploadBulkCodeSnips({
+  prompts: ["Build a CLI tool", "Add CSV support"],
+  filesWritten: files,
+  logFiles: logs,
+});
 
 // Or provide your own votes (AI grading is automatically skipped)
-const result2 = await client.uploadBulkCodeSnips(
-  ["Build a CLI tool", "Add CSV support"],
-  files,
-  logs,
-  true,                                    // useRaysurferAiVoting (ignored when userVotes set)
-  { "app.ts": 1, "utils.ts": -1 },        // userVotes
-);
-
-console.log(result.message);
-```
-
-</CodeGroup>
-
-#### Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `prompts` | `string[]` | required | Ordered list of raw user prompts |
-| `files_written` / `filesWritten` | `FileWritten[]` | required | Code files to store and grade |
-| `log_files` / `logFiles` | `LogFile[]` | `null` | Log files (any format; use `encoding: "base64"` for binary) |
-| `use_raysurfer_ai_voting` / `useRaysurferAiVoting` | `boolean` | `true` | Let Raysurfer AI grade and vote on stored blocks. Ignored when `user_votes` is provided. |
-| `user_votes` / `userVotes` | `dict[str, int] \| null` | `null` | Dict of filename to vote (`1` = thumbs up, `-1` = thumbs down). When provided, AI grading is automatically skipped. |
-
-<Note>
-  When providing `user_votes`, the keys should match the file paths in `files_written`. You don't need to vote on every file — only the files you include will receive votes. AI grading is entirely skipped when `user_votes` is provided.
-</Note>
-
----
-
-### store_code_block / storeCodeBlock
-
-Store a code block with full metadata (advanced usage).
-
-<CodeGroup>
-
-```python Python
-result = client.store_code_block(
-    name="GitHub User Fetcher",
-    source="def fetch_user(username): ...",
-    entrypoint="fetch_user",
-    language="python",
-    description="Fetches user data from GitHub API",
-    tags=["github", "api", "user"],
-    dependencies={"httpx": "0.27.0", "pydantic": "2.5.0"},
-)
-```
-
-```typescript TypeScript
-const result = await client.storeCodeBlock({
-  name: "GitHub User Fetcher",
-  source: "function fetchUser(username) { ... }",
-  entrypoint: "fetchUser",
-  language: "typescript",
-  description: "Fetches user data from GitHub API",
-  tags: ["github", "api", "user"],
-  dependencies: { "node-fetch": "3.3.0" },
+const result2 = await client.uploadBulkCodeSnips({
+  prompts: ["Build a CLI tool", "Add CSV support"],
+  filesWritten: files,
+  logFiles: logs,
+  userVotes: { "app.ts": 1, "utils.ts": -1 },
 });
 ```
 
 </CodeGroup>
 
-#### Parameters
+### Parameters
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `name` | `string` | Human-readable name |
-| `source` | `string` | The code source |
-| `entrypoint` | `string` | Main function/method name |
-| `language` | `string` | Programming language |
-| `description` | `string` | Description of what the code does |
-| `input_schema` / `inputSchema` | `object` | JSON schema for inputs |
-| `output_schema` / `outputSchema` | `object` | JSON schema for outputs |
-| `language_version` / `languageVersion` | `string` | Language version |
-| `dependencies` | `dict[str, str]` / `Record<string, string>` | Package name to version mapping (e.g., `{"pandas": "2.1.0"}`) |
-| `tags` | `string[]` | Searchable tags |
-| `capabilities` | `string[]` | What the code can do |
-| `example_queries` / `exampleQueries` | `string[]` | Example task queries |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `prompts` | `string[]` | required | Ordered list of raw user prompts |
+| `files_written` / `filesWritten` | [FileWritten](#filewritten)`[]` | required | Code files to store and grade |
+| `log_files` / `logFiles` | [LogFile](#logfile)`[]` | `null` | Log files (any format; use `encoding: "base64"` for binary) |
+| `use_raysurfer_ai_voting` / `useRaysurferAiVoting` | `boolean` | `true` | Let Raysurfer AI grade and vote on stored blocks. Ignored when `user_votes` is provided. |
+| `user_votes` / `userVotes` | `dict[str, int] \| null` | `null` | Dict of filename to vote (`1` = thumbs up, `-1` = thumbs down). When provided, AI grading is automatically skipped. |
+
+### Returns: [BulkExecutionResultResponse](#bulkexecutionresultresponse)
 
 ---
 
-## Voting Methods
-
-### vote_code_snip / voteCodeSnip
+## vote_code_snip / voteCodeSnip
 
 Vote on whether a cached code snippet was useful. This triggers background voting on the backend.
 
@@ -558,83 +354,136 @@ await client.voteCodeSnip({
 
 </CodeGroup>
 
+### Returns: [VoteCodeSnipResponse](#votecodesnipresponse)
+
 <Note>
-  Voting is triggered automatically by `upload_new_code_snip` / `uploadNewCodeSnip` when `use_raysurfer_ai_voting` is `true` (the default), and also by the high-level `RaysurferClient`. You can provide `user_vote` / `user_votes` to vote yourself (AI voting is skipped). Use `vote_code_snip` / `voteCodeSnip` directly only for voting on cached blocks after reuse.
+  Voting is triggered automatically by `upload_new_code_snip` when `use_raysurfer_ai_voting` is `true` (the default), and also by the high-level `RaysurferClient`. Use `vote_code_snip` directly only for voting on cached blocks after reuse.
 </Note>
 
 ---
 
-## Types
+## Response Types
 
-### CodeBlock
+### SearchResponse
 
-A stored code block with metadata.
+Returned by [`search()`](#search).
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | `string` | Unique identifier |
-| `name` | `string` | Human-readable name |
-| `description` | `string` | What the code does |
-| `source` | `string` | The actual code |
-| `entrypoint` | `string` | Main function name |
-| `language` | `string` | Programming language |
-| `language_version` / `languageVersion` | `string \| null` | Language version |
-| `dependencies` | `dict[str, str]` / `Record<string, string>` | Package name to version mapping (e.g., `{"pandas": "2.1.0"}`) |
-| `tags` | `string[]` | Searchable tags |
-| `capabilities` | `string[]` | What it can do |
-| `input_schema` / `inputSchema` | `object` | Input JSON schema |
-| `output_schema` / `outputSchema` | `object` | Output JSON schema |
+| `matches` | [SearchMatch](#searchmatch)`[]` | Matching code blocks with full scoring |
+| `total_found` / `totalFound` | `int` | Total matches found |
+| `cache_hit` / `cacheHit` | `boolean` | Whether results were served from cache |
+| `search_namespaces` / `searchNamespaces` | `string[]` | Namespaces that were searched |
+
+---
+
+### SubmitExecutionResultResponse
+
+Returned by [`upload_new_code_snip()`](#upload_new_code_snip--uploadnewcodesnip).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | `boolean` | Whether the operation succeeded |
+| `code_blocks_stored` / `codeBlocksStored` | `int` | Number of code blocks stored |
+| `message` | `string` | Human-readable status message |
+
+---
+
+### BulkExecutionResultResponse
+
+Returned by [`upload_bulk_code_snips()`](#upload_bulk_code_snips--uploadbulkcodesnips).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | `boolean` | Whether the operation succeeded |
+| `code_blocks_stored` / `codeBlocksStored` | `int` | Number of code blocks stored |
+| `votes_queued` / `votesQueued` | `int` | Number of votes queued for AI grading |
+| `message` | `string` | Human-readable status message |
+| `status_url` / `statusUrl` | `string \| null` | URL to check grading status (if applicable) |
+
+---
+
+### VoteCodeSnipResponse
+
+Returned by [`vote_code_snip()`](#vote_code_snip--votecodesnip).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | `boolean` | Whether the operation succeeded |
+| `vote_pending` / `votePending` | `boolean` | Whether the vote is being processed asynchronously |
+| `message` | `string` | Human-readable status message |
+
+---
+
+## Data Types
 
 ### SearchMatch
 
-A code block match from unified search.
+A single result from [`search()`](#search). Contains a full [CodeBlock](#codeblock) plus scoring metadata.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `code_block` / `codeBlock` | `CodeBlock` | The code block |
-| `combined_score` / `combinedScore` | `number` | Overall score (0.6 x similarity + 0.25 x verdict + 0.15 x confidence + resilience) |
-| `vector_score` / `vectorScore` | `number` | Semantic similarity |
-| `verdict_score` / `verdictScore` | `number` | Quality rating |
-| `error_resilience` / `errorResilience` | `number` | Error handling score |
-| `thumbs_up` / `thumbsUp` | `number` | Positive votes |
-| `thumbs_down` / `thumbsDown` | `number` | Negative votes |
-| `filename` | `string` | Generated filename |
+| `code_block` / `codeBlock` | [CodeBlock](#codeblock) | The matched code block with full source and metadata |
+| `combined_score` / `combinedScore` | `float` | Overall relevance score (0–1). Formula: `0.6 * similarity + 0.25 * verdict + 0.15 * confidence + resilience` |
+| `vector_score` / `vectorScore` | `float` | Semantic similarity between your task and the code block (0–1) |
+| `verdict_score` / `verdictScore` | `float` | Community quality rating: `thumbs_up / (thumbs_up + thumbs_down)`, defaults to `0.3` if unrated |
+| `error_resilience` / `errorResilience` | `float` | Score for how well the code handles errors (0–1) |
+| `thumbs_up` / `thumbsUp` | `int` | Total positive votes on this code block |
+| `thumbs_down` / `thumbsDown` | `int` | Total negative votes on this code block |
+| `filename` | `string` | Generated filename (e.g., `"github_fetcher.py"`) |
+| `language` | `string` | Programming language (e.g., `"python"`, `"typescript"`) |
+| `entrypoint` | `string` | Main function name to call (e.g., `"fetch_repos"`) |
+| `dependencies` | `dict[str, str]` / `Record<string, string>` | Package name to version (e.g., `{"httpx": "0.27.0"}`) |
+
+---
+
+### CodeBlock
+
+A stored code block with full metadata. Nested inside [SearchMatch](#searchmatch).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Unique identifier (UUID) |
+| `name` | `string` | Human-readable name (e.g., `"GitHub Trending Fetcher"`) |
+| `description` | `string` | What the code does |
+| `source` | `string` | The full source code |
+| `entrypoint` | `string` | Main function/method name |
 | `language` | `string` | Programming language |
-| `entrypoint` | `string` | Main function name |
-| `dependencies` | `dict[str, str]` / `Record<string, string>` | Package name to version mapping |
+| `language_version` / `languageVersion` | `string \| null` | Language version (e.g., `"3.12"`) |
+| `dependencies` | `dict[str, str]` / `Record<string, string>` | Package name to version (e.g., `{"pandas": "2.1.0"}`) |
+| `tags` | `string[]` | Searchable tags (e.g., `["github", "api"]`) |
+| `capabilities` | `string[]` | What the code can do (e.g., `["http_requests", "json_parsing"]`) |
+| `input_schema` / `inputSchema` | `dict` / `Record<string, unknown>` | JSON schema describing expected inputs |
+| `output_schema` / `outputSchema` | `dict` / `Record<string, unknown>` | JSON schema describing outputs |
+| `example_queries` / `exampleQueries` | `string[] \| null` | Example task queries this code is good for |
+| `created_at` / `createdAt` | `string \| null` | ISO 8601 timestamp of creation |
+| `updated_at` / `updatedAt` | `string \| null` | ISO 8601 timestamp of last update |
+
+---
+
+## Input Types
 
 ### FileWritten
 
-A file written during agent execution.
+A file created during agent execution. Used by [`upload_new_code_snip()`](#upload_new_code_snip--uploadnewcodesnip) and [`upload_bulk_code_snips()`](#upload_bulk_code_snips--uploadbulkcodesnips).
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `path` | `string` | File path |
-| `content` | `string` | File contents |
+| `path` | `string` | File path (e.g., `"fetch_repos.py"`) |
+| `content` | `string` | Full file contents as a string |
 
-### FewShotExample
+---
 
-A few-shot example for prompting.
+### LogFile
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `task` | `string` | The task description |
-| `input_sample` / `inputSample` | `object` | Example input |
-| `output_sample` / `outputSample` | `any` | Example output |
-| `code_snippet` / `codeSnippet` | `string` | The code |
+A log file for bulk grading. Used by [`upload_bulk_code_snips()`](#upload_bulk_code_snips--uploadbulkcodesnips).
 
-### TaskPattern
-
-A proven task-to-code mapping.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `task_pattern` / `taskPattern` | `string` | Task description pattern |
-| `code_block_id` / `codeBlockId` | `string` | Associated code block |
-| `code_block_name` / `codeBlockName` | `string` | Code block name |
-| `thumbs_up` / `thumbsUp` | `number` | Positive votes |
-| `thumbs_down` / `thumbsDown` | `number` | Negative votes |
-| `verdict_score` / `verdictScore` | `number` | Quality rating |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `path` | `string` | required | File path (e.g., `"logs/run.log"`) |
+| `content` | `string` | required | File contents (plain text or base64-encoded binary) |
+| `encoding` | `"utf-8" \| "base64"` | `"utf-8"` | Content encoding. Use `"base64"` for binary files. |
+| `content_type` / `contentType` | `string \| null` | `null` | MIME type (e.g., `"application/json"`) |
 
 ---
 
@@ -682,35 +531,47 @@ Scope of private snippets for retrieval.
 
 Base exception for all Raysurfer errors.
 
+| Property | Type | Description |
+|----------|------|-------------|
+| `message` | `string` | Error message |
+
 ### APIError
 
-Raised when the API returns an error response.
+Raised when the API returns an error response. Extends [RaySurferError](#raysurfererror).
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `message` | `string` | Error message |
-| `status_code` / `statusCode` | `number` | HTTP status code |
+| `status_code` / `statusCode` | `int` | HTTP status code |
 
 ### AuthenticationError
 
-Raised when the API key is invalid or missing.
-
-### CacheUnavailableError
-
-Raised when the cache backend is unreachable or returns an unexpected error.
-
-### RateLimitError
-
-Raised when the API rate limit is exceeded. The SDK automatically retries with exponential backoff before raising this error.
+Raised when the API key is invalid or missing. Extends [RaySurferError](#raysurfererror).
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `message` | `string` | Error message |
-| `retry_after` / `retryAfter` | `number \| null` | Seconds until rate limit resets |
+
+### CacheUnavailableError
+
+Raised when the cache backend is unreachable or returns an unexpected error. Extends [RaySurferError](#raysurfererror).
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `message` | `string` | Error message |
+
+### RateLimitError
+
+Raised when the API rate limit is exceeded. The SDK automatically retries with exponential backoff before raising this error. Extends [RaySurferError](#raysurfererror).
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `message` | `string` | Error message |
+| `retry_after` / `retryAfter` | `int \| null` | Seconds until rate limit resets |
 
 ### ValidationError
 
-Raised when request validation fails.
+Raised when request validation fails. Extends [RaySurferError](#raysurfererror).
 
 | Property | Type | Description |
 |----------|------|-------------|

@@ -99,6 +99,20 @@ client = RaysurferClient(
 | `snips_desired="company"` | TEAM or ENTERPRISE |
 | `snips_desired="client"` | ENTERPRISE only |
 
+## Public Snippets
+
+Include community public snippets (crawled from GitHub) alongside your private snippets:
+
+```python
+# High-level
+client = RaysurferClient(options, public_snips=True)
+
+# Low-level
+client = RaySurfer(api_key="...", public_snips=True)
+```
+
+See [How It Works — Public Snippets](/how-it-works#public-snippets) for details.
+
 ## Full Example
 
 ```python
@@ -217,7 +231,24 @@ The `get_code_files()` response includes:
 | `total_found` | `int` | Total matches found |
 | `add_to_llm_prompt` | `str` | Pre-formatted string to append to your LLM system prompt |
 
-Each `CodeFile` contains `code_block_id`, `filename`, `source`, `description`, `verdict_score`, `thumbs_up`, `thumbs_down`, and `similarity_score`.
+Each `CodeFile` contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code_block_id` | `str` | Unique identifier of the code block |
+| `filename` | `str` | Generated filename (e.g., `"github_fetcher.py"`) |
+| `source` | `str` | Full source code |
+| `entrypoint` | `str` | Main function to call |
+| `description` | `str` | What the code does |
+| `input_schema` | `dict` | JSON schema for inputs |
+| `output_schema` | `dict` | JSON schema for outputs |
+| `language` | `str` | Programming language |
+| `dependencies` | `dict[str, str]` | Package name to version mapping |
+| `verdict_score` | `float` | Quality rating (thumbs_up / total, 0.3 if unrated) |
+| `thumbs_up` | `int` | Positive votes |
+| `thumbs_down` | `int` | Negative votes |
+| `similarity_score` | `float` | Semantic similarity (0–1) |
+| `combined_score` | `float` | Combined score (similarity * 0.6 + verdict * 0.4) |
 
 ### Async Version
 
@@ -252,13 +283,38 @@ async with AsyncRaySurfer(api_key="your_api_key") as client:
     )
 ```
 
+### Search Response
+
+The `search()` method returns a `SearchResponse`:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `matches` | `list[SearchMatch]` | Matching code blocks with full scoring |
+| `total_found` | `int` | Total matches found |
+| `cache_hit` | `bool` | Whether results were served from cache |
+| `search_namespaces` | `list[str]` | Namespaces that were searched |
+
+Each `SearchMatch` contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code_block` | `CodeBlock` | The code block (has `id`, `name`, `description`, `source`, `entrypoint`, `language`, `dependencies`, `tags`) |
+| `combined_score` | `float` | Overall relevance score (0–1) |
+| `vector_score` | `float` | Semantic similarity score |
+| `verdict_score` | `float` | Community quality rating |
+| `error_resilience` | `float` | Error handling robustness score |
+| `thumbs_up` | `int` | Positive votes |
+| `thumbs_down` | `int` | Negative votes |
+| `filename` | `str` | Generated filename for the code |
+| `language` | `str` | Programming language |
+| `entrypoint` | `str` | Main function name |
+| `dependencies` | `dict[str, str]` | Package name to version mapping (e.g., `{"pandas": "2.1.0"}`) |
+
 ### Method Reference
 
 | Method | Description |
 |--------|-------------|
-| `search(task, top_k, min_verdict_score, prefer_complete)` | Unified search for cached code (recommended) |
-| `get_code_files(task, top_k, min_verdict_score, prefer_complete, cache_dir)` | Retrieve cached code files with `add_to_llm_prompt` for LLM augmentation |
-| `get_code_snips(task, top_k, min_verdict_score)` | Retrieve cached code snippets by semantic search |
-| `upload_new_code_snip(task, file_written, succeeded, use_raysurfer_ai_voting, user_vote, execution_logs, dependencies)` | Store a single code file with optional dependency versions |
-| `upload_bulk_code_snips(prompts, files_written, log_files, use_raysurfer_ai_voting, user_votes)` | Bulk upload for grading (AI votes by default, or provide per-file votes) |
-| `vote_code_snip(task, code_block_id, name, description, succeeded)` | Vote on snippet usefulness (triggers async backend voting) |
+| `search(task, top_k, min_verdict_score, prefer_complete)` | Search for cached code snippets |
+| `upload_new_code_snip(task, file_written, succeeded, ...)` | Store a code file for future reuse |
+| `upload_bulk_code_snips(prompts, files_written, ...)` | Bulk upload for grading |
+| `vote_code_snip(task, code_block_id, name, description, succeeded)` | Vote on snippet usefulness |
