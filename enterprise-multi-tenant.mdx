@@ -164,6 +164,26 @@ cross-workspace access.
 Your organization's shared cache is used. All users in your org see the same
 snippets — fine for internal use, but not for multi-tenant scenarios.
 
+### What does a workspace actually control?
+
+A workspace is just a cache partition — it siloes which cached code snippets
+are visible, nothing more. Raysurfer does not manage your underlying
+permissions (database access, column-level security, API scopes, etc.). Your
+application decides which `workspace_id` to assign each user based on whatever
+permission model you already have.
+
+For example, if user A can query columns M and N, and user B can query columns
+M, N, O, and P, give them different workspace IDs (e.g. `"mn"` and `"mnop"`).
+User A's cached scripts will only ever reference their allowed columns, and
+user B's are completely separate. Raysurfer guarantees no cross-workspace
+leakage — your app still enforces the actual data permissions.
+
+### What should I use as the workspace_id?
+
+Any string that uniquely maps to a permission boundary — a customer ID, a role
+name, a hash of allowed scopes, or a permission profile key. It's an arbitrary
+string you choose.
+
 ### Can I query multiple workspaces at once?
 
 No. Each client is scoped to one workspace. Query separately if needed.
