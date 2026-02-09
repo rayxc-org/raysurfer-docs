@@ -166,15 +166,7 @@ import { RaySurfer } from "raysurfer";
 
 const client = new RaySurfer({ apiKey: "your_api_key" });
 
-// 1. Get cached code snippets for a task
-const snips = await client.getCodeSnips({
-  task: "Fetch GitHub trending repos",
-});
-for (const match of snips.codeBlocks) {
-  console.log(`${match.codeBlock.name}: ${match.score}`);
-}
-
-// Or use the unified search endpoint
+// 1. Search for cached code
 const searchResult = await client.search({
   task: "Fetch GitHub trending repos",
 });
@@ -224,7 +216,7 @@ const client = new RaySurfer({
 
 ### Response Fields
 
-The `getCodeFiles()` response includes:
+The `search()` response includes:
 
 | Field | Type | Description |
 |-------|------|-------------|

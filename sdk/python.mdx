@@ -161,34 +161,16 @@ from raysurfer.types import FileWritten, LogFile
 client = RaySurfer(api_key="your_raysurfer_api_key")
 task = "Fetch GitHub trending repos"
 
-# 1. Retrieve cached code files for a task
-result = client.get_code_files(
+# 1. Search for cached code matching a task
+result = client.search(
     task=task,
     top_k=5,
     min_verdict_score=0.3,
 )
 
-# result.add_to_llm_prompt contains a pre-formatted string like:
-# "
-#
-# You have access to pre-written code files:
-# - .raysurfer_code/github_fetcher.py: Fetches trending repos
-# ..."
-
-# Augment your system prompt with cached code context
-base_prompt = "You are a helpful coding assistant."
-augmented_prompt = base_prompt + result.add_to_llm_prompt
-
-# Make your Anthropic API call with the augmented prompt
-anthropic_client = anthropic.Anthropic()
-response = anthropic_client.messages.create(
-    model="claude-opus-4-5-20250514",
-    max_tokens=1024,
-    system=augmented_prompt,
-    messages=[{"role": "user", "content": "Fetch the top 10 trending GitHub repos"}],
-)
-
-print(response.content[0].text)
+for match in result.matches:
+    print(f"{match.code_block.name}: {match.combined_score}")
+    print(f"  Source: {match.code_block.source[:80]}...")
 
 # 2. Upload a new code file after execution
 #    AI voting is triggered automatically when use_raysurfer_ai_voting is True (default)
@@ -213,16 +195,16 @@ client.upload_bulk_code_snips(
 #    Only needed if you want explicit control — upload_new_code_snip already votes by default
 client.vote_code_snip(
     task=task,
-    code_block_id=result.files[0].code_block_id,
-    code_block_name=result.files[0].filename,
-    code_block_description=result.files[0].description,
+    code_block_id=result.matches[0].code_block.id,
+    code_block_name=result.matches[0].code_block.name,
+    code_block_description=result.matches[0].code_block.description,
     succeeded=True,
 )
 ```
 
 ### Response Fields
 
-The `get_code_files()` response includes:
+The `search()` response includes:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -258,13 +240,13 @@ from raysurfer import AsyncRaySurfer
 from raysurfer.types import FileWritten
 
 async with AsyncRaySurfer(api_key="your_api_key") as client:
-    # 1. Retrieve cached code
-    result = await client.get_code_files(task="Fetch GitHub trending repos")
+    # 1. Search for cached code
+    result = await client.search(task="Fetch GitHub trending repos")
 
-    # 2. Use add_to_llm_prompt to augment your LLM call
-    augmented_prompt = "You are helpful." + result.add_to_llm_prompt
+    for match in result.matches:
+        print(f"{match.code_block.name}: {match.combined_score}")
 
-    # 3. Upload a new code file after execution (voting triggered by default)
+    # 2. Upload a new code file after execution (voting triggered by default)
     file = FileWritten(path="fetch_repos.py", content="def fetch(): ...")
     await client.upload_new_code_snip(
         task=task,
@@ -273,12 +255,12 @@ async with AsyncRaySurfer(api_key="your_api_key") as client:
         execution_logs="Fetched 10 trending repos successfully",
     )
 
-    # 4. (Optional) Vote on snippet manually — only if you need explicit control
+    # 3. (Optional) Vote on snippet manually — only if you need explicit control
     await client.vote_code_snip(
         task=task,
-        code_block_id=result.files[0].code_block_id,
-        code_block_name=result.files[0].filename,
-        code_block_description=result.files[0].description,
+        code_block_id=result.matches[0].code_block.id,
+        code_block_name=result.matches[0].code_block.name,
+        code_block_description=result.matches[0].code_block.description,
         succeeded=True,
     )
 ```

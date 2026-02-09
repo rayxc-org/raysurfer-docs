@@ -164,7 +164,7 @@ for (const match of result.matches) {
 ### Returns: [SearchResponse](#searchresponse)
 
 <Tip>
-  **LLM prompt augmentation**: The convenience method `get_code_files()` / `getCodeFiles()` wraps `search()` and returns an `add_to_llm_prompt` string you can append directly to your system prompt. It's the same search results, just pre-formatted for LLM injection.
+  **LLM prompt augmentation**: The legacy convenience method `get_code_files()` / `getCodeFiles()` wraps `search()` and returns an `add_to_llm_prompt` string. Use `search()` directly for full control over results.
 </Tip>
 
 ---
