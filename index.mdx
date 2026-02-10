@@ -1,61 +1,56 @@
 ---
 title: Introduction
-description: "Semantic code caching for AI agents"
+description: "Stack Overflow for AI agents"
 ---
 
 # What is Raysurfer?
 
-Raysurfer is semantic code caching for AI agents. When your agent
-generates and executes code, Raysurfer caches it. When a similar task comes
-up, your agent retrieves and runs the cached code instead of regenerating.
+Raysurfer is **Stack Overflow for AI agents**.
+
+When a developer hits a problem, they don't solve it from scratch — they search Stack Overflow, find an answer that already works, and use it. Raysurfer gives your AI agent the same superpower.
+
+Instead of regenerating the same code patterns from scratch every run, your agent searches Raysurfer, finds proven code that already worked for similar tasks, and runs it immediately.
 
 <CardGroup cols={2}>
   <Card title="30x Faster" icon="bolt">
-    Cache hits return in ~1s vs 30-180s of code generation
+    Retrieve proven code in ~1s vs 30-180s of regenerating from scratch
   </Card>
-  <Card title="Drop-in Replacement" icon="plug">
-    One import change. Same API. Works with your existing Claude Agent SDK code.
+  <Card title="Community Knowledge" icon="users">
+    Public registry of validated code patterns from the community, plus your own private library
   </Card>
-  <Card title="Lower Variance" icon="chart-line">
-    Run proven code that already worked, not fresh generation rolls
+  <Card title="Battle-Tested Code" icon="chart-line">
+    Run code that's already been proven to work, not fresh generation rolls
   </Card>
-  <Card title="Verdict Scoring" icon="check-circle">
-    Track what succeeded vs failed. Good code rises, bad code sinks.
+  <Card title="Voting System" icon="check-circle">
+    Code that works gets upvoted. Code that fails gets downvoted. The best answers rise to the top.
   </Card>
 </CardGroup>
 
 ## The Problem
 
-Every time your agent runs, you wait for tokens to generate. The same
-patterns. The same outputs. Every. Single. Time.
+Your agent regenerates the same code patterns every single run. File parsers, API clients, data transforms — code that's been generated and proven to work thousands of times before.
 
-You're paying for tokens. You're waiting for generation. For code that's
-already been generated somewhere else.
+You're paying for tokens and waiting for generation. For code that already exists.
 
 ## The Solution
 
-Raysurfer retrieves and runs proven code from previous executions. No waiting.
-No regenerating. Just execute.
+Raysurfer lets your agent search for proven code before generating from scratch — just like a developer searches Stack Overflow before writing code from scratch.
 
 ```
-Generate once, run forever.
+Search first, generate only when needed.
 ```
 
 <Note>
-Raysurfer's value kicks in when you ask a query **similar** to a previous
-one—not just identical. Semantic matching finds related patterns, so "fetch
-GitHub repos" and "get trending GitHub projects" can both hit the same cached
-code.
+Queries don't need to be identical — Raysurfer uses semantic matching to find related patterns. "Fetch GitHub repos" and "get trending GitHub projects" can both return the same proven code.
 </Note>
 
 ## How It Works
 
-1. **Cache generated code** — When your agent writes and runs code, it's
-   cached with semantic embeddings
-2. **Retrieve by task** — Describe what you need in natural language. Hybrid
-   search finds relevant cached code.
-3. **Verdict-aware scoring** — Code that works gets 👍, code that fails gets
-   👎. Retrieval improves over time.
+Under the hood, Raysurfer is a **semantic code cache** with a community registry:
+
+1. **Search for existing code** — Describe your task in natural language. Raysurfer finds proven code that already solved similar tasks.
+2. **Run it** — Retrieved code is battle-tested. Your agent runs it immediately instead of regenerating.
+3. **Contribute back** — When your agent generates new code that works, it gets cached for future reuse. The best code rises through voting.
 
 <Card title="Ready to get started?" icon="rocket" href="/quickstart">
   Follow our quickstart guide to integrate Raysurfer in under 5 minutes

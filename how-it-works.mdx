@@ -1,20 +1,26 @@
 ---
 title: How It Works
-description: "The magic behind Raysurfer's speed"
+description: "The code cache powering Stack Overflow for AI agents"
 ---
 
-## The Simple Version
+## The Stack Overflow Analogy
 
-When your agent runs a task similar to one it's done before, Raysurfer returns the cached result instantly instead of regenerating it.
+Think about how developers use Stack Overflow: they search for their problem, find an answer that already works, and use it. They don't solve every problem from scratch.
+
+Raysurfer works the same way for AI agents:
 
 ```
-First run:  Your query → Code generated → Result cached
-Second run: Similar query → Cache hit → Code retrieved (instant)
+Without Raysurfer:  Task → Agent generates code from scratch → Runs it
+With Raysurfer:     Task → Agent searches for proven code → Runs it (instant)
 ```
 
-Queries don't need to be identical—Raysurfer uses semantic matching to find related patterns. "Fetch user data from the API" and "Get customer info from the endpoint" can hit the same cache.
+Queries don't need to be identical — Raysurfer uses semantic matching to find related patterns. "Fetch user data from the API" and "Get customer info from the endpoint" return the same proven code.
 
-That's it. You don't need to manage anything.
+## Under the Hood: Semantic Code Cache
+
+The mechanism behind this is a **semantic code cache**. When your agent generates code that works, Raysurfer caches it with semantic embeddings. When a similar task comes up later — from you or from the community — the proven code is retrieved instead of regenerated.
+
+You don't need to manage anything. Caching and retrieval happen automatically.
 
 ## Why This Works
 
@@ -22,7 +28,7 @@ Production agents in 2026 are running longer and longer. Multi-step workflows, c
 
 But here's the thing: **the median run has a typical shape.**
 
-Despite all the complexity, most runs follow similar patterns. Raysurfer captures these patterns and guides the model to execute from the median run's starting point—editing that code file rather than regenerating it from scratch.
+Despite all the complexity, most runs follow similar patterns. Just like Stack Overflow answers cover the common patterns developers hit, Raysurfer captures the common patterns agents hit and serves proven code for them.
 
 This gives you:
 
@@ -139,9 +145,9 @@ return out4
 
 Each function extracts specific properties from the previous result—`out1[2]`, `out2.files[-1]`, `out3.length`—demonstrating why well-documented schemas matter for cache reuse.
 
-## Public Snippets
+## Public Snippets — The Community Registry
 
-Raysurfer maintains a curated collection of public snippets sourced from popular open-source GitHub repositories. These are validated code patterns that any user can include in their retrieval results.
+Just like Stack Overflow's value comes from community answers, Raysurfer maintains a public registry of validated code patterns sourced from popular open-source GitHub repositories. These are community-contributed answers that any agent can search and use.
 
 Enable public snippets by setting `public_snips` in the SDK constructor:
 
@@ -163,6 +169,6 @@ const result = await client.search({ task: "Parse CSV and generate chart" });
 
 </CodeGroup>
 
-Public snippets are read-only — they cannot be edited or deleted by users. They are curated by the Raysurfer team and ranked alongside your private snippets using the same scoring system.
+Public snippets are read-only — they cannot be edited or deleted by users. They are curated by the Raysurfer team and ranked alongside your private snippets using the same voting system — the best answers rise to the top.
 
 Also available via the [CLI](/integrations/cli) (`--public` flag) and [MCP server](/integrations/mcp) (`public_snips` parameter).
