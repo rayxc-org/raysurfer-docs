@@ -232,6 +232,8 @@ console.log(`Stored ${result.codeBlocksStored} code blocks`);
 | `succeeded` | `boolean` | required | Whether the task completed successfully |
 | `use_raysurfer_ai_voting` / `useRaysurferAiVoting` | `boolean` | `true` | Let Raysurfer AI vote on stored blocks. Ignored when `user_vote` is provided. |
 | `user_vote` / `userVote` | `int \| null` | `null` | User-provided vote: `1` for thumbs up, `-1` for thumbs down. When provided, AI voting is automatically skipped. |
+| `vote_source` / `voteSource` | `"ai" \| "human" \| null` | `null` | Explicitly sets the vote source. When omitted, `user_vote` defaults to `"human"` and AI voting defaults to `"ai"`. |
+| `vote_count` / `voteCount` | `int \| null` | `1` | Number of votes to apply. Useful for pre-seeding community votes. |
 | `execution_logs` / `executionLogs` | `string \| null` | `null` | Captured stdout/stderr for vote context |
 | `dependencies` | `dict[str, str]` / `Record<string, string>` | `null` | Package dependencies with versions (e.g., `{"pandas": "2.1.0"}`) |
 
@@ -317,6 +319,8 @@ const result2 = await client.uploadBulkCodeSnips({
 | `log_files` / `logFiles` | [LogFile](#logfile)`[]` | `null` | Log files (any format; use `encoding: "base64"` for binary) |
 | `use_raysurfer_ai_voting` / `useRaysurferAiVoting` | `boolean` | `true` | Let Raysurfer AI grade and vote on stored blocks. Ignored when `user_votes` is provided. |
 | `user_votes` / `userVotes` | `dict[str, int] \| null` | `null` | Dict of filename to vote (`1` = thumbs up, `-1` = thumbs down). When provided, AI grading is automatically skipped. |
+| `vote_source` / `voteSource` | `"ai" \| "human" \| null` | `null` | Explicitly sets the vote source. When omitted, `user_votes` defaults to `"human"` and AI voting defaults to `"ai"`. |
+| `vote_count` / `voteCount` | `int \| null` | `1` | Number of votes to apply per file. Useful for pre-seeding community votes. |
 
 ### Returns: [BulkExecutionResultResponse](#bulkexecutionresultresponse)
 

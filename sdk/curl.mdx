@@ -159,6 +159,8 @@ curl -X POST https://api.raysurfer.com/api/store/execution-result \
 | `succeeded` | boolean | required | Whether the task completed successfully |
 | `use_raysurfer_ai_voting` | boolean | `true` | Let Raysurfer AI vote on stored blocks. Ignored when `user_vote` is provided. |
 | `user_vote` | integer | `null` | User-provided vote: `1` = thumbs up, `-1` = thumbs down. Skips AI voting. |
+| `vote_source` | string | `null` | `"ai"` or `"human"` — explicitly sets vote source. When omitted, `user_vote` defaults to `"human"`, AI voting defaults to `"ai"`. |
+| `vote_count` | integer | `1` | Number of votes to apply. Useful for pre-seeding community votes. |
 | `execution_logs` | string | `null` | Stdout/stderr for vote context |
 | `run_url` | string | `null` | Link to the finished run log |
 
