@@ -46,7 +46,7 @@ import { query } from "raysurfer";
 
 for await (const message of query({
   prompt: "Fetch trending repos from GitHub",
-  options: { model: "claude-opus-4-5-20250514" },
+  options: { model: "claude-opus-4-6-20260210" },
 })) {
   console.log(message);
 }
