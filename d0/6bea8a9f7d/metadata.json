@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "d06bea8a9f7d",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "reading-for-agents.mdx",
+    "sdk/python.mdx",
+    "sdk/typescript.mdx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d0/6bea8a9f7d/0/metadata.json",
+      "transcript": "/d0/6bea8a9f7d/0/full.jsonl",
+      "context": "/d0/6bea8a9f7d/0/context.md",
+      "content_hash": "/d0/6bea8a9f7d/0/content_hash.txt",
+      "prompt": "/d0/6bea8a9f7d/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 113,
+    "cache_creation_tokens": 246224,
+    "cache_read_tokens": 8785748,
+    "output_tokens": 23618,
+    "api_call_count": 97
+  }
+}
