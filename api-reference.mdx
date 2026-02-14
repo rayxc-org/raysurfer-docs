@@ -155,13 +155,17 @@ for (const match of result.matches) {
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `task` | `string` | required | Natural language task description |
+| `task` | `string` | required | Natural language task description (any length) |
 | `top_k` / `topK` | `number` | `5` | Maximum number of results |
 | `min_verdict_score` / `minVerdictScore` | `number` | `0.3` | Minimum quality score filter |
 | `prefer_complete` / `preferComplete` | `boolean` | `false` | Prefer longer/more complete implementations |
 | `input_schema` / `inputSchema` | `object` | `null` | Optional input schema filter |
 
 ### Returns: [SearchResponse](#searchresponse)
+
+<Note>
+  Queries can be any length, but shorter queries (under 200 characters) give the best accuracy and speed. Longer queries are automatically rephrased into multiple shorter searches and merged, which adds latency and may reduce precision.
+</Note>
 
 <Tip>
   **LLM prompt augmentation**: The legacy convenience method `get_code_files()` / `getCodeFiles()` wraps `search()` and returns an `add_to_llm_prompt` string. Use `search()` directly for full control over results.
