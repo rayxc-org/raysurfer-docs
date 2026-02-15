@@ -18,12 +18,12 @@
   "topbarLinks": [
     {
       "name": "Dashboard",
-      "url": "https://raysurfer.com/dashboard"
+      "url": "https://www.raysurfer.com/dashboard"
     }
   ],
   "topbarCtaButton": {
     "name": "Get API Key",
-    "url": "https://raysurfer.com/dashboard/api-keys"
+    "url": "https://www.raysurfer.com/dashboard/api-keys"
   },
   "anchors": [
     {
