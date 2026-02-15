@@ -300,3 +300,65 @@ Each `SearchMatch` contains:
 | `upload_new_code_snip(task, file_written, succeeded, ...)` | Store a code file for future reuse |
 | `upload_bulk_code_snips(prompts, files_written, ...)` | Bulk upload for grading |
 | `vote_code_snip(task, code_block_id, name, description, succeeded)` | Vote on snippet usefulness |
+| `tool(fn)` | Register a local function as a tool for `execute()` |
+| `execute(task, timeout, force_regenerate)` | Execute a task with registered tools |
+
+## Programmatic Tool Calling
+
+Register local tools and let the server generate + execute code that calls them:
+
+```python
+import asyncio
+from raysurfer import AsyncRaySurfer
+
+async def main():
+    rs = AsyncRaySurfer(api_key="your_api_key")
+
+    @rs.tool
+    def add(a: int, b: int) -> int:
+        """Add two numbers together."""
+        return a + b
+
+    @rs.tool
+    def multiply(a: int, b: int) -> int:
+        """Multiply two numbers together."""
+        return a * b
+
+    result = await rs.execute("Add 5 and 3, then multiply the result by 2")
+    print(result.result)       # "16"
+    print(result.tool_calls)   # [ToolCallRecord(...), ...]
+    print(result.cache_hit)    # True on subsequent runs
+
+asyncio.run(main())
+```
+
+The `@rs.tool` decorator introspects your function signature to build a JSON schema. Both sync and async callbacks are supported.
+
+### How It Works
+
+1. SDK connects a WebSocket to the server for tool call routing
+2. Server generates Python code (or reuses reference code from a similar prior run)
+3. Code runs in a sandboxed environment — tool calls are routed back to your local functions via WebSocket
+4. Results are returned with full tool call history
+
+### Execute Options
+
+```python
+result = await rs.execute(
+    "Your task description",
+    timeout=300,            # Max execution time in seconds (default 300)
+    force_regenerate=False, # Skip cache and regenerate code (default False)
+)
+```
+
+### ExecuteResult Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `execution_id` | `str` | Unique execution identifier |
+| `result` | `str \| None` | Stdout output from the script |
+| `exit_code` | `int` | Process exit code (0 = success) |
+| `duration_ms` | `int` | Total execution time |
+| `cache_hit` | `bool` | Whether reference code was found from a prior run |
+| `error` | `str \| None` | Error message if exit_code != 0 |
+| `tool_calls` | `list[ToolCallRecord]` | All tool calls made during execution |

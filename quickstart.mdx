@@ -146,6 +146,45 @@ Raysurfer caches:
   Raysurfer automatically verifies and stores successful code snippets from your runs for future reuse.
 </Note>
 
+## Programmatic Tool Calling
+
+Register tools and let the server generate code that calls them in a sandbox:
+
+<CodeGroup>
+
+```python Python
+from raysurfer import AsyncRaySurfer
+
+rs = AsyncRaySurfer(api_key="your_api_key")
+
+@rs.tool
+def add(a: int, b: int) -> int:
+    """Add two numbers together."""
+    return a + b
+
+result = await rs.execute("Use add to compute 5 + 3, then print the result")
+print(result.result)     # "8"
+print(result.cache_hit)  # True on subsequent runs
+```
+
+```typescript TypeScript
+import { RaySurfer } from "raysurfer";
+
+const rs = new RaySurfer({ apiKey: "your_api_key" });
+
+rs.tool("add", "Add two numbers", { a: "integer", b: "integer" },
+  async (args) => String(Number(args.a) + Number(args.b))
+);
+
+const result = await rs.execute("Use add to compute 5 + 3, then print the result");
+console.log(result.result);    // "8"
+console.log(result.cacheHit);  // true on subsequent runs
+```
+
+</CodeGroup>
+
+See [Python SDK — Programmatic Tool Calling](/sdk/python#programmatic-tool-calling) or [TypeScript SDK — Programmatic Tool Calling](/sdk/typescript#programmatic-tool-calling) for full details.
+
 ## Next Steps
 
 <CardGroup cols={2}>
