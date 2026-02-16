@@ -3,9 +3,9 @@ title: "Multi-Tenant Isolation"
 description: "Isolate cached snippets per customer with workspaces"
 ---
 
-<Warning>
-  Multi-tenant isolation is an **enterprise-only** feature.
-</Warning>
+<Note>
+  Multi-tenant isolation is available on **Pro** and **Enterprise** tiers.
+</Note>
 
 ## Overview
 
@@ -183,6 +183,13 @@ leakage — your app still enforces the actual data permissions.
 Any string that uniquely maps to a permission boundary — a customer ID, a role
 name, a hash of allowed scopes, or a permission profile key. It's an arbitrary
 string you choose.
+
+### How does workspace search work?
+
+When you provide a `workspace_id`, Raysurfer searches both the workspace
+namespace and the org-wide namespace in parallel, merges results by score,
+and returns the top results. This means workspace-specific snippets compete
+on equal footing with company-wide snippets.
 
 ### Can I query multiple workspaces at once?
 

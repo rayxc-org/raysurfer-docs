@@ -52,7 +52,7 @@ for await (const msg of client.query("Your task here")) {
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `options` | `ClaudeAgentOptions` | Standard Claude Agent SDK options |
-| `workspace_id` | `string` | Workspace ID for per-customer isolation (enterprise) |
+| `workspace_id` | `string` | Workspace ID for per-customer isolation (Pro or Enterprise) |
 | `debug` | `boolean` | Enable debug logging |
 
 **TypeScript** — `new RaysurferClient(options)` where options is a single object:
@@ -62,7 +62,7 @@ for await (const msg of client.query("Your task here")) {
 | `allowedTools` | `string[]` | Allowed Claude tools |
 | `systemPrompt` | `string` | System prompt |
 | `model` | `string` | Claude model ID |
-| `workspaceId` | `string` | Workspace ID for per-customer isolation (enterprise) |
+| `workspaceId` | `string` | Workspace ID for per-customer isolation (Pro or Enterprise) |
 | `debug` | `boolean` | Enable debug logging |
 
 #### Methods
@@ -108,7 +108,7 @@ const result = await client.search({ task: "Fetch GitHub repos" });
 | `base_url` / `baseUrl` | `string` | API base URL (optional) |
 | `timeout` | `number` | Request timeout in seconds/ms |
 | `organization_id` / `organizationId` | `string` | Organization ID for team/enterprise namespacing |
-| `workspace_id` / `workspaceId` | `string` | Workspace ID for enterprise client namespacing |
+| `workspace_id` / `workspaceId` | `string` | Workspace ID for per-customer namespacing (Pro or Enterprise) |
 | `snips_desired` / `snipsDesired` | `"company"` \| `"client"` | Scope of private snippets |
 | `public_snips` / `publicSnips` | `boolean` | Include community public snippets |
 
@@ -389,6 +389,7 @@ Returned by [`upload_new_code_snip()`](#upload_new_code_snip--uploadnewcodesnip)
 | `success` | `boolean` | Whether the operation succeeded |
 | `code_blocks_stored` / `codeBlocksStored` | `int` | Number of code blocks stored |
 | `message` | `string` | Human-readable status message |
+| `snippet_name` / `snippetName` | `string \| null` | Name assigned to the stored snippet |
 
 ---
 
@@ -453,8 +454,8 @@ A stored code block with full metadata. Nested inside [SearchMatch](#searchmatch
 | `dependencies` | `dict[str, str]` / `Record<string, string>` | Package name to version (e.g., `{"pandas": "2.1.0"}`) |
 | `tags` | `string[]` | Searchable tags (e.g., `["github", "api"]`) |
 | `capabilities` | `string[]` | What the code can do (e.g., `["http_requests", "json_parsing"]`) |
-| `input_schema` / `inputSchema` | `dict` / `Record<string, unknown>` | JSON schema describing expected inputs |
-| `output_schema` / `outputSchema` | `dict` / `Record<string, unknown>` | JSON schema describing outputs |
+| `input_schema` / `inputSchema` | `JsonDict` / `Record<string, JsonValue>` | JSON schema describing expected inputs |
+| `output_schema` / `outputSchema` | `JsonDict` / `Record<string, JsonValue>` | JSON schema describing outputs |
 | `example_queries` / `exampleQueries` | `string[] \| null` | Example task queries this code is good for |
 | `created_at` / `createdAt` | `string \| null` | ISO 8601 timestamp of creation |
 | `updated_at` / `updatedAt` | `string \| null` | ISO 8601 timestamp of last update |
@@ -516,8 +517,8 @@ Scope of private snippets for retrieval.
 
 | Value | Required Tier | Description |
 |-------|---------------|-------------|
-| `company` | TEAM or ENTERPRISE | Organization-level snippets |
-| `client` | ENTERPRISE only | Client workspace snippets |
+| `company` | PRO or ENTERPRISE | Organization-level snippets |
+| `client` | PRO or ENTERPRISE | Client workspace snippets (requires `workspace_id`) |
 
 ---
 

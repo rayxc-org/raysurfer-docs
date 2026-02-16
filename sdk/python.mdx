@@ -87,17 +87,17 @@ client = RaysurferClient(
     snips_desired="company",  # Company-level snippets (Team/Enterprise)
 )
 
-# Enterprise: Retrieve client-specific snippets only
+# Pro/Enterprise: Retrieve client-specific snippets
 client = RaysurferClient(
     options,
-    snips_desired="client",   # Client workspace snippets (Enterprise only)
+    snips_desired="client",   # Client workspace snippets (Pro or Enterprise)
 )
 ```
 
 | Configuration | Required Tier |
 |--------------|---------------|
-| `snips_desired="company"` | TEAM or ENTERPRISE |
-| `snips_desired="client"` | ENTERPRISE only |
+| `snips_desired="company"` | PRO or ENTERPRISE |
+| `snips_desired="client"` | PRO or ENTERPRISE (requires `workspace_id`) |
 
 ## Public Snippets
 
@@ -222,8 +222,8 @@ Each `CodeFile` contains:
 | `source` | `str` | Full source code |
 | `entrypoint` | `str` | Main function to call |
 | `description` | `str` | What the code does |
-| `input_schema` | `dict` | JSON schema for inputs |
-| `output_schema` | `dict` | JSON schema for outputs |
+| `input_schema` | `JsonDict` | JSON schema for inputs |
+| `output_schema` | `JsonDict` | JSON schema for outputs |
 | `language` | `str` | Programming language |
 | `dependencies` | `dict[str, str]` | Package name to version mapping |
 | `verdict_score` | `float` | Quality rating (thumbs_up / total, 0.3 if unrated) |

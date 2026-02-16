@@ -131,8 +131,8 @@ const client = new ClaudeSDKClient({
   snipsDesired: "company",
 });
 
-// Enterprise: client-specific snippets only
-const enterpriseClient = new ClaudeSDKClient({
+// Pro/Enterprise: client-specific snippets
+const proClient = new ClaudeSDKClient({
   snipsDesired: "client",
 });
 ```
@@ -140,8 +140,8 @@ const enterpriseClient = new ClaudeSDKClient({
 | Configuration | Required Tier |
 |--------------|---------------|
 | Default (public only) | FREE |
-| `snipsDesired: "company"` | TEAM or ENTERPRISE |
-| `snipsDesired: "client"` | ENTERPRISE only |
+| `snipsDesired: "company"` | PRO or ENTERPRISE |
+| `snipsDesired: "client"` | PRO or ENTERPRISE (requires `workspaceId`) |
 
 ## Public Snippets
 
@@ -208,7 +208,7 @@ const client = new RaySurfer({
   baseUrl: "https://api.raysurfer.com", // optional
   timeout: 30000, // optional, in ms
   organizationId: "org_xxx", // optional, for team namespacing
-  workspaceId: "ws_xxx", // optional, for enterprise namespacing
+  workspaceId: "ws_xxx", // optional, for per-customer namespacing (Pro or Enterprise)
   snipsDesired: "company", // optional, snippet scope
   publicSnips: true, // optional, include community snippets
 });
@@ -234,8 +234,8 @@ Each `CodeFile` contains:
 | `source` | `string` | Full source code |
 | `entrypoint` | `string` | Main function to call |
 | `description` | `string` | What the code does |
-| `inputSchema` | `Record<string, unknown>` | JSON schema for inputs |
-| `outputSchema` | `Record<string, unknown>` | JSON schema for outputs |
+| `inputSchema` | `Record<string, JsonValue>` | JSON schema for inputs |
+| `outputSchema` | `Record<string, JsonValue>` | JSON schema for outputs |
 | `language` | `string` | Programming language |
 | `dependencies` | `Record<string, string>` | Package name to version mapping |
 | `verdictScore` | `number` | Quality rating (thumbsUp / total, 0.3 if unrated) |
