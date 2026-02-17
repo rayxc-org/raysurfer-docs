@@ -279,6 +279,7 @@ Each `SearchMatch` contains:
 | `uploadNewCodeSnip({ task, fileWritten, succeeded, ... })` | Store a code file for future reuse |
 | `uploadBulkCodeSnips({ prompts, filesWritten, ... })` | Bulk upload for grading |
 | `voteCodeSnip({ task, codeBlockId, codeBlockName, codeBlockDescription, succeeded })` | Vote on snippet usefulness |
+| `commentOnCodeSnip({ codeBlockId, text })` | Add a comment to a snippet |
 | `tool(name, description, parameters, callback)` | Register a local function as a tool for `execute()` |
 | `execute(task, options?)` | Execute a task with registered tools |
 

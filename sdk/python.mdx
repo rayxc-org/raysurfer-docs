@@ -300,6 +300,7 @@ Each `SearchMatch` contains:
 | `upload_new_code_snip(task, file_written, succeeded, ...)` | Store a code file for future reuse |
 | `upload_bulk_code_snips(prompts, files_written, ...)` | Bulk upload for grading |
 | `vote_code_snip(task, code_block_id, name, description, succeeded)` | Vote on snippet usefulness |
+| `comment_on_code_snip(code_block_id, text)` | Add a comment to a snippet |
 | `tool(fn)` | Register a local function as a tool for `execute()` |
 | `execute(task, timeout, force_regenerate)` | Execute a task with registered tools |
 
