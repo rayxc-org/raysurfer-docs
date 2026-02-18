@@ -302,11 +302,11 @@ Each `SearchMatch` contains:
 | `vote_code_snip(task, code_block_id, name, description, succeeded)` | Vote on snippet usefulness |
 | `comment_on_code_snip(code_block_id, text)` | Add a comment to a snippet |
 | `tool(fn)` | Register a local function as a tool for `execute()` |
-| `execute(task, timeout, force_regenerate)` | Execute a task with registered tools |
+| `execute(task, user_code, timeout)` | Execute client-generated code with registered tools |
 
 ## Programmatic Tool Calling
 
-Register local tools and let the server generate + execute code that calls them:
+Register local tools, generate code client-side, and execute that code remotely:
 
 ```python
 import asyncio
@@ -325,10 +325,18 @@ async def main():
         """Multiply two numbers together."""
         return a * b
 
-    result = await rs.execute("Add 5 and 3, then multiply the result by 2")
+    user_code = """
+intermediate = add(5, 3)
+final = multiply(intermediate, 2)
+print(final)
+"""
+    result = await rs.execute(
+        "Add 5 and 3, then multiply the result by 2",
+        user_code=user_code,
+    )
     print(result.result)       # "16"
     print(result.tool_calls)   # [ToolCallRecord(...), ...]
-    print(result.cache_hit)    # True on subsequent runs
+    print(result.cache_hit)    # False (reserved field)
 
 asyncio.run(main())
 ```
@@ -338,7 +346,7 @@ The `@rs.tool` decorator introspects your function signature to build a JSON sch
 ### How It Works
 
 1. SDK connects a WebSocket to the server for tool call routing
-2. Server generates Python code (or reuses reference code from a similar prior run)
+2. Your app sends client-generated Python `user_code` to `/api/execute/run`
 3. Code runs in a sandboxed environment — tool calls are routed back to your local functions via WebSocket
 4. Results are returned with full tool call history
 
@@ -347,8 +355,8 @@ The `@rs.tool` decorator introspects your function signature to build a JSON sch
 ```python
 result = await rs.execute(
     "Your task description",
+    user_code="print(add(1, 2))", # Required: client-generated Python code
     timeout=300,            # Max execution time in seconds (default 300)
-    force_regenerate=False, # Skip cache and regenerate code (default False)
 )
 ```
 
@@ -360,6 +368,6 @@ result = await rs.execute(
 | `result` | `str \| None` | Stdout output from the script |
 | `exit_code` | `int` | Process exit code (0 = success) |
 | `duration_ms` | `int` | Total execution time |
-| `cache_hit` | `bool` | Whether reference code was found from a prior run |
+| `cache_hit` | `bool` | Reserved field (currently always `False` for execute) |
 | `error` | `str \| None` | Error message if exit_code != 0 |
 | `tool_calls` | `list[ToolCallRecord]` | All tool calls made during execution |

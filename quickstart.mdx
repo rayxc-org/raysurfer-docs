@@ -148,7 +148,7 @@ Raysurfer caches:
 
 ## Programmatic Tool Calling
 
-Register tools and let the server generate code that calls them in a sandbox:
+Register tools, generate code client-side, and execute that code in a sandbox:
 
 <CodeGroup>
 
@@ -162,9 +162,13 @@ def add(a: int, b: int) -> int:
     """Add two numbers together."""
     return a + b
 
-result = await rs.execute("Use add to compute 5 + 3, then print the result")
+user_code = "result = add(5, 3)\nprint(result)"
+result = await rs.execute(
+    "Use add to compute 5 + 3, then print the result",
+    user_code=user_code,
+)
 print(result.result)     # "8"
-print(result.cache_hit)  # True on subsequent runs
+print(result.cache_hit)  # False (reserved field)
 ```
 
 ```typescript TypeScript
@@ -176,9 +180,15 @@ rs.tool("add", "Add two numbers", { a: "integer", b: "integer" },
   async (args) => String(Number(args.a) + Number(args.b))
 );
 
-const result = await rs.execute("Use add to compute 5 + 3, then print the result");
+const userCode = `
+result = add(5, 3)
+print(result)
+`;
+const result = await rs.execute("Use add to compute 5 + 3, then print the result", {
+  userCode,
+});
 console.log(result.result);    // "8"
-console.log(result.cacheHit);  // true on subsequent runs
+console.log(result.cacheHit);  // false (reserved field)
 ```
 
 </CodeGroup>
