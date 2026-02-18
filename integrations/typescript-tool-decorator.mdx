@@ -1,0 +1,63 @@
+---
+title: TypeScript Tool Decorator
+description: "Use tool(...) to expose local callbacks for programmatic tool calling in Raysurfer sandbox execution"
+---
+
+The TypeScript tool decorator integration lets you register local callbacks as tools and run generated code in a remote sandbox with tool calls routed back to your app.
+
+<Note>
+  Source: [rayxc-org/raysurfer-ts](https://github.com/rayxc-org/raysurfer-ts)
+</Note>
+
+## Setup
+
+Install the SDK and set `RAYSURFER_API_KEY` in your environment.
+
+```bash
+npm install raysurfer
+```
+
+## Register Tools
+
+`tool(name, description, parameters, callback)` can wrap any local callback you want to expose. The `description` is included in the tool payload.
+
+```typescript
+import { RaySurfer } from "raysurfer";
+
+const rs = new RaySurfer({ apiKey: "your_api_key" });
+
+rs.tool("add", "Add two numbers", { a: "integer", b: "integer" }, async (args) => {
+  return String(Number(args.a) + Number(args.b));
+});
+```
+
+## Execute Modes
+
+Use exactly one mode per `execute()` call:
+
+### Primary Mode: Pass `userCode`
+
+```typescript
+const result = await rs.execute("Compute 5 + 3", {
+  userCode: "print(add(5, 3))",
+});
+```
+
+### Optional Mode: Sandbox Codegen
+
+In this mode, code is generated inside the Daytona sandbox from your prompt.
+
+```typescript
+const result = await rs.execute("Compute 5 + 3", {
+  codegen: {
+    provider: "anthropic",
+    apiKey: "YOUR_ANTHROPIC_API_KEY",
+    model: "claude-opus-4-6",
+    prompt: "Write Python code that calls add(a, b) for 5 and 3, then prints the result.",
+  },
+});
+```
+
+## Full SDK Reference
+
+See [TypeScript SDK](/sdk/typescript#programmatic-tool-calling) for full method signatures and response fields.

@@ -285,6 +285,8 @@ Each `SearchMatch` contains:
 
 ## Programmatic Tool Calling
 
+Also available as an integration guide: [TypeScript Tool Decorator](/integrations/typescript-tool-decorator).
+
 Register local tools, then either pass `userCode` (primary mode) or use optional sandbox codegen with your own key + prompt:
 
 ```typescript
@@ -338,7 +340,7 @@ const result = await rs.execute("Your task description", {
 const sandboxCodegenResult = await rs.execute("Your task description", {
   codegen: {
     provider: "anthropic",
-    apiKey: "your_anthropic_key",
+    apiKey: "YOUR_ANTHROPIC_API_KEY",
     model: "claude-opus-4-6",
     prompt: "Write Python code that uses add(a, b) and prints 2 + 3.",
   },

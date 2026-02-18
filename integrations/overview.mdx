@@ -1,6 +1,6 @@
 ---
 title: Integrations
-description: "Connect Raysurfer code caching to your tools — CLI, MCP, Claude Code skill, or plugin"
+description: "Connect Raysurfer code caching to your tools — SDK decorators, CLI, MCP, Claude Code skill, or plugin"
 ---
 
 If you don't want to use the [Claude Agent SDK drop-in replacement](/sdk/python), these integrations let you add Raysurfer code caching to your existing workflow without changing how you call Claude. Each one connects to the same caching backend and API.
@@ -8,6 +8,12 @@ If you don't want to use the [Claude Agent SDK drop-in replacement](/sdk/python)
 ## Choose Your Integration
 
 <CardGroup cols={2}>
+  <Card title="Python Tool Decorator" icon="python" href="/integrations/python-tool-decorator">
+    Wrap local Python functions with `@rs.tool` and execute user code (or optional sandbox codegen) via programmatic tool calling.
+  </Card>
+  <Card title="TypeScript Tool Decorator" icon="js" href="/integrations/typescript-tool-decorator">
+    Register local callbacks with `tool(...)` and execute user code (or optional sandbox codegen) via programmatic tool calling.
+  </Card>
   <Card title="CLI" icon="terminal" href="/integrations/cli">
     Standalone command-line tool for searching, uploading, and voting on cached code. Works anywhere Python runs.
   </Card>
@@ -24,17 +30,18 @@ If you don't want to use the [Claude Agent SDK drop-in replacement](/sdk/python)
 
 ## Comparison
 
-| Feature | CLI | MCP | Skill | Plugin |
-|---------|-----|-----|-------|--------|
-| Search cached code | Yes | Yes | Yes | Yes |
-| Upload code | Yes | Yes | Yes | Yes |
-| Vote on quality | Yes | Yes | Yes | Yes |
-| Auto-check cache before coding | No | No | Yes | Yes |
-| Auto-upload after success | No | No | Yes | Yes |
-| Works outside Claude Code | Yes | Yes | No | No |
-| One-command install | No | No | No | Yes |
-| Requires Node.js | No | Yes | No | Yes |
-| Requires Python | Yes | No | No | No |
+| Feature | Python Decorator | TypeScript Decorator | CLI | MCP | Skill | Plugin |
+|---------|------------------|----------------------|-----|-----|-------|--------|
+| Search cached code | Yes | Yes | Yes | Yes | Yes | Yes |
+| Upload code | Yes | Yes | Yes | Yes | Yes | Yes |
+| Vote on quality | Yes | Yes | Yes | Yes | Yes | Yes |
+| Programmatic tool calling in remote sandbox | Yes | Yes | No | No | No | No |
+| Auto-check cache before coding | No | No | No | No | Yes | Yes |
+| Auto-upload after success | No | No | No | No | Yes | Yes |
+| Works outside Claude Code | Yes | Yes | Yes | Yes | No | No |
+| One-command install | No | No | No | No | No | Yes |
+| Requires Node.js | No | Yes | No | Yes | No | Yes |
+| Requires Python | Yes | No | Yes | No | No | No |
 
 ## Quick Setup
 
@@ -48,6 +55,8 @@ export RAYSURFER_API_KEY=your_key_here
 
 | Integration | Repository |
 |-------------|-----------|
+| Python Tool Decorator (SDK) | [rayxc-org/raysurfer-python](https://github.com/rayxc-org/raysurfer-python) |
+| TypeScript Tool Decorator (SDK) | [rayxc-org/raysurfer-ts](https://github.com/rayxc-org/raysurfer-ts) |
 | CLI | [rayxc-org/raysurfer-code-caching-cli](https://github.com/rayxc-org/raysurfer-code-caching-cli) |
 | MCP Server | [rayxc-org/raysurfer-code-caching-mcp](https://github.com/rayxc-org/raysurfer-code-caching-mcp) |
 | Skill | [rayxc-org/raysurfer-code-caching-skill](https://github.com/rayxc-org/raysurfer-code-caching-skill) |

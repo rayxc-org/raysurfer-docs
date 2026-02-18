@@ -306,6 +306,8 @@ Each `SearchMatch` contains:
 
 ## Programmatic Tool Calling
 
+Also available as an integration guide: [Python Tool Decorator](/integrations/python-tool-decorator).
+
 Register local tools, then either pass `user_code` (primary mode) or use optional sandbox codegen with your own key + prompt:
 
 ```python
@@ -368,7 +370,7 @@ result = await rs.execute(
 
 result = await rs.execute(
     "Your task description",
-    codegen_api_key="your_anthropic_key",  # Optional mode
+    codegen_api_key="YOUR_ANTHROPIC_API_KEY",  # Optional mode
     codegen_prompt="Write Python code that uses add(a, b) and prints 2 + 3.",
     codegen_model="claude-opus-4-6",
     timeout=300,

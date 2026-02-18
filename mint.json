@@ -44,11 +44,11 @@
     },
     {
       "group": "Integrations",
-      "pages": ["integrations/overview", "integrations/cli", "integrations/mcp", "integrations/skill", "integrations/plugin"]
+      "pages": ["integrations/overview", "integrations/python-tool-decorator", "integrations/typescript-tool-decorator", "integrations/cli", "integrations/mcp", "integrations/skill", "integrations/plugin"]
     },
     {
       "group": "SDK Reference",
-      "pages": ["sdk/python", "sdk/typescript", "sdk/curl", "api-reference"]
+      "pages": ["sdk/python", "integrations/python-tool-decorator", "sdk/typescript", "integrations/typescript-tool-decorator", "sdk/curl", "api-reference"]
     },
     {
       "group": "Enterprise",
