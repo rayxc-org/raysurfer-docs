@@ -281,11 +281,11 @@ Each `SearchMatch` contains:
 | `voteCodeSnip({ task, codeBlockId, codeBlockName, codeBlockDescription, succeeded })` | Vote on snippet usefulness |
 | `commentOnCodeSnip({ codeBlockId, text })` | Add a comment to a snippet |
 | `tool(name, description, parameters, callback)` | Register a local function as a tool for `execute()` |
-| `execute(task, { userCode, timeout? })` | Execute client-generated code with registered tools |
+| `execute(task, { userCode?, codegen?, timeout? })` | Execute user code (primary) or sandbox-generated code (optional) with registered tools |
 
 ## Programmatic Tool Calling
 
-Register local tools, generate code client-side, and execute that code remotely:
+Register local tools, then either pass `userCode` (primary mode) or use optional sandbox codegen with your own key + prompt:
 
 ```typescript
 import { RaySurfer } from "raysurfer";
@@ -313,19 +313,36 @@ console.log(result.toolCalls);  // [{toolName: 'add', ...}, ...]
 console.log(result.cacheHit);   // false (reserved field)
 ```
 
+`tool()` lets you wrap any local function as a tool callback.
+The `description` string you pass is included in the tool schema payload.
+
 ### How It Works
 
 1. SDK connects a WebSocket to the server for tool call routing
-2. Your app sends client-generated `userCode` to `/api/execute/run`
+2. Your app sends either `userCode` (primary mode) or `codegen` (optional mode) to `/api/execute/run`
 3. Code runs in a sandboxed environment — tool calls are routed back to your local functions via WebSocket
 4. Results are returned with full tool call history
+
+Use exactly one mode per call:
+- `userCode`: run pre-generated code directly (recommended default)
+- `codegen`: generate code in sandbox and run it
 
 ### Execute Options
 
 ```typescript
 const result = await rs.execute("Your task description", {
-  userCode: "print(add(1, 2))", // Required: client-generated Python code
+  userCode: "print(add(1, 2))", // Primary mode
   timeout: 300000,              // Max time in ms (default 300000)
+});
+
+const sandboxCodegenResult = await rs.execute("Your task description", {
+  codegen: {
+    provider: "anthropic",
+    apiKey: "your_anthropic_key",
+    model: "claude-opus-4-6",
+    prompt: "Write Python code that uses add(a, b) and prints 2 + 3.",
+  },
+  timeout: 300000,
 });
 ```
 
