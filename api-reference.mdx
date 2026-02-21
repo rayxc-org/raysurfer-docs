@@ -173,7 +173,7 @@ for (const match of result.matches) {
 
 ---
 
-## upload_new_code_snip / uploadNewCodeSnip
+## upload
 
 Upload a code file from an execution for future reuse.
 
@@ -185,7 +185,7 @@ from raysurfer.types import FileWritten
 file = FileWritten(path="fetch_repos.py", content="def fetch(): ...")
 
 # Let Raysurfer AI vote (default behavior)
-result = client.upload_new_code_snip(
+result = client.upload(
     task="Fetch GitHub trending repos",
     file_written=file,
     succeeded=True,
@@ -193,7 +193,7 @@ result = client.upload_new_code_snip(
 )
 
 # Or provide your own vote (AI voting is automatically skipped)
-result = client.upload_new_code_snip(
+result = client.upload(
     task="Fetch GitHub trending repos",
     file_written=file,
     succeeded=True,
@@ -207,7 +207,7 @@ print(f"Stored {result.code_blocks_stored} code blocks")
 const file = { path: "fetch_repos.ts", content: "function fetch() { ... }" };
 
 // Let Raysurfer AI vote (default behavior)
-const result = await client.uploadNewCodeSnip({
+const result = await client.upload({
   task: "Fetch GitHub trending repos",
   fileWritten: file,
   succeeded: true,
@@ -215,7 +215,7 @@ const result = await client.uploadNewCodeSnip({
 });
 
 // Or provide your own vote (AI voting is automatically skipped)
-const result2 = await client.uploadNewCodeSnip({
+const result2 = await client.upload({
   task: "Fetch GitHub trending repos",
   fileWritten: file,
   succeeded: true,
@@ -361,7 +361,7 @@ await client.voteCodeSnip({
 ### Returns: [VoteCodeSnipResponse](#votecodesnipresponse)
 
 <Note>
-  Voting is triggered automatically by `upload_new_code_snip` when `use_raysurfer_ai_voting` is `true` (the default), and also by the high-level `RaysurferClient`. Use `vote_code_snip` directly only for voting on cached blocks after reuse.
+  Voting is triggered automatically by `upload` when `use_raysurfer_ai_voting` is `true` (the default), and also by the high-level `RaysurferClient`. Use `vote_code_snip` directly only for voting on cached blocks after reuse.
 </Note>
 
 ---
@@ -382,7 +382,7 @@ Returned by [`search()`](#search).
 
 ### SubmitExecutionResultResponse
 
-Returned by [`upload_new_code_snip()`](#upload_new_code_snip--uploadnewcodesnip).
+Returned by [`upload()`](#upload).
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -466,7 +466,7 @@ A stored code block with full metadata. Nested inside [SearchMatch](#searchmatch
 
 ### FileWritten
 
-A file created during agent execution. Used by [`upload_new_code_snip()`](#upload_new_code_snip--uploadnewcodesnip) and [`upload_bulk_code_snips()`](#upload_bulk_code_snips--uploadbulkcodesnips).
+A file created during agent execution. Used by [`upload()`](#upload) and [`upload_bulk_code_snips()`](#upload_bulk_code_snips--uploadbulkcodesnips).
 
 | Field | Type | Description |
 |-------|------|-------------|

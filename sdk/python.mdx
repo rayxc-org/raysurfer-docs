@@ -6,7 +6,7 @@ description: "Drop-in replacement for Claude Agent SDK"
 ## Installation
 
 ```bash
-pip install raysurfer
+uv add raysurfer
 ```
 
 ## Setup
@@ -68,6 +68,46 @@ options = ClaudeAgentOptions(
 ```
 
 Caching is enabled automatically when `RAYSURFER_API_KEY` is set.
+
+## Agent-Owned Repos
+
+Set `agent_id` to isolate uploads/searches into an agent-owned repo:
+
+```python
+from raysurfer import AsyncRaySurfer
+
+client = AsyncRaySurfer(
+    api_key="your_api_key",
+    agent_id="claims-agent-v1",
+)
+```
+
+## Agent-Accessible Functions
+
+Decorator flow:
+
+```python
+from raysurfer import AsyncRaySurfer, agent_accessible
+
+rs = AsyncRaySurfer(api_key="your_api_key", agent_id="claims-agent-v1")
+
+@agent_accessible("Generate claim summary PDF")
+def generate_claim_summary(claim_id: str) -> str:
+    return f"summary-{claim_id}.pdf"
+
+await rs.publish_function_registry([generate_claim_summary])
+```
+
+`raysurfer.yaml` flow:
+
+```python
+from my_app import claims
+from raysurfer import AsyncRaySurfer, load_config
+
+rs = AsyncRaySurfer(api_key="your_api_key", agent_id="claims-agent-v1")
+functions = load_config("raysurfer.yaml", modules=[claims])
+await rs.publish_function_registry(functions)
+```
 
 ## Snippet Retrieval Scope
 
@@ -158,7 +198,7 @@ import anthropic
 from raysurfer import RaySurfer
 from raysurfer.types import FileWritten, LogFile
 
-client = RaySurfer(api_key="your_raysurfer_api_key")
+client = RaySurfer(api_key="your_raysurfer_api_key", agent_id="claims-agent-v1")
 task = "Fetch GitHub trending repos"
 
 # 1. Search for cached code matching a task
@@ -175,7 +215,7 @@ for match in result.matches:
 # 2. Upload a new code file after execution
 #    AI voting is triggered automatically when use_raysurfer_ai_voting is True (default)
 file = FileWritten(path="fetch_repos.py", content="def fetch(): ...")
-client.upload_new_code_snip(
+client.upload(
     task=task,
     file_written=file,
     succeeded=True,
@@ -192,7 +232,7 @@ client.upload_bulk_code_snips(
 )
 
 # 3. (Optional) Vote on a cached snippet manually
-#    Only needed if you want explicit control — upload_new_code_snip already votes by default
+#    Only needed if you want explicit control — upload already votes by default
 client.vote_code_snip(
     task=task,
     code_block_id=result.matches[0].code_block.id,
@@ -248,7 +288,7 @@ async with AsyncRaySurfer(api_key="your_api_key") as client:
 
     # 2. Upload a new code file after execution (voting triggered by default)
     file = FileWritten(path="fetch_repos.py", content="def fetch(): ...")
-    await client.upload_new_code_snip(
+    await client.upload(
         task=task,
         file_written=file,
         succeeded=True,
@@ -291,16 +331,19 @@ Each `SearchMatch` contains:
 | `language` | `str` | Programming language |
 | `entrypoint` | `str` | Main function name |
 | `dependencies` | `dict[str, str]` | Package name to version mapping (e.g., `{"pandas": "2.1.0"}`) |
+| `agent_id` | `str \| None` | Agent identifier when snippet came from an agent-owned repo |
+| `s3_url` | `str \| None` | Presigned download URL for agent-stored script content |
 
 ### Method Reference
 
 | Method | Description |
 |--------|-------------|
 | `search(task, top_k, min_verdict_score, prefer_complete)` | Search for cached code snippets |
-| `upload_new_code_snip(task, file_written, succeeded, ...)` | Store a code file for future reuse |
+| `upload(task, file_written, succeeded, ...)` | Store a code file for future reuse |
 | `upload_bulk_code_snips(prompts, files_written, ...)` | Bulk upload for grading |
 | `vote_code_snip(task, code_block_id, name, description, succeeded)` | Vote on snippet usefulness |
 | `comment_on_code_snip(code_block_id, text)` | Add a comment to a snippet |
+| `publish_function_registry(functions)` | Publish `@agent_accessible` functions for agent discovery |
 | `tool(fn)` | Register a local function as a tool for `execute()` |
 | `execute(task, user_code=None, timeout=300, codegen_api_key=None, codegen_prompt=None, codegen_model=...)` | Execute user code (primary) or sandbox-generated code (optional) with registered tools |
 
@@ -350,9 +393,9 @@ Both sync and async callbacks are supported.
 
 ### How It Works
 
-1. SDK connects a WebSocket to the server for tool call routing
+1. SDK opens a live callback channel for tool call routing
 2. Your app sends either `user_code` (primary mode) or `codegen_*` inputs (optional mode) to `/api/execute/run`
-3. Code runs in a sandboxed environment — tool calls are routed back to your local functions via WebSocket
+3. Code runs in a Modal sandbox — tool calls are routed back to your local functions through that callback channel
 4. Results are returned with full tool call history
 
 Use exactly one mode per call:

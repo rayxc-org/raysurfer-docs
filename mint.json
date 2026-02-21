@@ -40,11 +40,11 @@
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["index", "quickstart", "how-it-works", "tool-compatibility", "reading-for-agents"]
+      "pages": ["index", "quickstart", "how-it-works", "agent-owned-repos", "tool-compatibility", "reading-for-agents"]
     },
     {
       "group": "Integrations",
-      "pages": ["integrations/overview", "integrations/python-tool-decorator", "integrations/typescript-tool-decorator", "integrations/cli", "integrations/mcp", "integrations/skill", "integrations/plugin"]
+      "pages": ["integrations/overview", "integrations/agent-accessible-flow", "integrations/python-tool-decorator", "integrations/typescript-tool-decorator", "integrations/cli", "integrations/mcp", "integrations/skill", "integrations/plugin"]
     },
     {
       "group": "SDK Reference",

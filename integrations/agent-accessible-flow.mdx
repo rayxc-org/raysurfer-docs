@@ -1,0 +1,136 @@
+---
+title: Agent-Accessible Flow
+description: "Expose human-authored functions to agents with auto-inferred schemas and Anthropic tool integration"
+---
+
+## What is `agent_accessible`?
+
+The `agent_accessible` decorator (Python) and `agentAccessible` wrapper (TypeScript) mark your functions as callable by AI agents. Raysurfer auto-infers the function name, description, and input schema from the function signature, type hints, and docstring — so you don't need to write schemas by hand.
+
+Once marked, functions can be:
+
+- Published to Raysurfer for agent discovery via `publish_function_registry` / `publishFunctionRegistry`
+- Converted to Anthropic tool definitions via `to_anthropic_tool` / `toAnthropicTool` for direct use with Claude's tool calling
+- Tracked automatically — every call records execution duration, inputs, outputs, and success/failure
+
+## Python
+
+### Auto-inferred (no explicit params)
+
+```python
+from raysurfer import AsyncRaySurfer, agent_accessible
+
+rs = AsyncRaySurfer()
+
+@agent_accessible()
+def generate_board_report(company: str, quarter: str) -> str:
+    """Generate a quarterly board report.
+
+    Args:
+        company: The company name to generate the report for.
+        quarter: The fiscal quarter (e.g. "Q1 2026").
+    """
+    return build_report(company=company, quarter=quarter)
+```
+
+Name, description, and input schema are all inferred from the function name, docstring, and type hints.
+
+### With explicit description
+
+```python
+@agent_accessible("Generate a quarterly board report")
+def generate_board_report(company: str, quarter: str) -> str:
+    return build_report(company=company, quarter=quarter)
+```
+
+### Org/workspace scoping
+
+```python
+@agent_accessible(org_id="acme-corp", workspace_id="finance-team")
+def generate_board_report(company: str, quarter: str) -> str:
+    """Generate a quarterly board report."""
+    return build_report(company=company, quarter=quarter)
+```
+
+### Converting to Anthropic tool format
+
+```python
+from raysurfer import agent_accessible, to_anthropic_tool
+
+@agent_accessible()
+def generate_board_report(company: str, quarter: str) -> str:
+    """Generate a quarterly board report."""
+    return build_report(company=company, quarter=quarter)
+
+tool = to_anthropic_tool(generate_board_report)
+# Returns: {"name": "generate_board_report", "description": "...", "input_schema": {...}}
+```
+
+### Publishing to Raysurfer
+
+```python
+rs = AsyncRaySurfer()
+await rs.publish_function_registry([generate_board_report])
+```
+
+## TypeScript
+
+### Auto-inferred (no explicit options)
+
+```typescript
+import { RaySurfer, agentAccessible } from "raysurfer";
+
+const rs = new RaySurfer();
+
+const generateBoardReport = agentAccessible(
+  (company: string, quarter: string) => buildReport(company, quarter),
+);
+```
+
+Name and parameters are inferred from the function.
+
+### With explicit options
+
+```typescript
+const generateBoardReport = agentAccessible(
+  (company: string, quarter: string) => buildReport(company, quarter),
+  {
+    name: "generateBoardReport",
+    description: "Generate a quarterly board report",
+  },
+);
+```
+
+### Org/workspace scoping
+
+```typescript
+const generateBoardReport = agentAccessible(
+  (company: string, quarter: string) => buildReport(company, quarter),
+  { orgId: "acme-corp", workspaceId: "finance-team" },
+);
+```
+
+### Converting to Anthropic tool format
+
+```typescript
+import { agentAccessible, toAnthropicTool } from "raysurfer";
+
+const generateBoardReport = agentAccessible(
+  (company: string, quarter: string) => buildReport(company, quarter),
+  { description: "Generate a quarterly board report" },
+);
+
+const tool = toAnthropicTool(generateBoardReport);
+// Returns: { name: "generateBoardReport", description: "...", input_schema: {...} }
+```
+
+### Publishing to Raysurfer
+
+```typescript
+const rs = new RaySurfer();
+await rs.publishFunctionRegistry([generateBoardReport]);
+```
+
+## Persistent Sandbox
+
+Previously published scripts are available in the sandbox execution environment, scoped by org and workspace. When an agent runs code through Raysurfer's sandbox, all functions published via `publish_function_registry` / `publishFunctionRegistry` for that org/workspace are accessible — so agents can call proven functions without re-uploading them each session.

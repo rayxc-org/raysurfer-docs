@@ -77,7 +77,7 @@ client = AsyncRaySurfer(api_key="rs_...")
 results = await client.search(task="Process shipment data", top_k=5, workspace_id="acme")
 
 # Upload - stores only to customer's isolated workspace
-await client.upload_new_code_snip(
+await client.upload(
     task="Process shipment data",
     file_written=FileWritten(path="processor.py", content="def process(): ..."),
     succeeded=True,
@@ -97,17 +97,12 @@ const client2 = new RaySurfer({ apiKey: "rs_..." });
 const results2 = await client2.search({ task: "Process shipment data", topK: 5, workspaceId: "acme" });
 
 // Upload - stores only to customer's isolated workspace
-await client2.uploadNewCodeSnip(
-  "Process shipment data",
-  { path: "processor.ts", content: "function process() { ... }" },
-  true,       // succeeded
-  undefined,  // cachedCodeBlocks
-  true,       // useRaysurferAiVoting
-  undefined,  // userVote
-  undefined,  // executionLogs
-  undefined,  // runUrl
-  "acme",     // workspaceId per-method override
-);
+await client2.upload({
+  task: "Process shipment data",
+  fileWritten: { path: "processor.ts", content: "function process() { ... }" },
+  succeeded: true,
+  workspaceId: "acme",  // per-method override
+});
 ```
 
 </CodeGroup>

@@ -82,7 +82,7 @@ from raysurfer.exceptions import RateLimitError
 client = RaySurfer(api_key="your_api_key")
 
 try:
-    result = client.get_code_snips(task="Fetch GitHub repos")
+    result = client.search(task="Fetch GitHub repos")
 except RateLimitError as e:
     print(f"Rate limited after retries: {e}")
     if e.retry_after:
@@ -95,7 +95,7 @@ import { RaySurfer, RateLimitError } from "raysurfer";
 const client = new RaySurfer({ apiKey: "your_api_key" });
 
 try {
-  const result = await client.getCodeSnips({ task: "Fetch GitHub repos" });
+  const result = await client.search({ task: "Fetch GitHub repos" });
 } catch (e) {
   if (e instanceof RateLimitError) {
     console.log(`Rate limited after retries: ${e.message}`);

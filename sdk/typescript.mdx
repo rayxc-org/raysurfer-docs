@@ -6,7 +6,7 @@ description: "Drop-in replacement for Claude Agent SDK with automatic caching"
 ## Installation
 
 ```bash
-npm install raysurfer
+bun add raysurfer
 ```
 
 ## Setup
@@ -61,6 +61,53 @@ import {
 
 Caching is enabled automatically when `RAYSURFER_API_KEY` is set. Without it,
 behaves exactly like the original SDK.
+
+## Agent-Owned Repos
+
+Set `agentId` to isolate uploads/searches into an agent-owned repo:
+
+```typescript
+import { RaySurfer } from "raysurfer";
+
+const client = new RaySurfer({
+  apiKey: "your_api_key",
+  agentId: "claims-agent-v1",
+});
+```
+
+## Agent-Accessible Functions
+
+Decorator flow:
+
+```typescript
+import { RaySurfer, agentAccessible } from "raysurfer";
+
+const rs = new RaySurfer({ apiKey: "your_api_key", agentId: "claims-agent-v1" });
+
+const generateClaimSummary = agentAccessible(
+  (claimId: string) => `summary-${claimId}.pdf`,
+  {
+    name: "generateClaimSummary",
+    description: "Generate claim summary PDF",
+    parameters: { claimId: "string" },
+  },
+);
+
+await rs.publishFunctionRegistry([generateClaimSummary]);
+```
+
+`raysurfer.yaml` flow:
+
+```typescript
+import * as claimsModule from "./src/claims";
+import { RaySurfer, loadConfig } from "raysurfer";
+
+const rs = new RaySurfer({ apiKey: "your_api_key", agentId: "claims-agent-v1" });
+const functions = loadConfig("raysurfer.yaml", {
+  "src/claims.ts": claimsModule,
+});
+await rs.publishFunctionRegistry(functions);
+```
 
 ## Class-based API
 
@@ -175,7 +222,7 @@ for (const match of searchResult.matches) {
 }
 
 // 2. Upload a new code file after execution (with dependency versions)
-await client.uploadNewCodeSnip({
+await client.upload({
   task: "Fetch GitHub trending repos",
   fileWritten: { path: "fetch_repos.ts", content: "function fetch() { ... }" },
   succeeded: true,
@@ -209,6 +256,7 @@ const client = new RaySurfer({
   timeout: 30000, // optional, in ms
   organizationId: "org_xxx", // optional, for team namespacing
   workspaceId: "ws_xxx", // optional, for per-customer namespacing (Pro or Enterprise)
+  agentId: "claims-agent-v1", // optional, for agent-owned repo isolation
   snipsDesired: "company", // optional, snippet scope
   publicSnips: true, // optional, include community snippets
 });
@@ -270,16 +318,19 @@ Each `SearchMatch` contains:
 | `language` | `string` | Programming language |
 | `entrypoint` | `string` | Main function name |
 | `dependencies` | `Record<string, string>` | Package name to version mapping (e.g., `{"node-fetch": "3.3.0"}`) |
+| `agentId` | `string \| null` | Agent identifier when snippet came from an agent-owned repo |
+| `s3Url` | `string \| null` | Presigned download URL for agent-stored script content |
 
 ### Method Reference
 
 | Method | Description |
 |--------|-------------|
 | `search({ task, topK?, minVerdictScore?, preferComplete? })` | Search for cached code snippets |
-| `uploadNewCodeSnip({ task, fileWritten, succeeded, ... })` | Store a code file for future reuse |
+| `upload({ task, fileWritten, succeeded, ... })` | Store a code file for future reuse |
 | `uploadBulkCodeSnips({ prompts, filesWritten, ... })` | Bulk upload for grading |
 | `voteCodeSnip({ task, codeBlockId, codeBlockName, codeBlockDescription, succeeded })` | Vote on snippet usefulness |
 | `commentOnCodeSnip({ codeBlockId, text })` | Add a comment to a snippet |
+| `publishFunctionRegistry(functions)` | Publish `agentAccessible(...)` functions for agent discovery |
 | `tool(name, description, parameters, callback)` | Register a local function as a tool for `execute()` |
 | `execute(task, { userCode?, codegen?, timeout? })` | Execute user code (primary) or sandbox-generated code (optional) with registered tools |
 
@@ -320,9 +371,9 @@ The `description` string you pass is included in the tool schema payload.
 
 ### How It Works
 
-1. SDK connects a WebSocket to the server for tool call routing
+1. SDK opens a live callback channel for tool call routing
 2. Your app sends either `userCode` (primary mode) or `codegen` (optional mode) to `/api/execute/run`
-3. Code runs in a sandboxed environment — tool calls are routed back to your local functions via WebSocket
+3. Code runs in a Modal sandbox — tool calls are routed back to your local functions through that callback channel
 4. Results are returned with full tool call history
 
 Use exactly one mode per call:

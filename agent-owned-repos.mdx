@@ -1,0 +1,61 @@
+---
+title: Agent-Owned Repos
+description: "How agent-owned repos connect to Raysurfer's code reputation system"
+---
+
+# Agent-Owned Repos
+
+## Terminology
+
+- **Agent owned repo** — the general description of all Raysurfer tools: code reputation tracking combined with auto-deploying proven code in a sandbox.
+- **Private Stack Overflow for AI agents** — how we describe the reputation management of code: snippets earn scores through execution results and community voting, and the best answers rise to the top.
+- **AI maintained skills** — how we describe the way high-reputation code gets resurfaced: verified code from prior runs is automatically reused by agents instead of regenerating from scratch.
+
+An agent-owned repo is the idea that agents can take increasing ownership over coding decisions, based on execution-proven reputation signals rather than one-off code generation.
+
+Raysurfer supports this by combining:
+
+1. Semantic retrieval of verified snippets
+2. Execution-aware scoring (`thumbs_up` / `thumbs_down`)
+3. Reuse-first workflows across SDKs and integrations
+
+## The Loop
+
+```
+Search proven code -> execute -> score -> promote top patterns
+```
+
+This makes repo behavior more stable over time. Agents start from high-signal code paths and only generate new code when necessary.
+
+## How This Connects to Raysurfer Products
+
+<CardGroup cols={2}>
+  <Card title="Code Reputation Registry" icon="chart-line" href="https://www.raysurfer.com/public_snippets">
+    Inspect publicly ranked snippets and quality signals that feed reuse decisions.
+  </Card>
+  <Card title="AI Maintained Skills" icon="robot" href="/how-it-works">
+    Reuse verified code from prior runs as skills for your vertical agents.
+  </Card>
+  <Card title="Integrations" icon="plug" href="/integrations/overview">
+    Add the same loop through Python/TypeScript SDKs, CLI, MCP, skill, or plugin.
+  </Card>
+  <Card title="Product Page" icon="window-maximize" href="https://www.raysurfer.com/products/agent-owned-repos">
+    See the website version of this concept and how it fits the product lineup.
+  </Card>
+</CardGroup>
+
+## Recommended Rollout
+
+1. Add Raysurfer to one high-frequency workflow first.
+2. Track which snippets are repeatedly reused with positive votes.
+3. Expand ownership scope to additional workflows once retrieval quality is stable.
+
+<Note>
+Keep values parameterized in snippets. Hardcode only values you expect to be reused verbatim.
+</Note>
+
+## Persistent Sandbox
+
+When agents execute code through Raysurfer's sandbox, previously published scripts are available in the execution environment, scoped by org and workspace. This means agents don't need to re-upload functions each session — proven code persists and is accessible across runs.
+
+Functions published via `publish_function_registry` (Python) or `publishFunctionRegistry` (TypeScript) are stored and available for future agent sessions within the same org/workspace scope. See the [agent-accessible flow](/integrations/agent-accessible-flow) for setup details.
