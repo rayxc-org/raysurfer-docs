@@ -6,6 +6,7 @@ Mintlify-powered documentation site for Raysurfer at [docs.raysurfer.com](https:
 
 - `index.mdx` - Documentation homepage
 - `quickstart.mdx` - Getting started guide
+- `benchmarks.mdx` - Reproducible benchmark results and rerun commands
 - `api-reference.mdx` - Full API reference
 - `how-it-works.mdx` - Architecture and concepts
 - `sdk/` - Python and TypeScript SDK docs

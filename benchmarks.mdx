@@ -1,0 +1,71 @@
+---
+title: Benchmarks
+description: Reproducible benchmark results for claude-agent-sdk baseline vs Raysurfer drop-in replacement.
+---
+
+# Benchmarks
+
+This page reports rotating benchmark runs that compare:
+
+- `claude-agent-sdk` baseline
+- Raysurfer drop-in replacement (`RaysurferClient`)
+
+All runs use the same model and budgets per mode. Prompts are rotated between rounds, and when `.raysurfer_code` exists the agent is required to review cached code and reputation before execution.
+
+## Latest Results (February 21-22, 2026)
+
+| Run Set | Attempts / Mode | Model | Max Turns | Timeout | Baseline Consistency | Raysurfer Consistency | Delta |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Mixed existing benchmarks (10 HumanEval + 10 MBPP) | 40 (20 tasks x 2 rounds) | `claude-haiku-4-5-20251001` | 8 | 120s | 45.0% (18/40) | 77.5% (31/40) | +32.5 pp |
+| MBPP showcase (best persistence demo) | 30 (10 tasks x 3 rounds) | `claude-haiku-4-5-20251001` | 8 | 120s | 0.0% (0/30) | 33.3% (10/30) | +33.3 pp |
+| Public one-shot eval | 40 (20 tasks x 2 rounds) | `claude-haiku-4-5-20251001` | 8 | 180s | 55.0% (22/40) | 40.0% (16/40) | -15.0 pp |
+
+Raysurfer cache behavior from these runs:
+
+- Mixed existing benchmarks: cache hit `97.5%`, cache review `92.5%`
+- MBPP showcase: cache hit `93.3%`, cache review `90.0%`
+- Public one-shot: cache hit `80.0%`, cache review `75.0%`
+
+<Note>
+For a large, clear persistence uplift demo, use the MBPP showcase and mixed existing benchmark runs.
+</Note>
+
+## Methodology
+
+1. Rotate task order each round.
+2. Rotate prompt wording while preserving task semantics.
+3. Require cache-review-before-execute when cache files exist.
+4. Report both completion-within-SLA and validation pass rate.
+5. Record run details including `status`, `validation`, `cache_hit`, and `cache_review`.
+
+## Re-run Commands
+
+### Existing benchmark rotating eval
+
+```bash
+cd examples/raysurfer-existing-benchmarks-eval
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/seed_reference_solutions.py --tasks tasks/existing_benchmarks_20.json
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/run_rotating_sdk_eval.py --tasks tasks/existing_benchmarks_20.json --mode baseline --out runs/rotating_sdk_baseline.json --rounds 2 --timeout-seconds 120 --max-turns 8 --model claude-haiku-4-5-20251001
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/run_rotating_sdk_eval.py --tasks tasks/existing_benchmarks_20.json --mode raysurfer --out runs/rotating_sdk_raysurfer.json --rounds 2 --timeout-seconds 120 --max-turns 8 --model claude-haiku-4-5-20251001
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/score_eval.py --tasks tasks/existing_benchmarks_20.json --baseline-runs runs/rotating_sdk_baseline.json --raysurfer-runs runs/rotating_sdk_raysurfer.json --json-out runs/rotating_sdk_summary.json
+```
+
+### MBPP showcase eval
+
+```bash
+cd examples/raysurfer-existing-benchmarks-eval
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/seed_reference_solutions.py --tasks tasks/mbpp_only_10.json
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/run_rotating_sdk_eval.py --tasks tasks/mbpp_only_10.json --mode baseline --out runs/showcase_mbpp_rotating_baseline_t8_r3.json --rounds 3 --timeout-seconds 120 --max-turns 8 --model claude-haiku-4-5-20251001
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/run_rotating_sdk_eval.py --tasks tasks/mbpp_only_10.json --mode raysurfer --out runs/showcase_mbpp_rotating_raysurfer_t8_r3.json --rounds 3 --timeout-seconds 120 --max-turns 8 --model claude-haiku-4-5-20251001
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/score_eval.py --tasks tasks/mbpp_only_10.json --baseline-runs runs/showcase_mbpp_rotating_baseline_t8_r3.json --raysurfer-runs runs/showcase_mbpp_rotating_raysurfer_t8_r3.json --json-out runs/showcase_mbpp_rotating_summary_t8_r3.json
+```
+
+### One-shot rotating eval
+
+```bash
+cd examples/raysurfer-public-oneshot-eval
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/seed_verified_snippets.py --tasks tasks/tasks.json
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/run_rotating_sdk_eval.py --tasks tasks/tasks.json --mode baseline --out runs/rotating_sdk_baseline.json --rounds 2 --max-turns 8 --timeout-seconds 180 --model claude-haiku-4-5-20251001
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/run_rotating_sdk_eval.py --tasks tasks/tasks.json --mode raysurfer --out runs/rotating_sdk_raysurfer.json --rounds 2 --max-turns 8 --timeout-seconds 180 --model claude-haiku-4-5-20251001
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/score_eval.py --tasks tasks/tasks.json --baseline-runs runs/rotating_sdk_baseline.json --raysurfer-runs runs/rotating_sdk_raysurfer.json --json-out runs/rotating_sdk_summary.json
+```
