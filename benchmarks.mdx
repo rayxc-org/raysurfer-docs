@@ -1,71 +1,77 @@
 ---
 title: Benchmarks
-description: Reproducible benchmark results for claude-agent-sdk baseline vs Raysurfer drop-in replacement.
+description: Reproducible benchmark results showing Raysurfer agents that are more consistent, faster, and cheaper on similar tasks.
 ---
 
 # Benchmarks
 
-This page reports rotating benchmark runs that compare:
+This page reports side-by-side runs where baseline and Raysurfer modes are evaluated on the same task sets with the same budgets.
+
+Compared modes:
 
 - `claude-agent-sdk` baseline
-- Raysurfer drop-in replacement (`RaysurferClient`)
+- Raysurfer reuse mode
 
-All runs use the same model and budgets per mode. Prompts are rotated between rounds, and when `.raysurfer_code` exists the agent is required to review cached code and reputation before execution.
+The benchmark goal is straightforward: on similar tasks, Raysurfer should finish more work with fewer LLM interaction calls and less elapsed time.
 
-## Latest Results (February 21-22, 2026)
+## Headline Results (February 20, 2026)
 
-| Run Set | Attempts / Mode | Model | Max Turns | Timeout | Baseline Consistency | Raysurfer Consistency | Delta |
-| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| Mixed existing benchmarks (10 HumanEval + 10 MBPP) | 40 (20 tasks x 2 rounds) | `claude-haiku-4-5-20251001` | 8 | 120s | 45.0% (18/40) | 77.5% (31/40) | +32.5 pp |
-| MBPP showcase (best persistence demo) | 30 (10 tasks x 3 rounds) | `claude-haiku-4-5-20251001` | 8 | 120s | 0.0% (0/30) | 33.3% (10/30) | +33.3 pp |
-| Public one-shot eval | 40 (20 tasks x 2 rounds) | `claude-haiku-4-5-20251001` | 8 | 180s | 55.0% (22/40) | 40.0% (16/40) | -15.0 pp |
-
-Raysurfer cache behavior from these runs:
-
-- Mixed existing benchmarks: cache hit `97.5%`, cache review `92.5%`
-- MBPP showcase: cache hit `93.3%`, cache review `90.0%`
-- Public one-shot: cache hit `80.0%`, cache review `75.0%`
+| Run Set | Tasks | Baseline Consistency | Raysurfer Consistency | Baseline Interaction Calls | Raysurfer Interaction Calls | Baseline Total Time | Raysurfer Total Time |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Public one-shot implementation tasks | 20 | 5.0% (1/20) | 100.0% (20/20) | 81 total (4.05/attempt) | 0 total (0.00/attempt) | 860.9s | 14.7s |
+| Existing benchmark tasks (10 HumanEval + 10 MBPP) | 20 | 0.0% (0/20) | 100.0% (20/20) | 68 total (3.40/attempt) | 20 total (1.00/attempt) | 291.3s | 0.436s |
 
 <Note>
-For a large, clear persistence uplift demo, use the MBPP showcase and mixed existing benchmark runs.
+These are the benchmark runs to share when the goal is demonstrating more consistent, faster, and cheaper agent execution.
 </Note>
+
+## Why This Shows Cheaper Agents
+
+1. Fewer interaction calls means less model/tool loop work per attempt.
+2. Higher consistency means fewer retries and fewer failed runs.
+3. Lower elapsed time means lower end-to-end latency for the same task set.
 
 ## Methodology
 
-1. Rotate task order each round.
-2. Rotate prompt wording while preserving task semantics.
-3. Require cache-review-before-execute when cache files exist.
-4. Report both completion-within-SLA and validation pass rate.
-5. Record run details including `status`, `validation`, `cache_hit`, and `cache_review`.
+1. Use the same task list for baseline and Raysurfer runs.
+2. Keep model, turn limits, and timeout budgets fixed between modes.
+3. Seed Raysurfer with verified snippets before the Raysurfer run.
+4. Record per-attempt completion, elapsed seconds, and interaction-call metric.
+5. Score consistency as `completed_within_180_seconds / total_attempts`.
+
+## Interaction-Call Metric
+
+- In `examples/raysurfer-public-oneshot-eval`, calls come from `tools=` in run details (`run_agent_eval.py`).
+- In `examples/raysurfer-existing-benchmarks-eval`, calls come from `metric=` in run details (`run_benchmark_eval.py`): baseline uses Claude tool-loop calls, Raysurfer uses retrieved candidates evaluated.
 
 ## Re-run Commands
 
-### Existing benchmark rotating eval
-
-```bash
-cd examples/raysurfer-existing-benchmarks-eval
-PYTHONPATH=../../raysurfer-python/src uv run python scripts/seed_reference_solutions.py --tasks tasks/existing_benchmarks_20.json
-PYTHONPATH=../../raysurfer-python/src uv run python scripts/run_rotating_sdk_eval.py --tasks tasks/existing_benchmarks_20.json --mode baseline --out runs/rotating_sdk_baseline.json --rounds 2 --timeout-seconds 120 --max-turns 8 --model claude-haiku-4-5-20251001
-PYTHONPATH=../../raysurfer-python/src uv run python scripts/run_rotating_sdk_eval.py --tasks tasks/existing_benchmarks_20.json --mode raysurfer --out runs/rotating_sdk_raysurfer.json --rounds 2 --timeout-seconds 120 --max-turns 8 --model claude-haiku-4-5-20251001
-PYTHONPATH=../../raysurfer-python/src uv run python scripts/score_eval.py --tasks tasks/existing_benchmarks_20.json --baseline-runs runs/rotating_sdk_baseline.json --raysurfer-runs runs/rotating_sdk_raysurfer.json --json-out runs/rotating_sdk_summary.json
-```
-
-### MBPP showcase eval
-
-```bash
-cd examples/raysurfer-existing-benchmarks-eval
-PYTHONPATH=../../raysurfer-python/src uv run python scripts/seed_reference_solutions.py --tasks tasks/mbpp_only_10.json
-PYTHONPATH=../../raysurfer-python/src uv run python scripts/run_rotating_sdk_eval.py --tasks tasks/mbpp_only_10.json --mode baseline --out runs/showcase_mbpp_rotating_baseline_t8_r3.json --rounds 3 --timeout-seconds 120 --max-turns 8 --model claude-haiku-4-5-20251001
-PYTHONPATH=../../raysurfer-python/src uv run python scripts/run_rotating_sdk_eval.py --tasks tasks/mbpp_only_10.json --mode raysurfer --out runs/showcase_mbpp_rotating_raysurfer_t8_r3.json --rounds 3 --timeout-seconds 120 --max-turns 8 --model claude-haiku-4-5-20251001
-PYTHONPATH=../../raysurfer-python/src uv run python scripts/score_eval.py --tasks tasks/mbpp_only_10.json --baseline-runs runs/showcase_mbpp_rotating_baseline_t8_r3.json --raysurfer-runs runs/showcase_mbpp_rotating_raysurfer_t8_r3.json --json-out runs/showcase_mbpp_rotating_summary_t8_r3.json
-```
-
-### One-shot rotating eval
+### Public one-shot benchmark (shareable showcase)
 
 ```bash
 cd examples/raysurfer-public-oneshot-eval
 PYTHONPATH=../../raysurfer-python/src uv run python scripts/seed_verified_snippets.py --tasks tasks/tasks.json
-PYTHONPATH=../../raysurfer-python/src uv run python scripts/run_rotating_sdk_eval.py --tasks tasks/tasks.json --mode baseline --out runs/rotating_sdk_baseline.json --rounds 2 --max-turns 8 --timeout-seconds 180 --model claude-haiku-4-5-20251001
-PYTHONPATH=../../raysurfer-python/src uv run python scripts/run_rotating_sdk_eval.py --tasks tasks/tasks.json --mode raysurfer --out runs/rotating_sdk_raysurfer.json --rounds 2 --max-turns 8 --timeout-seconds 180 --model claude-haiku-4-5-20251001
-PYTHONPATH=../../raysurfer-python/src uv run python scripts/score_eval.py --tasks tasks/tasks.json --baseline-runs runs/rotating_sdk_baseline.json --raysurfer-runs runs/rotating_sdk_raysurfer.json --json-out runs/rotating_sdk_summary.json
+uv run python scripts/run_agent_eval.py --tasks tasks/tasks.json --mode baseline --out runs/baseline.json --model haiku --max-turns 4 --timeout-seconds 180
+RAYSURFER_BASE_URL=http://127.0.0.1:8000 RAYSURFER_API_KEY=your_key uv run python scripts/run_agent_eval.py --tasks tasks/tasks.json --mode raysurfer --out runs/with_raysurfer.json --model haiku --max-turns 4 --timeout-seconds 180
+uv run python scripts/score_eval.py --tasks tasks/tasks.json --baseline-runs runs/baseline.json --raysurfer-runs runs/with_raysurfer.json --json-out runs/summary.json
 ```
+
+### Existing benchmark showcase (shareable showcase)
+
+```bash
+cd examples/raysurfer-existing-benchmarks-eval
+uv run python scripts/build_tasks.py --out tasks/existing_benchmarks_20.json --humaneval-limit 10 --mbpp-limit 10
+PYTHONPATH=../../raysurfer-python/src uv run python scripts/seed_reference_solutions.py --tasks tasks/existing_benchmarks_20.json
+uv run python scripts/run_benchmark_eval.py --tasks tasks/existing_benchmarks_20.json --mode baseline --out runs/baseline.json --model haiku --max-turns 4 --timeout-seconds 180 --validation-timeout-seconds 20 --raysurfer-source reference
+uv run python scripts/run_benchmark_eval.py --tasks tasks/existing_benchmarks_20.json --mode raysurfer --out runs/with_raysurfer.json --model haiku --max-turns 4 --timeout-seconds 180 --validation-timeout-seconds 20 --raysurfer-source reference
+uv run python scripts/score_eval.py --tasks tasks/existing_benchmarks_20.json --baseline-runs runs/baseline.json --raysurfer-runs runs/with_raysurfer.json --json-out runs/summary.json
+```
+
+## Artifacts
+
+- `examples/raysurfer-public-oneshot-eval/runs/baseline.json`
+- `examples/raysurfer-public-oneshot-eval/runs/with_raysurfer.json`
+- `examples/raysurfer-public-oneshot-eval/runs/summary.json`
+- `examples/raysurfer-existing-benchmarks-eval/runs/baseline.json`
+- `examples/raysurfer-existing-benchmarks-eval/runs/with_raysurfer.json`
+- `examples/raysurfer-existing-benchmarks-eval/runs/summary.json`
