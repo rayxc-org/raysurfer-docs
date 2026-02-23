@@ -341,6 +341,7 @@ Each `SearchMatch` contains:
 | `search(task, top_k, min_verdict_score, prefer_complete)` | Search for cached code snippets |
 | `upload(task, file_written, succeeded, ...)` | Store a code file for future reuse |
 | `upload_bulk_code_snips(prompts, files_written, ...)` | Bulk upload for grading |
+| `delete(snippet_id)` | Delete a snippet and all its associated data |
 | `vote_code_snip(task, code_block_id, name, description, succeeded)` | Vote on snippet usefulness |
 | `comment_on_code_snip(code_block_id, text)` | Add a comment to a snippet |
 | `publish_function_registry(functions)` | Publish `@agent_accessible` functions for agent discovery |

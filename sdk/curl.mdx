@@ -205,11 +205,15 @@ curl -X POST https://api.raysurfer.com/api/store/code-block \
   }'
 ```
 
-### Delete a code block
+### Delete a snippet
 
 ```bash
-curl -X DELETE https://api.raysurfer.com/api/store/code-block/CODE_BLOCK_ID \
-  -H "Authorization: Bearer $RAYSURFER_API_KEY"
+curl -X POST https://api.raysurfer.com/api/snippets/delete \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "snippet_id": "CODE_BLOCK_ID"
+  }'
 ```
 
 ### Check background task status

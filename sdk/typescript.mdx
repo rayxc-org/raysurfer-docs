@@ -328,6 +328,7 @@ Each `SearchMatch` contains:
 | `search({ task, topK?, minVerdictScore?, preferComplete? })` | Search for cached code snippets |
 | `upload({ task, fileWritten, succeeded, ... })` | Store a code file for future reuse |
 | `uploadBulkCodeSnips({ prompts, filesWritten, ... })` | Bulk upload for grading |
+| `delete(snippetId)` | Delete a snippet and all its associated data |
 | `voteCodeSnip({ task, codeBlockId, codeBlockName, codeBlockDescription, succeeded })` | Vote on snippet usefulness |
 | `commentOnCodeSnip({ codeBlockId, text })` | Add a comment to a snippet |
 | `publishFunctionRegistry(functions)` | Publish `agentAccessible(...)` functions for agent discovery |

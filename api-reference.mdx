@@ -330,6 +330,37 @@ const result2 = await client.uploadBulkCodeSnips({
 
 ---
 
+## delete
+
+Delete a snippet and all its associated data (vectors, retrieval logs, votes).
+
+<CodeGroup>
+
+```python Python
+result = client.delete(snippet_id="cb_abc123")
+
+print(f"Deleted {result.deleted_count} snippet(s)")
+```
+
+```typescript TypeScript
+const result = await client.delete("cb_abc123");
+
+console.log(`Deleted ${result.deletedCount} snippet(s)`);
+```
+
+</CodeGroup>
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `snippet_id` / `snippetId` | `string` | required | The ID of the snippet to delete |
+| `workspace_id` / `workspaceId` | `string` | `null` | Override client-level workspace ID |
+
+### Returns: [DeleteResponse](#deleteresponse)
+
+---
+
 ## vote_code_snip / voteCodeSnip
 
 Vote on whether a cached code snippet was useful. This triggers background voting on the backend.
@@ -404,6 +435,18 @@ Returned by [`upload_bulk_code_snips()`](#upload_bulk_code_snips--uploadbulkcode
 | `votes_queued` / `votesQueued` | `int` | Number of votes queued for AI grading |
 | `message` | `string` | Human-readable status message |
 | `status_url` / `statusUrl` | `string \| null` | URL to check grading status (if applicable) |
+
+---
+
+### DeleteResponse
+
+Returned by [`delete()`](#delete).
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | `boolean` | Whether the operation succeeded |
+| `deleted_count` / `deletedCount` | `int` | Number of snippets deleted |
+| `message` | `string` | Human-readable status message |
 
 ---
 
