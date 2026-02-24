@@ -337,13 +337,21 @@ Delete a snippet and all its associated data (vectors, retrieval logs, votes).
 <CodeGroup>
 
 ```python Python
+# Delete by ID
 result = client.delete(snippet_id="cb_abc123")
+
+# Or delete by name
+result = client.delete(snippet_id="weather_fetcher.py")
 
 print(f"Deleted {result.deleted_count} snippet(s)")
 ```
 
 ```typescript TypeScript
+// Delete by ID
 const result = await client.delete("cb_abc123");
+
+// Or delete by name
+const result2 = await client.delete("weather_fetcher.py");
 
 console.log(`Deleted ${result.deletedCount} snippet(s)`);
 ```
@@ -354,7 +362,7 @@ console.log(`Deleted ${result.deletedCount} snippet(s)`);
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `snippet_id` / `snippetId` | `string` | required | The ID of the snippet to delete |
+| `snippet_id` / `snippetId` | `string` | required | The ID or name of the snippet to delete |
 | `workspace_id` / `workspaceId` | `string` | `null` | Override client-level workspace ID |
 
 ### Returns: [DeleteResponse](#deleteresponse)
