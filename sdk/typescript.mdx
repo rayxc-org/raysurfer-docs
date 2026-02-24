@@ -221,6 +221,9 @@ for (const match of searchResult.matches) {
   console.log(`${match.codeBlock.name}: ${match.combinedScore}`);
 }
 
+// Your LLM execution loop goes here
+// e.g. Claude Agent SDK generates and runs code using the cached snippets
+
 // 2. Upload a new code file after execution (with dependency versions)
 await client.upload({
   task: "Fetch GitHub trending repos",

@@ -212,6 +212,9 @@ for match in result.matches:
     print(f"{match.code_block.name}: {match.combined_score}")
     print(f"  Source: {match.code_block.source[:80]}...")
 
+# Your LLM execution loop goes here
+# e.g. Claude Agent SDK generates and runs code using the cached snippets
+
 # 2. Upload a new code file after execution
 #    AI voting is triggered automatically when use_raysurfer_ai_voting is True (default)
 file = FileWritten(path="fetch_repos.py", content="def fetch(): ...")
@@ -285,6 +288,9 @@ async with AsyncRaySurfer(api_key="your_api_key") as client:
 
     for match in result.matches:
         print(f"{match.code_block.name}: {match.combined_score}")
+
+    # Your LLM execution loop goes here
+    # e.g. Claude Agent SDK generates and runs code using the cached snippets
 
     # 2. Upload a new code file after execution (voting triggered by default)
     file = FileWritten(path="fetch_repos.py", content="def fetch(): ...")
