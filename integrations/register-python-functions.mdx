@@ -32,6 +32,23 @@ def add(a: int, b: int) -> int:
     return a + b
 ```
 
+## How Functions Get Passed Back To The Agent
+
+`@rs.tool` registers two things locally in your app process:
+
+- A tool schema (name, description, parameters) that Raysurfer sends to the sandbox run
+- A callback function that stays local and is invoked when the sandbox requests that tool
+
+Execution flow:
+
+1. `execute()` opens a callback session and sends tool schemas plus your task to Raysurfer.
+2. Sandbox code calls a tool (for example `add(5, 3)`).
+3. Raysurfer sends a `tool_call` message back to your app.
+4. Your local callback runs, and the SDK sends `tool_result` back to the sandbox.
+5. The sandbox continues running with that result.
+
+This is the mechanism that passes tool execution back into your running agent app.
+
 ## Execute Modes
 
 Use exactly one mode per `execute()` call:
@@ -45,9 +62,35 @@ result = await rs.execute(
 )
 ```
 
+### End-To-End Sandbox Example
+
+```python
+import asyncio
+from raysurfer import AsyncRaySurfer
+
+
+async def main() -> None:
+    rs = AsyncRaySurfer(api_key="your_api_key")
+
+    @rs.tool
+    def add(a: int, b: int) -> int:
+        """Add two numbers."""
+        return a + b
+
+    result = await rs.execute(
+        "Compute 5 + 3",
+        user_code="result = add(5, 3)\nprint(result)",
+    )
+    print(result.result)      # "8"
+    print(result.tool_calls)  # tool call history
+
+
+asyncio.run(main())
+```
+
 ### Optional Mode: Sandbox Codegen
 
-In this mode, code is generated inside the Daytona sandbox from your prompt.
+In this mode, code is generated inside Raysurfer's remote sandbox from your prompt.
 
 ```python
 result = await rs.execute(

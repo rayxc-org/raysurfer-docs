@@ -11,6 +11,18 @@ Once registered, functions can be:
 - Converted to Anthropic tool definitions via `to_anthropic_tool` / `toAnthropicTool` for direct use with Claude's tool calling
 - Tracked automatically — every call records execution duration, inputs, outputs, and success/failure
 
+## Which Path Passes Functions Back To The Running Agent?
+
+These three paths are related, but they are not the same runtime:
+
+| Path | Purpose | How functions are wired at runtime |
+|------|---------|------------------------------------|
+| `publish_function_registry` / `publishFunctionRegistry` | Persist reusable functions for discovery across sessions | Functions are uploaded as registry snippets and made available to Raysurfer sandbox runs for that scope |
+| `to_anthropic_tool` / `toAnthropicTool` | Generate Anthropic-compatible tool schemas | You pass the returned schema to your Claude tool-calling loop and handle tool execution in your app |
+| `@rs.tool` / `tool(...)` + `execute(...)` | Live tool calling in Raysurfer sandbox | Raysurfer opens a callback channel and routes each tool call back to your local callback during execution |
+
+If your question is "how does the function call get passed back into my agent process during execution?", use `@rs.tool` / `tool(...)` with `execute(...)`. See [Register Python Functions](/integrations/register-python-functions) or [Register TypeScript Functions](/integrations/register-ts-functions).
+
 ## Python
 
 ### Auto-inferred (no explicit params)
@@ -131,4 +143,19 @@ await rs.publishFunctionRegistry([generateBoardReport]);
 
 ## Persistent Sandbox
 
-Previously published functions are available in the sandbox execution environment, scoped by org and workspace. When an agent runs code through Raysurfer's sandbox, all functions published via `publish_function_registry` / `publishFunctionRegistry` for that org/workspace are accessible — so agents can call proven functions without re-uploading them each session.
+Previously published functions are available in the sandbox execution environment, scoped by org and workspace. When an agent runs code through Raysurfer's sandbox, functions published via `publish_function_registry` / `publishFunctionRegistry` for that scope are available without re-uploading each session.
+
+For live callback routing during a run, use `@rs.tool` / `tool(...)` with `execute(...)`.
+
+## Running In Raysurfer Sandbox
+
+To run a coding agent in Raysurfer's remote sandbox with tool callbacks:
+
+1. Register callbacks with `@rs.tool` (Python) or `tool(...)` (TypeScript).
+2. Call `execute(...)` with either `user_code` / `userCode` or optional sandbox codegen inputs.
+3. Handle results from `ExecuteResult` (`result`, `error`, and `tool_calls` / `toolCalls`).
+
+Use the end-to-end guides:
+
+- [Register Python Functions](/integrations/register-python-functions)
+- [Register TypeScript Functions](/integrations/register-ts-functions)
