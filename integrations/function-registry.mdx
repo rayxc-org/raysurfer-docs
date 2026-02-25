@@ -1,13 +1,11 @@
 ---
-title: Agent-Accessible Flow
-description: "Expose human-authored functions to agents with auto-inferred schemas and Anthropic tool integration"
+title: Function Registry
+description: "Publish a registry of your functions so agents can discover and call them across sessions"
 ---
 
-## What is `agent_accessible`?
+Publish a registry of your functions so agents can discover and call them across sessions. Raysurfer auto-infers the function name, description, and input schema from the function signature, type hints, and docstring — so you don't need to write schemas by hand.
 
-The `agent_accessible` decorator (Python) and `agentAccessible` wrapper (TypeScript) mark your functions as callable by AI agents. Raysurfer auto-infers the function name, description, and input schema from the function signature, type hints, and docstring — so you don't need to write schemas by hand.
-
-Once marked, functions can be:
+Once registered, functions can be:
 
 - Published to Raysurfer for agent discovery via `publish_function_registry` / `publishFunctionRegistry`
 - Converted to Anthropic tool definitions via `to_anthropic_tool` / `toAnthropicTool` for direct use with Claude's tool calling
@@ -133,4 +131,4 @@ await rs.publishFunctionRegistry([generateBoardReport]);
 
 ## Persistent Sandbox
 
-Previously published scripts are available in the sandbox execution environment, scoped by org and workspace. When an agent runs code through Raysurfer's sandbox, all functions published via `publish_function_registry` / `publishFunctionRegistry` for that org/workspace are accessible — so agents can call proven functions without re-uploading them each session.
+Previously published functions are available in the sandbox execution environment, scoped by org and workspace. When an agent runs code through Raysurfer's sandbox, all functions published via `publish_function_registry` / `publishFunctionRegistry` for that org/workspace are accessible — so agents can call proven functions without re-uploading them each session.

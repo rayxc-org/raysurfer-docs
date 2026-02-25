@@ -3,20 +3,20 @@ title: Quickstart
 description: "Get started with Raysurfer in under 5 minutes"
 ---
 
-<Warning>
-  Raysurfer is designed for agents that generate code and execute it in production. If your agent isn't doing that yet, you need to get onboard! Until then, Raysurfer is not for you.
-</Warning>
+<Note>
+  Raysurfer is designed for agents that chain multiple tool calls together in production workflows. If your agent only makes 1-3 tool calls per run, check [Is Raysurfer Right for You?](/is-it-right-for-me) first.
+</Note>
 
 ## Installation
 
 <CodeGroup>
 
 ```bash Python
-pip install raysurfer
+uv add raysurfer
 ```
 
 ```bash TypeScript
-npm install raysurfer
+bun add raysurfer
 ```
 
 </CodeGroup>
@@ -209,9 +209,9 @@ In TypeScript, `tool(name, description, parameters, callback)` wraps any callbac
     Full TypeScript SDK reference and examples
   </Card>
   <Card title="How It Works" icon="gear" href="/how-it-works">
-    Learn about semantic matching and verified snippets
+    Learn about proven code retrieval and reputation scoring
   </Card>
-  <Card title="Tool Compatibility" icon="puzzle-piece" href="/tool-compatibility">
-    See which Claude tools work with Raysurfer caching
+  <Card title="Is It Right for Me?" icon="compass" href="/is-it-right-for-me">
+    Check if your agent workflow is a good fit for Raysurfer
   </Card>
 </CardGroup>

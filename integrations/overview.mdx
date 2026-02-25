@@ -1,21 +1,21 @@
 ---
 title: Integrations
-description: "Connect Raysurfer code caching to your tools — SDK decorators, CLI, MCP, Claude Code skill, or plugin"
+description: "Connect Raysurfer to your tools — SDK functions, CLI, MCP, Claude Code skill, or plugin"
 ---
 
-If you don't want to use the [Claude Agent SDK drop-in replacement](/sdk/python), these integrations let you add Raysurfer code caching to your existing workflow without changing how you call Claude. Each one connects to the same caching backend and API.
+If you don't want to use the [Claude Agent SDK drop-in replacement](/sdk/python), these integrations let you add Raysurfer to your existing workflow without changing how you call Claude. Each one connects to the same backend and API.
 
 ## Choose Your Integration
 
 <CardGroup cols={2}>
-  <Card title="Agent-Accessible Flow" icon="robot" href="/integrations/agent-accessible-flow">
-    Mark human-authored functions for agents, publish a function registry, and isolate snippets per `agent_id`.
+  <Card title="Function Registry" icon="robot" href="/integrations/function-registry">
+    Publish a registry of your functions so agents can discover and call them across sessions.
   </Card>
-  <Card title="Python Tool Decorator" icon="python" href="/integrations/python-tool-decorator">
-    Wrap local Python functions with `@rs.tool` and execute user code (or optional sandbox codegen) via programmatic tool calling.
+  <Card title="Register Python Functions" icon="python" href="/integrations/register-python-functions">
+    Expose your existing Python functions so agents can call them in a remote sandbox.
   </Card>
-  <Card title="TypeScript Tool Decorator" icon="js" href="/integrations/typescript-tool-decorator">
-    Register local callbacks with `tool(...)` and execute user code (or optional sandbox codegen) via programmatic tool calling.
+  <Card title="Register TypeScript Functions" icon="js" href="/integrations/register-ts-functions">
+    Expose your existing TypeScript functions so agents can call them in a remote sandbox.
   </Card>
   <Card title="CLI" icon="terminal" href="/integrations/cli">
     Standalone command-line tool for searching, uploading, and voting on cached code. Works anywhere Python runs.
@@ -33,8 +33,8 @@ If you don't want to use the [Claude Agent SDK drop-in replacement](/sdk/python)
 
 ## Comparison
 
-| Feature | Python Decorator | TypeScript Decorator | CLI | MCP | Skill | Plugin |
-|---------|------------------|----------------------|-----|-----|-------|--------|
+| Feature | Register Python | Register TypeScript | CLI | MCP | Skill | Plugin |
+|---------|-----------------|---------------------|-----|-----|-------|--------|
 | Search cached code | Yes | Yes | Yes | Yes | Yes | Yes |
 | Upload code | Yes | Yes | Yes | Yes | Yes | Yes |
 | Vote on quality | Yes | Yes | Yes | Yes | Yes | Yes |
@@ -58,8 +58,8 @@ export RAYSURFER_API_KEY=your_key_here
 
 | Integration | Repository |
 |-------------|-----------|
-| Python Tool Decorator (SDK) | [rayxc-org/raysurfer-python](https://github.com/rayxc-org/raysurfer-python) |
-| TypeScript Tool Decorator (SDK) | [rayxc-org/raysurfer-ts](https://github.com/rayxc-org/raysurfer-ts) |
+| Register Python Functions (SDK) | [rayxc-org/raysurfer-python](https://github.com/rayxc-org/raysurfer-python) |
+| Register TypeScript Functions (SDK) | [rayxc-org/raysurfer-ts](https://github.com/rayxc-org/raysurfer-ts) |
 | CLI | [rayxc-org/raysurfer-code-caching-cli](https://github.com/rayxc-org/raysurfer-code-caching-cli) |
 | MCP Server | [rayxc-org/raysurfer-code-caching-mcp](https://github.com/rayxc-org/raysurfer-code-caching-mcp) |
 | Skill | [rayxc-org/raysurfer-code-caching-skill](https://github.com/rayxc-org/raysurfer-code-caching-skill) |

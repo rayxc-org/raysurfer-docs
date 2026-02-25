@@ -40,15 +40,15 @@
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["index", "quickstart", "how-it-works", "agent-owned-repos", "tool-compatibility", "reading-for-agents", "benchmarks"]
+      "pages": ["index", "quickstart", "how-it-works", "agent-owned-repos", "is-it-right-for-me", "results"]
     },
     {
       "group": "Integrations",
-      "pages": ["integrations/overview", "integrations/agent-accessible-flow", "integrations/python-tool-decorator", "integrations/typescript-tool-decorator", "integrations/cli", "integrations/mcp", "integrations/skill", "integrations/plugin"]
+      "pages": ["integrations/overview", "integrations/function-registry", "integrations/register-python-functions", "integrations/register-ts-functions", "integrations/cli", "integrations/mcp", "integrations/skill", "integrations/plugin"]
     },
     {
       "group": "SDK Reference",
-      "pages": ["sdk/python", "integrations/python-tool-decorator", "sdk/typescript", "integrations/typescript-tool-decorator", "sdk/curl", "api-reference"]
+      "pages": ["sdk/python", "sdk/typescript", "sdk/curl", "api-reference"]
     },
     {
       "group": "Enterprise",

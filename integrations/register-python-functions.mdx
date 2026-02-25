@@ -1,9 +1,9 @@
 ---
-title: Python Tool Decorator
-description: "Use @rs.tool to expose local Python functions for programmatic tool calling in Raysurfer sandbox execution"
+title: Register Python Functions
+description: "Expose your existing Python functions so agents can call them in a remote sandbox"
 ---
 
-The Python tool decorator integration lets you expose local functions as tools and run generated code in a remote sandbox with tool calls routed back to your app.
+Register your existing Python functions so agents can call them. Raysurfer wraps your functions with `@rs.tool`, auto-infers the schema from the signature and docstring, and routes tool calls back to your app during sandbox execution.
 
 <Note>
   Source: [rayxc-org/raysurfer-python](https://github.com/rayxc-org/raysurfer-python)
@@ -14,7 +14,7 @@ The Python tool decorator integration lets you expose local functions as tools a
 Install the SDK and set `RAYSURFER_API_KEY` in your environment.
 
 ```bash
-pip install raysurfer
+uv add raysurfer
 ```
 
 ## Register Tools

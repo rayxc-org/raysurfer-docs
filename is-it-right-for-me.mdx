@@ -1,0 +1,111 @@
+---
+title: Is Raysurfer Right for You?
+description: "A quick guide to help you decide if Raysurfer fits your agent workflow"
+---
+
+## The Quick Test
+
+Ask yourself two questions:
+
+1. **How many tool calls does your agent make per run?**
+2. **Does your agent already generate and execute code in production?**
+
+If the answer is "2-3 tools, under 2 seconds" — Raysurfer isn't for you yet. Your agent is simple enough that caching won't move the needle.
+
+If the answer is "10-30+ tools, 30+ seconds, and yes we run generated code" — keep reading.
+
+## Where Raysurfer Works
+
+Raysurfer works when your agent chains many tool calls together and the same patterns repeat across runs.
+
+### Freight Logistics
+
+A logistics agent processing a shipment reads a database row, pulls a column, checks a Slack channel, cross-references an email, verifies a date — that's 10 tools before it even has context. Then it emails carriers, reconciles responses, and books shipments. Total: 30-50 tool calls per run.
+
+The key insight: **the variance per customer is low.** The same customer ships similar freight the same way every time. The agent should be running the same proven workflow, not regenerating 44 tool calls from scratch.
+
+### Real Estate Search
+
+A real estate agent pulls 30 tools per house search — neighborhood data, comparable prices, market trends, school ratings, commute times. But each home searcher is typically looking for one type of house in one neighborhood. The tool call pattern is nearly identical across searches for the same buyer.
+
+### The Pattern
+
+Any workflow where:
+- Your agent chains **10+ tool calls** per run
+- Similar requests produce **similar tool call sequences**
+- The same patterns repeat across customers or sessions
+
+## Good Fit Checklist
+
+<CardGroup cols={2}>
+  <Card title="Long Tool Chains" icon="link">
+    Your agent runs 10-50+ tool calls per task, chaining outputs from one into the next
+  </Card>
+  <Card title="Repetitive Workflows" icon="arrows-rotate">
+    Similar requests come in repeatedly — same customer types, same operations, same data shapes
+  </Card>
+  <Card title="Accuracy-Critical" icon="bullseye">
+    Getting consistent, correct results matters. You can't afford 60% reliability on a $50k contract.
+  </Card>
+  <Card title="Already Generating Code" icon="code">
+    Your agent generates and executes code in production, not just calling tools via JSON
+  </Card>
+</CardGroup>
+
+### The compounding error problem
+
+This is why long chains need caching. If each tool call in a chain has a 98% success rate:
+
+| Tool Calls | End-to-End Success Rate |
+|------------|------------------------|
+| 5 calls    | 90% |
+| 10 calls   | 82% |
+| 20 calls   | 67% |
+| 30 calls   | 55% |
+| 50 calls   | 36% |
+
+With Raysurfer, the agent retrieves the entire proven chain as one code block. No per-step failure risk — same correct result every time.
+
+### What a good workflow looks like
+
+The ideal Raysurfer pattern is a multi-step workflow where each step depends on the previous step's output:
+
+```python
+llm_input = params
+out1 = query_customer_records_from_postgres_database(llm_input)
+out2 = lookup_contact_details_in_local_csv_file(out1[2])
+out3 = fetch_purchase_history_from_stripe_api(out2.files[-1])
+out4 = calculate_loyalty_tier_from_transaction_count(out3.length)
+
+return out4
+```
+
+On the **first run**, your agent generates this code, executes it, and Raysurfer caches the entire block. On the **second run**, Raysurfer retrieves the proven code and runs it directly — no LLM regeneration, no trial-and-error, no compounding errors.
+
+## Not the Right Fit (Yet)
+
+<Warning>
+  Raysurfer amplifies what your agent already does well. If your agent isn't working yet, caching won't fix it.
+</Warning>
+
+**Your agent makes 1-3 tool calls per run.** The overhead of searching the cache outweighs the benefit. Caching helps when the alternative is 30+ serial LLM roundtrips.
+
+**Every request is completely unique.** If no two requests produce similar tool call sequences, there's nothing useful to cache.
+
+**Your agent doesn't generate code yet.** Raysurfer caches generated code blocks, not raw LLM text or JSON tool responses. If your agent is still in the serial tool-calling paradigm (send JSON to tool, get JSON back, feed to LLM, repeat), you need to migrate to code generation first.
+
+**Your agent's base accuracy is below 40%.** If the agent is producing garbage, caching garbage doesn't help — it feeds the noise. Get your agent working reliably first, then add caching to make it consistent.
+
+## How to Tell It's Working
+
+Once you integrate Raysurfer:
+
+1. **First run** takes normal time (agent generates code from scratch)
+2. **Second run** with a similar query returns near-instantly (proven code retrieved)
+3. **Accuracy improves over time** as high-reputation code gets prioritized and low-quality code gets deprioritized
+
+The highest-value signal: your agent produces the **same correct output** for similar requests, every time, instead of rolling the dice on fresh generation.
+
+<Card title="Ready to try it?" icon="rocket" href="/quickstart">
+  Follow the quickstart to integrate Raysurfer in under 5 minutes
+</Card>

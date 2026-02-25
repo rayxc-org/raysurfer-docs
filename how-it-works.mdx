@@ -1,13 +1,11 @@
 ---
 title: How It Works
-description: "The code cache powering AI maintained skills for vertical agents"
+description: "How Raysurfer retrieves proven code instead of regenerating from scratch"
 ---
 
 ## AI Maintained Skills
 
-Raysurfer provides AI maintained skills for vertical agents — re-use verified code from prior runs rather than serial tool calls or generating code per execution. Every snippet earns a reputation through community voting and execution results, so the best code rises to the top.
-
-Raysurfer works the same way for AI agents:
+Raysurfer provides AI maintained skills for vertical agents — retrieve proven code from prior runs instead of regenerating from scratch. Every snippet earns a reputation through execution results and community voting, so the best code rises to the top.
 
 ```
 Without Raysurfer:  Task → Agent generates code from scratch → Runs it
@@ -16,122 +14,9 @@ With Raysurfer:     Task → Agent searches for proven code → Runs it (instant
 
 Queries don't need to be identical — Raysurfer uses semantic matching to find related patterns. "Fetch user data from the API" and "Get customer info from the endpoint" return the same proven code.
 
-## Under the Hood: Semantic Code Cache
+## The Ideal Pattern
 
-The mechanism behind this is a **semantic code cache**. When your agent generates code that works, Raysurfer caches it with semantic embeddings. When a similar task comes up later — from you or from the community — the proven code is retrieved instead of regenerated.
-
-You don't need to manage anything. Caching and retrieval happen automatically.
-
-## Why This Works
-
-Production agents in 2026 are running longer and longer. Multi-step workflows, complex tool chains, sprawling context windows. They're becoming difficult to context manage and behave consistently.
-
-But here's the thing: **the median run has a typical shape.**
-
-Despite all the complexity, most runs follow similar patterns. Raysurfer captures these common patterns as AI maintained skills — verified code from prior runs that your agent reuses instead of regenerating.
-
-This gives you:
-
-- **Better context management** — intermediate outputs between API calls or code functions aren't printed by default, keeping context clean
-- **Consistent behavior** — the model starts from proven code instead of improvising each time
-- **Faster execution** — skip the generation, go straight to the result
-
-## What Gets Cached
-
-Raysurfer automatically caches:
-
-- Code outputs from your agent
-- Generated documents and templates
-- Structured data transformations
-
-You don't need to tag or categorize anything. Raysurfer uses semantic matching to find similar past outputs.
-
-## Quality Over Time
-
-Raysurfer tracks which cached outputs work well:
-
-- Outputs that succeed get prioritized
-- Outputs that fail get deprioritized
-- The system improves automatically
-
-## Verified Snippets
-
-Every cached output is verified before reuse:
-
-- Only successful executions get cached
-- Failed outputs are automatically excluded
-- Your agent builds a library of proven code over time
-
-## Immutable Snippets
-
-Code snippets in Raysurfer are immutable—they cannot be edited after creation. When you need a modified version of existing code, a new snippet is created instead.
-
-This means:
-
-- **Edits create new snippets** — modifying cached code doesn't overwrite the original; it creates a new entry that surfaces for different types of requests
-- **Original code stays intact** — the original snippet remains available with its existing verdict scores
-- **Version history is automatic** — each iteration of a code pattern becomes its own snippet, and the best-performing version rises to the top through voting
-
-This design provides:
-
-- **Auditability** — complete history of all cached code
-- **Reproducibility** — retrieval results are consistent over time
-- **Quality tracking** — verdict scores stay tied to the exact code that earned them
-
-You can view all your snippets in the [dashboard](https://www.raysurfer.com/dashboard).
-
-## Snippet Scoring
-
-Every snippet has a verdict score that determines its priority in retrieval.
-
-### Automatic Voting
-
-The system automatically votes in two scenarios:
-
-- **On cache reuse** — when cached code runs successfully and produces the expected output, it receives a thumbs up; failures receive a thumbs down
-- **On upload** — when new code is stored after a successful execution, Raysurfer's AI evaluates and votes on it (controlled by `use_raysurfer_ai_voting`, on by default). You can also provide your own votes via `user_vote` / `user_votes`, which skips AI voting.
-
-Both happen in the background after each execution—you don't need to do anything. The SDK also captures execution logs (tool outputs) and sends them to the backend as context for voting.
-
-### Manual Voting
-
-You can also manually adjust scores in the [dashboard](https://www.raysurfer.com/dashboard):
-
-- Add positive score to promote high-quality snippets
-- Add negative score to demote problematic code
-- Override automatic votes when you know better than the AI
-
-The verdict score is calculated as:
-
-```
-verdict_score = thumbs_up / (thumbs_up + thumbs_down)
-```
-
-Snippets with higher verdict scores are prioritized during retrieval, ensuring your agent uses the most reliable code.
-
-## Well-Documented Tool Schemas
-
-For cached code to be reusable, the tool functions it calls must have well-documented input and output schemas. This lets agents extract specific properties (accessors) from one tool's response to pass into the next.
-
-```python
-# Good: Agent can extract user.email for the next call
-class UserResponse:
-    id: str           # Unique user identifier
-    email: str        # User's email address
-    created_at: str   # ISO 8601 timestamp
-
-# Bad: Agent doesn't know what's inside
-def get_user(id: str) -> dict:
-    ...
-```
-
-Well-typed responses enable:
-
-- **Property extraction** — agents can access `.email` or `.id` from responses
-- **Chained tool calls** — output from one tool feeds directly into the next
-- **Better cache hits** — semantic matching works on structured, documented schemas
-
-Here's an example of chained tool calls where each output feeds into the next:
+The best way to understand Raysurfer's value is through this pattern:
 
 ```python
 llm_input = params
@@ -143,7 +28,139 @@ out4 = calculate_loyalty_tier_from_transaction_count(out3.length)
 return out4
 ```
 
-Each function extracts specific properties from the previous result—`out1[2]`, `out2.files[-1]`, `out3.length`—demonstrating why well-documented schemas matter for cache reuse.
+This is a multi-step workflow where each step depends on the previous step's output:
+
+1. **First run**: The agent generates this code, executes it, and Raysurfer caches the entire block
+2. **Second run**: Raysurfer retrieves the cached code and executes it directly — no LLM regeneration needed
+
+Without Raysurfer, the agent iterates through the LLM multiple times: generating code, checking if it compiles, running it, handling errors, retrying. Each iteration costs tokens and time. With Raysurfer, the agent retrieves proven code and runs it immediately — eliminating the trial-and-error loop entirely.
+
+## The Loop
+
+Every execution follows this cycle:
+
+```
+Search proven code → Execute → Score → Promote top patterns
+```
+
+Over time, agents build up a library of proven code. High-reputation snippets get prioritized, and the agent starts from high-signal code paths instead of improvising each time.
+
+## Under the Hood
+
+The mechanism behind this is a semantic code cache. When your agent generates code that works, Raysurfer caches it with semantic embeddings. When a similar task comes up later — from you or from the community — the proven code is retrieved instead of regenerated.
+
+You don't need to manage anything. Caching and retrieval happen automatically.
+
+## Why This Works
+
+Production agents in 2026 are running longer and longer — multi-step workflows, complex tool chains, sprawling context windows. But here's the thing: **the median run has a typical shape.**
+
+Despite all the complexity, most runs follow similar patterns. Raysurfer captures these common patterns as proven code that your agent reuses instead of regenerating.
+
+This gives you:
+
+- **Consistent behavior** — the agent starts from proven code instead of improvising each time
+- **Better context management** — intermediate outputs between API calls aren't printed by default, keeping context clean
+- **Faster execution** — skip the generation, go straight to the result
+
+## Well-Documented Tool Schemas
+
+For cached code to be reusable, the tool functions it calls must have well-documented input and output schemas. This lets agents extract specific properties from one tool's response to pass into the next.
+
+<CodeGroup>
+
+```python Good - Specific types
+from dataclasses import dataclass
+
+@dataclass
+class SalesRecord:
+    id: str
+    amount: float
+    quarter: str
+    region: str
+
+@dataclass
+class Report:
+    title: str
+    records: list[SalesRecord]
+    total: float
+
+def generate_report(records: list[SalesRecord], template: str) -> Report:
+    ...
+```
+
+```python Bad - Vague types
+def generate_report(records: list[dict], template: str) -> dict:
+    # Agent doesn't know the shape of records or return value
+    ...
+
+def process_data(data: Any) -> Any:
+    # Impossible to generate correct downstream code
+    ...
+```
+
+</CodeGroup>
+
+When types are specific, the agent generates code that correctly accesses fields like `record.amount` instead of guessing with `record["amount"]` or `record.get("amount", 0)`.
+
+## Quality Over Time
+
+Raysurfer tracks which cached outputs work well:
+
+- Outputs that produce useful results get prioritized
+- Outputs that fail or produce unhelpful results get deprioritized
+- The system improves automatically
+
+Reputation scores track whether outputs were genuinely helpful to users, not just whether they executed successfully. Code that technically runs but doesn't solve the user's problem gets deprioritized.
+
+## Verified Snippets
+
+Every cached output is verified before reuse:
+
+- Only successful executions get cached
+- Failed outputs are automatically excluded
+- Your agent builds a library of proven code over time
+
+## Immutable Snippets
+
+Code snippets in Raysurfer are immutable — they cannot be edited after creation. When you need a modified version of existing code, a new snippet is created instead.
+
+This means:
+
+- **Edits create new snippets** — modifying cached code doesn't overwrite the original; it creates a new entry that surfaces for different types of requests
+- **Original code stays intact** — the original snippet remains available with its existing reputation scores
+- **Version history is automatic** — each iteration of a code pattern becomes its own snippet, and the best-performing version rises to the top through voting
+
+You can view all your snippets in the [dashboard](https://www.raysurfer.com/dashboard).
+
+## Snippet Scoring
+
+Every snippet has a reputation score that determines its priority in retrieval.
+
+### Automatic Voting
+
+The system automatically votes in two scenarios:
+
+- **On cache reuse** — when cached code runs successfully and produces the expected output, it receives a thumbs up; failures receive a thumbs down
+- **On upload** — when new code is stored after a successful execution, Raysurfer's AI evaluates and votes on it (controlled by `use_raysurfer_ai_voting`, on by default). You can also provide your own votes via `user_vote` / `user_votes`, which skips AI voting.
+
+Both happen in the background after each execution — you don't need to do anything. The SDK also captures execution logs (tool outputs) and sends them to the backend as context for voting.
+
+### Manual Voting
+
+You can also manually adjust scores in the [dashboard](https://www.raysurfer.com/dashboard):
+
+- Add positive score to promote high-quality snippets
+- Add negative score to demote problematic code
+- Override automatic votes when you know better than the AI
+
+The reputation score is calculated as:
+
+```
+reputation_score = thumbs_up / (thumbs_up + thumbs_down)
+```
+
+Snippets with higher reputation scores are prioritized during retrieval, ensuring your agent uses the most reliable code.
 
 ## Public Snippets — The Community Registry
 
