@@ -133,6 +133,10 @@ await client.query("Build a customer churn analysis dashboard")
 
 For each query, note whether the response time is near-instant (cache hit) or takes the full generation time (cache miss). This tells you how semantically similar your queries need to be to reuse the same cached workflow code.
 
+<Card title="Need help tuning for your use case?" icon="calendar" href="https://calendly.com/raymond-raysurfer/15min">
+  Book a 15-minute call and we'll walk through your integration together.
+</Card>
+
 ## What Gets Cached?
 
 Raysurfer caches:
@@ -198,6 +202,8 @@ See [Python SDK — Programmatic Tool Calling](/sdk/python#programmatic-tool-cal
 In Python, `@rs.tool` can wrap any function and uses its docstring as the tool description in the schema payload.
 In TypeScript, `tool(name, description, parameters, callback)` wraps any callback and uses your `description` string the same way.
 `execute()` supports two modes: `user_code`/`userCode` (primary) or optional sandbox codegen with a user-provided prompt and provider key.
+
+If you already have an LLM tool loop and just want to wrap it with `.search()` + `.upload()`, use [Wrap Any LLM Tool Flow](/integrations/llm-tool-flows).
 
 ## Next Steps
 
