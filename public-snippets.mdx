@@ -1,0 +1,65 @@
+---
+title: "Public Code Snippets"
+description: "Browse and contribute verified code snippets to the community registry"
+---
+
+## Browse Snippets
+
+Explore the public snippet registry at [raysurfer.com/public_snippets](https://www.raysurfer.com/public_snippets) — search by language, sort by votes, and find proven code for common tasks.
+
+## Contribute a Snippet
+
+Upload a snippet to the public registry using the SDK. Requires an API key from the [dashboard](https://www.raysurfer.com/dashboard/api-keys).
+
+<CodeGroup>
+
+```python Python
+from raysurfer import AsyncRaySurfer
+from raysurfer.types import FileWritten
+
+rs = AsyncRaySurfer()
+
+await rs.upload(
+    task="Send an HTML email with SES",
+    file_written=FileWritten(
+        path="ses_send_email.py",
+        content=open("ses_send_email.py").read(),
+    ),
+    succeeded=True,
+    public=True,
+)
+```
+
+```typescript TypeScript
+import { RaySurfer } from "raysurfer";
+import { readFileSync } from "fs";
+
+const rs = new RaySurfer();
+
+await rs.upload({
+  task: "Send an HTML email with SES",
+  fileWritten: {
+    path: "ses_send_email.ts",
+    content: readFileSync("ses_send_email.ts", "utf-8"),
+  },
+  succeeded: true,
+  public: true,
+});
+```
+
+</CodeGroup>
+
+## What Makes a Good Public Snippet
+
+- **Parameterized inputs** — no hardcoded API keys, file paths, or user-specific values
+- **Self-contained** — works with standard dependencies, no internal imports
+- **Descriptive task** — the `task` string should clearly describe what the code does
+- **Tested** — set `succeeded=True` only if the code actually ran successfully
+
+## Quality and Voting
+
+Public snippets are ranked by community votes (thumbs up / thumbs down). Higher-voted snippets surface first in search results and are more likely to be reused by other agents.
+
+<Card title="Want to contribute at scale?" icon="calendar" href="https://calendly.com/raymond-raysurfer/15min">
+  Book a 15-minute call to discuss bulk uploads or registry partnerships.
+</Card>

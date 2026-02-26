@@ -40,11 +40,11 @@
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["index", "quickstart", "how-it-works", "agent-owned-repos", "is-it-right-for-me", "results"]
+      "pages": ["index", "quickstart", "how-it-works", "agent-owned-repos", "public-snippets", "is-it-right-for-me", "results"]
     },
     {
       "group": "Integrations",
-      "pages": ["integrations/overview", "integrations/function-registry", "integrations/register-python-functions", "integrations/register-ts-functions", "integrations/cli", "integrations/mcp", "integrations/skill", "integrations/plugin"]
+      "pages": ["integrations/overview", "integrations/llm-tool-flows", "integrations/function-registry", "integrations/register-python-functions", "integrations/register-ts-functions", "integrations/cli", "integrations/mcp", "integrations/skill", "integrations/plugin"]
     },
     {
       "group": "SDK Reference",
