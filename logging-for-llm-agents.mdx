@@ -20,12 +20,12 @@ Use a stable hash for each instrumentation point so the agent can request that e
 
 ```python Python
 result = run_refill_check(payload)
-raysurfer.log(result, "4b1f7f31")
+raysurfer.log(result, "4b1f7f31a2c9d8e6")
 ```
 
 ```typescript TypeScript
 const result = await runRefillCheck(payload);
-raysurfer.log(result, "4b1f7f31");
+raysurfer.log(result, "4b1f7f31a2c9d8e6");
 ```
 
 </CodeGroup>
@@ -36,10 +36,11 @@ LLMs should not invent random hashes on each run.
 Use a deterministic hash derived from source location, for example:
 
 ```text
-hash = sha1("<normalized_repo_relative_path>:<line_number>")[:8]
+hash = sha256("<normalized_repo_relative_path>:<line_number>").hexdigest()[:16]
 ```
 
 This gives stable addressing for the same line across runs.
+SHA-1 outputs 40 hex characters (160 bits), and SHA-256 outputs 64 hex characters (256 bits), so truncating to 16+ hex characters keeps IDs compact while materially lowering collision risk.
 
 Collision behavior should be strict:
 
@@ -59,7 +60,7 @@ This prevents two unrelated log points from being merged into one log area.
 
 ```bash
 curl -H "Authorization: Bearer $RAYSURFER_API_KEY" \
-  https://api.mywebsite.com/logs/4b1f7f31.md
+  https://api.mywebsite.com/logs/4b1f7f31a2c9d8e6.md
 ```
 
 By default, `.md` returns a summary page, not a full raw run dump.
@@ -79,7 +80,7 @@ This avoids broad timestamp-to-timestamp log searches unless absolutely required
 ```md
 # Log Summary
 timestamp: 2026-02-28T17:05:19Z
-hash: 4b1f7f31
+hash: 4b1f7f31a2c9d8e6
 source: app/refills/service.py:184
 
 ## Recent values
@@ -94,8 +95,8 @@ source: app/refills/service.py:184
 # based on thumbs_up/down, resolution, and repeat issue patterns
 
 ## Links
-raw: raysurfer.com/logs/4b1f7f31.raw.md
-related: raysurfer.com/logs/d22ac11b.md
+raw: raysurfer.com/logs/4b1f7f31a2c9d8e6.raw.md
+related: raysurfer.com/logs/d22ac11b9f6e4c2a.md
 ```
 
 ## What `user_satisfaction` means
