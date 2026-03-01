@@ -1,0 +1,92 @@
+---
+title: Logging for LLM Agents
+description: "Summary-first hashed logs that agents can expand incrementally with authenticated curl"
+---
+
+## Why this logging format works for agents
+
+Most agent debugging fails because the model gets a huge raw log dump and loses the thread.
+Raysurfer logging is designed for the opposite pattern:
+
+1. Start with a compact summary for one exact line hash
+2. Expand only when needed by curling related hashes
+3. Keep context small while preserving deterministic drill-down paths
+
+## 1) Instrument the exact line
+
+Use a stable hash for each instrumentation point so the agent can request that exact log stream later.
+
+<CodeGroup>
+
+```python Python
+result = run_refill_check(payload)
+raysurfer.log(result, "4b1f7f31")
+```
+
+```typescript TypeScript
+const result = await runRefillCheck(payload);
+raysurfer.log(result, "4b1f7f31");
+```
+
+</CodeGroup>
+
+## 2) Fetch the summary with API key auth
+
+```bash
+curl -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  https://api.mywebsite.com/logs/4b1f7f31.md
+```
+
+By default, `.md` returns a summary page, not a full raw run dump.
+
+## 3) Expand only when needed
+
+When the summary indicates an issue, the agent can curl deeper links:
+
+- Raw logs for the same hash
+- Related hashes for nearby lines/functions
+- Additional diagnostics for trend or slowness analysis
+
+This avoids broad timestamp-to-timestamp log searches unless absolutely required.
+
+## Example summary shape
+
+```md
+# Log Summary
+timestamp: 2026-02-28T17:05:19Z
+hash: 4b1f7f31
+source: app/refills/service.py:184
+
+## Recent values
+- 17:04:53Z status=queued latency_ms=112
+- 17:05:12Z status=queued latency_ms=117
+- 17:05:19Z status=error_timeout latency_ms=842
+
+## Auto insights
+- trend: error rate +6.2% in last 30m
+- slowness: p95 latency 2.4x baseline
+- user_satisfaction: 0.71 -> 0.58
+# based on thumbs_up/down, resolution, and repeat issue patterns
+
+## Links
+raw: raysurfer.com/logs/4b1f7f31.raw.md
+related: raysurfer.com/logs/d22ac11b.md
+```
+
+## What `user_satisfaction` means
+
+`user_satisfaction` is an outcome signal, not a model guess.
+It is derived from:
+
+- thumbs_up / thumbs_down feedback
+- whether the issue was resolved after the run
+- whether similar issues repeated shortly after
+
+## Practical agent loop
+
+```text
+curl summary -> detect issue -> curl related hash/raw -> act -> recheck summary
+```
+
+This gives agents deterministic debugging paths with low context overhead.
+
