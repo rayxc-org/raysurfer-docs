@@ -1,0 +1,115 @@
+---
+title: Per-Function Reputation
+description: "Track reputation and telemetry for each function inside cached code"
+---
+
+Per-function reputation helps agents improve the weak parts of a cached snippet, not just the snippet as a whole.
+
+When enabled:
+
+- Upload extracts function fingerprints from your code and tracks function-level votes.
+- Search injects function diagnostics into source comments.
+- Search responses include `functions` metadata with telemetry and vote stats.
+
+## Quickstart
+
+### 1) Log function outputs
+
+Call `log(...)` inside functions you want tracked.
+
+<CodeGroup>
+
+```python Python
+from raysurfer import log
+
+def extract_contacts(html: str) -> list[str]:
+    contacts = []  # parse html...
+    log(contacts)
+    return contacts
+```
+
+```typescript TypeScript
+import { log } from "raysurfer";
+
+function extractContacts(html: string): string[] {
+  const contacts: string[] = []; // parse html...
+  log(contacts);
+  return contacts;
+}
+```
+
+</CodeGroup>
+
+### 2) Upload with per-function tracking
+
+<CodeGroup>
+
+```python Python
+from raysurfer.types import FileWritten
+
+client.upload(
+    task="Extract contacts from company pages",
+    file_written=FileWritten(path="contacts.py", content=code),
+    succeeded=True,
+    execution_logs=logs,
+    per_function_reputation=True,
+)
+```
+
+```typescript TypeScript
+await client.upload({
+  task: "Extract contacts from company pages",
+  fileWritten: { path: "contacts.ts", content: code },
+  succeeded: true,
+  executionLogs: logs,
+  perFunctionReputation: true,
+});
+```
+
+</CodeGroup>
+
+### 3) Search with per-function diagnostics
+
+<CodeGroup>
+
+```python Python
+result = client.search(
+    task="Extract contacts from company pages",
+    per_function_reputation=True,
+)
+
+for fn in result.matches[0].functions or []:
+    print(fn.function_name, fn.thumbs_up, fn.thumbs_down, fn.total_logged_calls)
+```
+
+```typescript TypeScript
+const result = await client.search({
+  task: "Extract contacts from company pages",
+  perFunctionReputation: true,
+});
+
+for (const fn of result.matches[0].functions ?? []) {
+  console.log(fn.functionName, fn.thumbsUp, fn.thumbsDown, fn.totalLoggedCalls);
+}
+```
+
+</CodeGroup>
+
+## What You Get
+
+- Inline comments like `# [raysurfer ab12cd34] ...` inside matched source.
+- A `functions` array on each match with:
+  - vote counts (`thumbs_up`/`thumbs_down`)
+  - telemetry (`total_logged_calls`, `output_completeness`, `avg_output_size`)
+  - status timestamps (`last_success_at`, `last_failure_at`)
+
+The injected comments include a history URL for each function:
+
+`https://api.raysurfer.com/api/functions/<fingerprint>.md`
+
+Use this for drill-down diagnostics before rewriting a weak function.
+
+## Defaults
+
+- Low-level `search()` / `upload()` APIs: per-function reputation is opt-in.
+- `get_code_files()` / `getCodeFiles()` wrappers: per-function reputation is enabled by default.
