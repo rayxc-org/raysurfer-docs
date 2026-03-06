@@ -1,0 +1,159 @@
+---
+title: Browser Agent
+description: "Cache and reuse Playwright scripts across browser automation runs"
+---
+
+Wrap any browser automation agent with Raysurfer's `search()` and `upload()` to cache Playwright scripts. On repeat tasks, the LLM receives the cached script as context and decides whether to reuse it, modify it, or generate a new one.
+
+<Note>
+  Cached scripts are always reviewed by the LLM before execution — never run directly.
+</Note>
+
+## How It Works
+
+```text
+1. search(task)        → find cached Playwright scripts for this task
+2. LLM reviews         → decides: reuse, modify, or generate fresh
+3. Execute script      → run Playwright in headless browser
+4. upload(task, script) → cache successful scripts for next time
+```
+
+First run generates a script from scratch. Subsequent runs retrieve the cached script and let the LLM decide.
+
+## Setup
+
+```bash
+pip install raysurfer anthropic playwright
+playwright install chromium
+
+export ANTHROPIC_API_KEY=sk-ant-...
+export RAYSURFER_API_KEY=rs_...
+```
+
+## Quick Example
+
+```python
+import asyncio
+import os
+from raysurfer import AsyncRaySurfer, FileWritten
+from anthropic import AsyncAnthropic
+
+SYSTEM_PROMPT = (
+    "You are a browser automation expert. Write Python scripts using "
+    "playwright.sync_api with chromium in headless mode. "
+    "Print the final result to stdout. "
+    "Respond with ONLY a JSON object: {\"script\": \"<python code>\", \"explanation\": \"<one line>\"}"
+)
+
+async def run_browser_task(task: str, url: str | None = None):
+    rs = AsyncRaySurfer(api_key=os.environ["RAYSURFER_API_KEY"])
+    anthropic = AsyncAnthropic()
+
+    # 1. Search for cached scripts
+    cached_script = None
+    response = await rs.search(task=task, top_k=1, min_verdict_score=0.3)
+    if response.matches:
+        cached_script = response.matches[0].code_block.source
+
+    # 2. Build prompt — include cached script if found
+    url_line = f"\nStarting URL: {url}" if url else ""
+    if cached_script:
+        user_msg = (
+            f"Task: {task}{url_line}\n\n"
+            f"A cached script for a similar task:\n```python\n{cached_script}\n```\n\n"
+            "Review it: run as-is if it fits, modify for the current task, "
+            "or write a new script if not relevant."
+        )
+    else:
+        user_msg = f"Task: {task}{url_line}"
+
+    # 3. LLM generates or approves the script
+    llm_response = await anthropic.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=4096,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": user_msg}],
+    )
+
+    import json
+    parsed = json.loads(llm_response.content[0].text)
+    script = parsed["script"]
+
+    # 4. Execute the Playwright script
+    import subprocess, sys, tempfile
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+        f.write(script)
+        f.flush()
+        result = subprocess.run([sys.executable, f.name], capture_output=True, text=True, timeout=60)
+
+    if result.returncode == 0:
+        print(f"Output: {result.stdout.strip()}")
+        # 5. Cache the successful script
+        await rs.upload(
+            task=task,
+            file_written=FileWritten(path="browser_script.py", content=script),
+            succeeded=True,
+            execution_logs=result.stdout,
+            tags=["browser-automation", "playwright"],
+        )
+    else:
+        print(f"Error: {result.stderr.strip()}")
+
+    await rs.close()
+
+asyncio.run(run_browser_task("Get the titles and prices of the first 5 books", url="https://books.toscrape.com"))
+```
+
+## What Gets Cached
+
+The cached artifact is a complete, runnable Playwright Python script:
+
+```python
+from playwright.sync_api import sync_playwright
+import json
+
+def scrape_books():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto('https://books.toscrape.com', timeout=10000)
+        page.wait_for_load_state('networkidle')
+
+        books = []
+        for book in page.locator('article.product_pod').all()[:5]:
+            title = book.locator('h3 a').get_attribute('title')
+            price = book.locator('p.price_color').inner_text()
+            books.append({'title': title, 'price': price})
+
+        print(json.dumps(books, indent=2))
+        browser.close()
+
+if __name__ == '__main__':
+    scrape_books()
+```
+
+On the next similar request, this script is passed to the LLM as context. The LLM can reuse it directly or modify it for the new task.
+
+## Standalone Wrapper
+
+For a ready-to-use wrapper class, see the [raysurfer-browser-agent example](https://github.com/rayxc-org/raysurfer/tree/master/examples/raysurfer-browser-agent):
+
+```python
+from raysurfer_browser_agent import RaysurferBrowserAgent
+
+async with RaysurferBrowserAgent() as agent:
+    # First run: generates script from scratch, caches it
+    result = await agent.run("Get the top 3 stories from Hacker News")
+
+    # Second run: LLM reviews cached script and reuses it
+    result = await agent.run("Get the top 3 stories from Hacker News")
+    print(result.output)       # scraped data
+    print(result.cached)        # True — cached script was found
+    print(result.reused_cache)  # True — LLM chose to reuse it
+```
+
+## Related
+
+- [Wrap Any LLM Tool Flow](/integrations/llm-tool-flows)
+- [Python SDK](/sdk/python)
+- [Quickstart](/quickstart)

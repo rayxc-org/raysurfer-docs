@@ -44,7 +44,7 @@
     },
     {
       "group": "Integrations",
-      "pages": ["integrations/overview", "integrations/llm-tool-flows", "integrations/function-registry", "integrations/register-python-functions", "integrations/register-ts-functions", "integrations/cli", "integrations/mcp", "integrations/skill", "integrations/plugin"]
+      "pages": ["integrations/overview", "integrations/llm-tool-flows", "integrations/browser-agent", "integrations/function-registry", "integrations/register-python-functions", "integrations/register-ts-functions", "integrations/cli", "integrations/mcp", "integrations/skill", "integrations/plugin"]
     },
     {
       "group": "SDK Reference",
