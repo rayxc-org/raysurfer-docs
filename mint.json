@@ -40,7 +40,7 @@
   "navigation": [
     {
       "group": "Get Started",
-      "pages": ["index", "quickstart", "how-it-works", "agent-owned-repos", "public-snippets", "is-it-right-for-me", "results"]
+      "pages": ["index", "quickstart", "agent-chat", "how-it-works", "per-function-reputation", "agent-owned-repos", "public-snippets", "is-it-right-for-me", "results"]
     },
     {
       "group": "Integrations",

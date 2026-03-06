@@ -1,0 +1,151 @@
+---
+title: Agent Chat
+description: "Persistent agent workspaces that survive across conversations"
+---
+
+Give your AI agent a persistent workspace scoped per user and org. Files, state, and context are automatically saved and restored — no setup needed.
+
+## How It Works
+
+1. **You call `chat()`** with a query, user ID, and org ID
+2. **Raysurfer restores the workspace** — all files from prior calls for that user+org are mounted automatically
+3. **Claude executes the task** with full tool access (Read, Write, Bash, etc.)
+4. **Raysurfer persists the workspace** — any files created or modified are saved for next time
+
+## Usage
+
+<CodeGroup>
+
+```python Python
+from raysurfer import AsyncRaySurfer
+
+rs = AsyncRaySurfer()
+
+# First call — agent creates files from scratch
+response = await rs.chat(
+    "Create hello.py with a greet(name) function",
+    user="user-123",
+    org="acme-corp",
+)
+print(response.output)
+print(response.changed_files)  # ["hello.py"]
+
+# Second call — agent sees hello.py already in its workspace
+response = await rs.chat(
+    "Import greet from hello.py and create main.py",
+    user="user-123",
+    org="acme-corp",
+)
+print(response.workspace_files)  # ["hello.py", "main.py"]
+```
+
+```typescript TypeScript
+import { RaySurfer } from "raysurfer";
+
+const rs = new RaySurfer();
+
+const response = await rs.chat(
+  "Create hello.ts with a greet(name) function",
+  { user: "user-123", org: "acme-corp" },
+);
+console.log(response.output);
+console.log(response.changedFiles);
+
+const response2 = await rs.chat(
+  "Import greet from hello.ts and create main.ts",
+  { user: "user-123", org: "acme-corp" },
+);
+console.log(response2.workspaceFiles);
+```
+
+```bash cURL
+curl -X POST https://api.raysurfer.com/api/agent-chat \
+  -H "Authorization: Bearer $RAYSURFER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_query": "Create hello.py with a greet(name) function",
+    "user_id": "user-123",
+    "org_id": "acme-corp"
+  }'
+```
+
+</CodeGroup>
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `query` | string | required | The task or question |
+| `user` | string | required | User identifier (scopes the workspace) |
+| `org` | string | required | Organization identifier (scopes the workspace) |
+| `model` | string | `"sonnet"` | Claude model to use |
+| `max_turns` | int | `8` | Maximum agent turns per request |
+
+## Response
+
+<CodeGroup>
+
+```python Python
+response = await rs.chat("Create a Flask app", user="dev-1", org="startup")
+
+response.success          # True
+response.output           # "I created app.py with a Flask app..."
+response.changed_files    # ["app.py"]
+response.workspace_files  # ["app.py"]
+response.duration_ms      # 4200
+response.session_id       # "sess_abc123"
+```
+
+```typescript TypeScript
+const response = await rs.chat("Create a Flask app", { user: "dev-1", org: "startup" });
+
+response.success;        // true
+response.output;         // "I created app.py with a Flask app..."
+response.changedFiles;   // ["app.py"]
+response.workspaceFiles; // ["app.py"]
+response.durationMs;     // 4200
+response.sessionId;      // "sess_abc123"
+```
+
+</CodeGroup>
+
+## Workspace Scoping
+
+Workspaces are scoped by `(org, user)`:
+
+- **Same user + same org** = same workspace (state persists)
+- **Different user or different org** = separate workspace
+
+Use this to give each of your end users their own persistent agent workspace.
+
+## Multi-Turn Example
+
+```python
+from raysurfer import AsyncRaySurfer
+
+rs = AsyncRaySurfer()
+
+# Turn 1: Create a project
+await rs.chat("Create a Flask app with a /health endpoint",
+              user="dev-1", org="startup")
+
+# Turn 2: Agent sees app.py from turn 1
+await rs.chat("Add a /users endpoint that returns a list of users",
+              user="dev-1", org="startup")
+
+# Turn 3: Agent sees both endpoints
+await rs.chat("Add tests for all endpoints",
+              user="dev-1", org="startup")
+```
+
+Each call builds on the previous workspace — the agent sees all files from prior turns.
+
+## Skill Document
+
+AI agents can read the full API reference at:
+
+```
+https://api.raysurfer.com/skill.md
+```
+
+Point your agent's system prompt or skill loader at this URL for self-serve integration.
