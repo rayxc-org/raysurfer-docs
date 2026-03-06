@@ -134,6 +134,88 @@ if __name__ == '__main__':
 
 On the next similar request, this script is passed to the LLM as context. The LLM can reuse it directly or modify it for the new task.
 
+## Handling Optional Elements
+
+Real pages have cookie banners, login modals, age gates, and other elements that may or may not appear. Cached scripts should check for these before interacting:
+
+```python
+from playwright.sync_api import sync_playwright
+
+def scrape_with_guards():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto('https://example-store.com', timeout=15000)
+        page.wait_for_load_state('networkidle')
+
+        # Cookie consent banner
+        cookie_btn = page.locator('button:has-text("Accept"), #cookie-accept, [data-testid="cookie-accept"]')
+        if cookie_btn.count() > 0:
+            cookie_btn.first.click()
+            page.wait_for_timeout(500)
+
+        # Age verification gate
+        age_gate = page.locator('[data-testid="age-gate"], .age-verification')
+        if age_gate.count() > 0:
+            confirm_btn = age_gate.locator('button:has-text("Yes"), button:has-text("I am over")')
+            if confirm_btn.count() > 0:
+                confirm_btn.first.click()
+                page.wait_for_timeout(500)
+
+        # Dismiss newsletter/promo popup
+        popup_close = page.locator('[aria-label="Close"], .modal-close, .popup-close, button:has-text("No thanks")')
+        if popup_close.count() > 0:
+            popup_close.first.click()
+            page.wait_for_timeout(500)
+
+        # "Load more" button — click until all items are visible or button disappears
+        while True:
+            load_more = page.locator('button:has-text("Load more"), button:has-text("Show more")')
+            if load_more.count() == 0 or not load_more.first.is_visible():
+                break
+            load_more.first.click()
+            page.wait_for_timeout(1000)
+
+        # Login wall — skip scraping if login is required
+        login_wall = page.locator('form[action*="login"], [data-testid="login-required"]')
+        if login_wall.count() > 0:
+            print("Login required — cannot proceed")
+            browser.close()
+            return
+
+        # Now scrape the actual content
+        items = page.locator('.product-card').all()
+        results = []
+        for item in items[:10]:
+            name = item.locator('.product-name')
+            price = item.locator('.product-price')
+            results.append({
+                'name': name.inner_text() if name.count() > 0 else 'N/A',
+                'price': price.inner_text() if price.count() > 0 else 'N/A',
+            })
+
+        import json
+        print(json.dumps(results, indent=2))
+        browser.close()
+
+if __name__ == '__main__':
+    scrape_with_guards()
+```
+
+Common patterns to guard against:
+
+| Element | How to detect | What to do |
+|---------|---------------|------------|
+| Cookie consent | `button:has-text("Accept")`, `#cookie-accept` | Click accept, wait briefly |
+| Newsletter popup | `.modal-close`, `[aria-label="Close"]` | Click close |
+| Age verification | `.age-verification`, `data-testid="age-gate"` | Click confirm |
+| "Load more" button | `button:has-text("Load more")` | Click in loop until gone |
+| Login wall | `form[action*="login"]` | Exit early or log in |
+| CAPTCHA | `.captcha`, `iframe[src*="recaptcha"]` | Exit early — can't automate |
+| Region selector | `.region-picker`, `select[name="country"]` | Select region, wait for reload |
+
+These guards get cached alongside the scraping logic, so subsequent runs of the same task handle the same popups automatically.
+
 ## Standalone Wrapper
 
 For a ready-to-use wrapper class, see the [raysurfer-browser-agent example](https://github.com/rayxc-org/raysurfer/tree/master/examples/raysurfer-browser-agent):
