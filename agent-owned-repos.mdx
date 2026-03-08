@@ -25,21 +25,24 @@ Pass your chat history as Anthropic-typed messages. The agent handles caching, c
 ```python Python
 from raysurfer import Agent
 
-async with Agent(org_id="acme-corp", user_id="user_123") as agent:
-    result = await agent.run(
-        messages=[
-            {"role": "user", "content": "Generate a quarterly report from our sales data"},
-        ],
-    )
+agent = Agent()
+result = await agent.run(
+    org_id="acme-corp",
+    user_id="user_123",
+    messages=[
+        {"role": "user", "content": "Generate a quarterly report from our sales data"},
+    ],
+)
 ```
 
 ```typescript TypeScript
 import { Agent } from "raysurfer";
 
-const agent = new Agent({ orgId: "acme-corp", userId: "user_123" });
-const result = await agent.run([
-  { role: "user", content: "Generate a quarterly report from our sales data" },
-]);
+const agent = new Agent();
+const result = await agent.run(
+  [{ role: "user", content: "Generate a quarterly report from our sales data" }],
+  { orgId: "acme-corp", userId: "user_123" },
+);
 ```
 
 </CodeGroup>
