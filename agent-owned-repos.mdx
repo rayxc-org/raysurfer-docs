@@ -16,21 +16,85 @@ Instead of generating from scratch every run, agents:
 3. **Score** the results — code that produces useful output gets promoted
 4. **Build a library** — over time, the agent accumulates a growing collection of reliable code
 
-## The Core Loop
+## Quick Start
+
+Pass your user queries, user ID, and org ID. The agent handles caching and code reuse automatically.
+
+<CodeGroup>
+
+```python Python
+from raysurfer import Agent
+
+async with Agent(org_id="acme-corp") as agent:
+    results = await agent.run(
+        ["Generate quarterly report", "Summarize sales data"],
+        user_id="user_123",
+    )
+
+    # User liked the first result, disliked the second
+    await agent.feedback(results[0].run_id, satisfied=True)
+    await agent.feedback(results[1].run_id, satisfied=False)
+```
+
+```typescript TypeScript
+import { Agent } from "raysurfer";
+
+const agent = new Agent({ orgId: "acme-corp" });
+const results = await agent.run(
+  ["Generate quarterly report", "Summarize sales data"],
+  { userId: "user_123" },
+);
+
+// User liked the first result, disliked the second
+await agent.feedback(results[0].runId, true);
+await agent.feedback(results[1].runId, false);
+```
+
+</CodeGroup>
+
+## How Feedback Drives Code Quality
+
+Every time `agent.run()` processes a query, it tracks which cached code snippets were retrieved and used. When a user later expresses satisfaction or dissatisfaction with the result, `agent.feedback()` retroactively votes on all the code that contributed:
+
+- **Satisfied** → thumbs up on every cached snippet used → those snippets rank higher in future searches
+- **Dissatisfied** → thumbs down → those snippets get demoted and eventually stop surfacing
+
+This creates a closed loop: user happiness directly determines which code gets reused. Code that consistently makes users happy rises to the top. Code that doesn't gets buried.
 
 ```
-Search proven code → Execute → Score → Promote top patterns
+User query → search cached code → execute → produce result
+                                                  ↓
+                                          user feedback
+                                                  ↓
+                                    retroactive vote on all
+                                    code that contributed
+                                                  ↓
+                                    good code promoted,
+                                    bad code demoted
+```
+
+New code generated during execution is separately AI-voted at upload time, so it enters the library with an initial quality signal before any user feedback arrives.
+
+## The Core Loop
+
+Under the hood, `agent.run()` wraps two API calls per query:
+
+1. **`raysurfer.search()`** — find proven code that already solved similar tasks
+2. **`raysurfer.upload()`** — store any new code generated for future reuse
+
+```
+Search proven code → Execute → Upload new code → Score via feedback
 ```
 
 This makes agent behavior more stable over time. Agents start from high-signal code paths and only generate new code when necessary.
 
-## How Raysurfer Supports This
+## Persistence
 
-Raysurfer combines three things to make agent-owned repos work:
+The code library persists per organization. Every agent session within the same `org_id` shares the same pool of proven code. This means:
 
-- **Proven code retrieval** — semantic search finds code that already worked for similar tasks, so agents reuse instead of regenerate
-- **Reputation scoring** — every snippet earns a score through execution results and user feedback (`thumbs_up` / `thumbs_down`), so the best code rises to the top
-- **Reuse-first workflows** — SDKs and integrations search the cache before generating, making retrieval the default path
+- Code uploaded by one user's session is available to all users in the org
+- Feedback from any user affects the ranking for everyone
+- The library improves continuously without manual curation
 
 ## Sandbox Execution
 
@@ -39,12 +103,6 @@ When agents execute code through Raysurfer, it runs in an isolated environment. 
 - Code runs safely without affecting your production systems
 - Execution results are captured and used for reputation scoring
 - Failed code is automatically excluded from future retrieval
-
-## Persistent Code Library
-
-Published functions stay available across sessions. When you publish functions via `publish_function_registry` (Python) or `publishFunctionRegistry` (TypeScript), they're stored and accessible for future agent sessions within the same org/workspace scope.
-
-This means agents don't need to re-upload functions each session — proven code persists and is available across runs. See the [Function Registry](/integrations/function-registry) for setup details.
 
 ## Recommended Rollout
 
