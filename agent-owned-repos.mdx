@@ -13,77 +13,69 @@ Instead of generating from scratch every run, agents:
 
 1. **Search** for proven code that already solved similar tasks
 2. **Execute** the code in an isolated sandbox environment
-3. **Score** the results — code that produces useful output gets promoted
+3. **Score** the results — AI automatically evaluates code quality and promotes what works
 4. **Build a library** — over time, the agent accumulates a growing collection of reliable code
 
 ## Quick Start
 
-Pass your user queries, user ID, and org ID. The agent handles caching and code reuse automatically.
+Pass your chat history as Anthropic-typed messages. The agent handles caching, code reuse, and quality scoring automatically.
 
 <CodeGroup>
 
 ```python Python
 from raysurfer import Agent
 
-async with Agent(org_id="acme-corp") as agent:
-    results = await agent.run(
-        ["Generate quarterly report", "Summarize sales data"],
-        user_id="user_123",
+async with Agent(org_id="acme-corp", user_id="user_123") as agent:
+    result = await agent.run(
+        messages=[
+            {"role": "user", "content": "Generate a quarterly report from our sales data"},
+        ],
     )
-
-    # User liked the first result, disliked the second
-    await agent.feedback(results[0].run_id, satisfied=True)
-    await agent.feedback(results[1].run_id, satisfied=False)
 ```
 
 ```typescript TypeScript
 import { Agent } from "raysurfer";
 
-const agent = new Agent({ orgId: "acme-corp" });
-const results = await agent.run(
-  ["Generate quarterly report", "Summarize sales data"],
-  { userId: "user_123" },
-);
-
-// User liked the first result, disliked the second
-await agent.feedback(results[0].runId, true);
-await agent.feedback(results[1].runId, false);
+const agent = new Agent({ orgId: "acme-corp", userId: "user_123" });
+const result = await agent.run([
+  { role: "user", content: "Generate a quarterly report from our sales data" },
+]);
 ```
 
 </CodeGroup>
 
-## How Feedback Drives Code Quality
+## How Code Quality Improves Over Time
 
-Every time `agent.run()` processes a query, it tracks which cached code snippets were retrieved and used. When a user later expresses satisfaction or dissatisfaction with the result, `agent.feedback()` retroactively votes on all the code that contributed:
+Every time `agent.run()` processes a conversation, it tracks which cached code snippets were retrieved and used. AI automatically evaluates execution results and votes on all the code that contributed:
 
-- **Satisfied** → thumbs up on every cached snippet used → those snippets rank higher in future searches
-- **Dissatisfied** → thumbs down → those snippets get demoted and eventually stop surfacing
+- **Successful execution** → thumbs up on every cached snippet used → those snippets rank higher in future searches
+- **Failed execution** → thumbs down → those snippets get demoted and eventually stop surfacing
 
-This creates a closed loop: user happiness directly determines which code gets reused. Code that consistently makes users happy rises to the top. Code that doesn't gets buried.
+This creates a closed loop: execution quality directly determines which code gets reused. Code that consistently produces good results rises to the top. Code that doesn't gets buried — all without any manual intervention.
 
 ```
-User query → search cached code → execute → produce result
-                                                  ↓
-                                          user feedback
-                                                  ↓
-                                    retroactive vote on all
-                                    code that contributed
-                                                  ↓
-                                    good code promoted,
-                                    bad code demoted
+Chat messages → search cached code → execute → produce result
+                                                      ↓
+                                              AI evaluates quality
+                                                      ↓
+                                        automatic vote on all
+                                        code that contributed
+                                                      ↓
+                                        good code promoted,
+                                        bad code demoted
 ```
 
-New code generated during execution is separately AI-voted at upload time, so it enters the library with an initial quality signal before any user feedback arrives.
+New code generated during execution is also AI-voted at upload time, so it enters the library with an initial quality signal immediately.
 
 ## The Core Loop
 
-Under the hood, `agent.run()` wraps two API calls per query:
+Under the hood, `agent.run()` wraps two API calls per conversation:
 
 1. **`raysurfer.search()`** — find proven code that already solved similar tasks
 2. **`raysurfer.upload()`** — store any new code generated for future reuse
 
 ```
-Search proven code → Execute → Upload new code → Score via feedback
+Search proven code → Execute → Upload new code → AI scores quality
 ```
 
 This makes agent behavior more stable over time. Agents start from high-signal code paths and only generate new code when necessary.
@@ -93,7 +85,7 @@ This makes agent behavior more stable over time. Agents start from high-signal c
 The code library persists per organization. Every agent session within the same `org_id` shares the same pool of proven code. This means:
 
 - Code uploaded by one user's session is available to all users in the org
-- Feedback from any user affects the ranking for everyone
+- AI quality scoring affects the ranking for everyone
 - The library improves continuously without manual curation
 
 ## Sandbox Execution
@@ -107,7 +99,7 @@ When agents execute code through Raysurfer, it runs in an isolated environment. 
 ## Recommended Rollout
 
 1. Add Raysurfer to one high-frequency workflow first.
-2. Track which snippets are repeatedly reused with positive votes.
+2. Track which snippets are repeatedly reused with positive scores.
 3. Expand to additional workflows once retrieval quality is stable.
 
 <Note>
