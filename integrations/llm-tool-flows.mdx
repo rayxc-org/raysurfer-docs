@@ -1,0 +1,181 @@
+---
+title: Wrap Any LLM Tool Flow
+description: "Runnable quickstarts for wrapping search() and upload() around Anthropic, LangSmith, and custom tool-calling loops"
+---
+
+If you already have an LLM tool flow, Raysurfer stays simple:
+
+1. `search()` before the run
+2. `upload()` after the run
+
+That pattern works whether you call Anthropic directly, run through LangSmith/LangChain, or use your own orchestrator.
+
+<Note>
+  Core idea: two calls around your existing flow, no retriever plumbing needed.
+</Note>
+
+## Quickstart Pattern
+
+```text
+search(task) -> run your tool flow -> upload(task, changed_code, logs)
+```
+
+## Python: Anthropic Tool Flow
+
+```python
+import asyncio
+from anthropic import AsyncAnthropic
+from raysurfer import AsyncRaySurfer, FileWritten
+
+
+def build_cached_context(matches) -> str:
+    lines = ["Use these cached snippets before generating new code:"]
+    for match in matches[:5]:
+        lines.append(f"\n### {match.filename}")
+        lines.append(f"```{match.language}\n{match.code_block.source}\n```")
+    return "\n".join(lines)
+
+
+async def run_task(task: str) -> None:
+    rs = AsyncRaySurfer()  # uses RAYSURFER_API_KEY
+    anthropic = AsyncAnthropic()
+
+    # 1) Pull top snippets for this task
+    search_result = await rs.search(task=task, top_k=5)
+    cached_context = build_cached_context(search_result.matches)
+
+    # 2) Run your existing model/tool flow
+    response = await anthropic.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=1200,
+        system=cached_context,
+        messages=[{"role": "user", "content": task}],
+    )
+    final_text = "".join(
+        block.text for block in response.content if getattr(block, "type", "") == "text"
+    )
+
+    # Example changed code produced by your flow
+    generated_code = f"print({final_text!r})\n"
+
+    # 3) Upload changed code + logs
+    await rs.upload(
+        task=task,
+        file_written=FileWritten(path="generated.py", content=generated_code),
+        succeeded=True,
+        execution_logs=final_text,
+    )
+
+    await rs.close()
+
+
+asyncio.run(run_task("Generate a quarterly report from CSV files"))
+```
+
+## TypeScript: Anthropic Tool Flow
+
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+import { RaySurfer } from "raysurfer";
+
+function buildCachedContext(matches: Array<{
+  filename: string;
+  language: string;
+  codeBlock: { source: string };
+}>): string {
+  const lines = ["Use these cached snippets before generating new code:"];
+  for (const match of matches.slice(0, 5)) {
+    lines.push(`\n### ${match.filename}`);
+    lines.push(`\`\`\`${match.language}\n${match.codeBlock.source}\n\`\`\``);
+  }
+  return lines.join("\n");
+}
+
+async function runTask(task: string): Promise<void> {
+  const rs = new RaySurfer(); // uses RAYSURFER_API_KEY
+  const anthropic = new Anthropic();
+
+  // 1) Pull top snippets for this task
+  const searchResult = await rs.search({ task, topK: 5 });
+  const cachedContext = buildCachedContext(searchResult.matches);
+
+  // 2) Run your existing model/tool flow
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-5",
+    max_tokens: 1200,
+    system: cachedContext,
+    messages: [{ role: "user", content: task }],
+  });
+
+  let finalText = "";
+  for (const block of response.content) {
+    if (block.type === "text") {
+      finalText += block.text;
+    }
+  }
+
+  // Example changed code produced by your flow
+  const generatedCode = `console.log(${JSON.stringify(finalText)});\\n`;
+
+  // 3) Upload changed code + logs
+  await rs.upload({
+    task,
+    fileWritten: { path: "generated.ts", content: generatedCode },
+    succeeded: true,
+    executionLogs: finalText,
+  });
+}
+
+await runTask("Generate a quarterly report from CSV files");
+```
+
+## LangSmith / Framework Wrapper Pattern
+
+Use the same two-call shape around your existing runner:
+
+```python
+async def run_with_raysurfer(task: str, run_flow):
+    rs = AsyncRaySurfer()
+
+    # before
+    search_result = await rs.search(task=task, top_k=5)
+    cached_context = build_cached_context(search_result.matches)
+
+    # your framework flow (LangSmith/LangChain/custom)
+    result = await run_flow(task=task, cached_context=cached_context)
+    # expected result shape:
+    # result.code_path, result.code_content, result.logs, result.succeeded
+
+    # after
+    await rs.upload(
+        task=task,
+        file_written=FileWritten(path=result.code_path, content=result.code_content),
+        succeeded=result.succeeded,
+        execution_logs=result.logs,
+    )
+```
+
+## Workspace Silo (Enterprise)
+
+When you need per-customer isolation, pass `workspace_id`/`workspaceId` on both calls:
+
+<CodeGroup>
+
+```python Python
+await rs.search(task=task, top_k=5, workspace_id="acme")
+await rs.upload(task=task, file_written=file, succeeded=True, workspace_id="acme")
+```
+
+```typescript TypeScript
+await rs.search({ task, topK: 5, workspaceId: "acme" });
+await rs.upload({ task, fileWritten: file, succeeded: true, workspaceId: "acme" });
+```
+
+</CodeGroup>
+
+## Related
+
+- [Quickstart](/quickstart)
+- [Function Registry](/integrations/function-registry)
+- [Python SDK](/sdk/python)
+- [TypeScript SDK](/sdk/typescript)

@@ -206,6 +206,7 @@ result = client.search(
     task=task,
     top_k=5,
     min_verdict_score=0.3,
+    per_function_reputation=True,
 )
 
 for match in result.matches:
@@ -224,6 +225,7 @@ client.upload(
     succeeded=True,
     execution_logs="Fetched 10 trending repos successfully",
     dependencies={"httpx": "0.27.0", "pydantic": "2.5.0"},  # Track package versions
+    per_function_reputation=True,
 )
 
 # 2b. Bulk upload prompts/logs/code for sandboxed grading
@@ -284,7 +286,10 @@ from raysurfer.types import FileWritten
 
 async with AsyncRaySurfer(api_key="your_api_key") as client:
     # 1. Search for cached code
-    result = await client.search(task="Fetch GitHub trending repos")
+    result = await client.search(
+        task="Fetch GitHub trending repos",
+        per_function_reputation=True,
+    )
 
     for match in result.matches:
         print(f"{match.code_block.name}: {match.combined_score}")
@@ -299,6 +304,7 @@ async with AsyncRaySurfer(api_key="your_api_key") as client:
         file_written=file,
         succeeded=True,
         execution_logs="Fetched 10 trending repos successfully",
+        per_function_reputation=True,
     )
 
     # 3. (Optional) Vote on snippet manually — only if you need explicit control
@@ -339,13 +345,14 @@ Each `SearchMatch` contains:
 | `dependencies` | `dict[str, str]` | Package name to version mapping (e.g., `{"pandas": "2.1.0"}`) |
 | `agent_id` | `str \| None` | Agent identifier when snippet came from an agent-owned repo |
 | `s3_url` | `str \| None` | Presigned download URL for agent-stored script content |
+| `functions` | `list[FunctionReputation] \| None` | Per-function reputation metadata (when `per_function_reputation=True`) |
 
 ### Method Reference
 
 | Method | Description |
 |--------|-------------|
-| `search(task, top_k, min_verdict_score, prefer_complete)` | Search for cached code snippets |
-| `upload(task, file_written, succeeded, ...)` | Store a code file for future reuse |
+| `search(task, top_k, min_verdict_score, prefer_complete, per_function_reputation)` | Search for cached code snippets |
+| `upload(task, file_written, succeeded, ..., per_function_reputation=False)` | Store a code file for future reuse |
 | `upload_bulk_code_snips(prompts, files_written, ...)` | Bulk upload for grading |
 | `delete(snippet_id)` | Delete a snippet by ID or name |
 | `vote_code_snip(task, code_block_id, name, description, succeeded)` | Vote on snippet usefulness |

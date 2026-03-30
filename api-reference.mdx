@@ -160,6 +160,7 @@ for (const match of result.matches) {
 | `min_verdict_score` / `minVerdictScore` | `number` | `0.3` | Minimum quality score filter |
 | `prefer_complete` / `preferComplete` | `boolean` | `false` | Prefer longer/more complete implementations |
 | `input_schema` / `inputSchema` | `object` | `null` | Optional input schema filter |
+| `per_function_reputation` / `perFunctionReputation` | `boolean` | `false` | Inject per-function diagnostics into matched source and return `functions` metadata |
 
 ### Returns: [SearchResponse](#searchresponse)
 
@@ -240,6 +241,7 @@ console.log(`Stored ${result.codeBlocksStored} code blocks`);
 | `vote_count` / `voteCount` | `int \| null` | `1` | Number of votes to apply. Useful for pre-seeding community votes. |
 | `execution_logs` / `executionLogs` | `string \| null` | `null` | Captured stdout/stderr for vote context |
 | `dependencies` | `dict[str, str]` / `Record<string, string>` | `null` | Package dependencies with versions (e.g., `{"pandas": "2.1.0"}`) |
+| `per_function_reputation` / `perFunctionReputation` | `boolean` | `false` | Extract function fingerprints and track per-function reputation for this upload |
 
 ### Returns: [SubmitExecutionResultResponse](#submitexecutionresultresponse)
 
@@ -325,6 +327,7 @@ const result2 = await client.uploadBulkCodeSnips({
 | `user_votes` / `userVotes` | `dict[str, int] \| null` | `null` | Dict of filename to vote (`1` = thumbs up, `-1` = thumbs down). When provided, AI grading is automatically skipped. |
 | `vote_source` / `voteSource` | `"ai" \| "human" \| null` | `null` | Explicitly sets the vote source. When omitted, `user_votes` defaults to `"human"` and AI voting defaults to `"ai"`. |
 | `vote_count` / `voteCount` | `int \| null` | `1` | Number of votes to apply per file. Useful for pre-seeding community votes. |
+| `per_function_reputation` / `perFunctionReputation` | `boolean` | `false` | Extract function fingerprints and track per-function reputation for each uploaded file |
 
 ### Returns: [BulkExecutionResultResponse](#bulkexecutionresultresponse)
 
@@ -486,6 +489,32 @@ A single result from [`search()`](#search). Contains a full [CodeBlock](#codeblo
 | `language` | `string` | Programming language (e.g., `"python"`, `"typescript"`) |
 | `entrypoint` | `string` | Main function name to call (e.g., `"fetch_repos"`) |
 | `dependencies` | `dict[str, str]` / `Record<string, string>` | Package name to version (e.g., `{"httpx": "0.27.0"}`) |
+| `functions` | [FunctionReputation](#functionreputation)`[] \| null` | Per-function reputation and telemetry metadata (only when requested) |
+
+---
+
+### FunctionReputation
+
+Per-function reputation metadata returned on `SearchMatch.functions`.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `fingerprint` | `string` | Stable function fingerprint |
+| `function_name` / `functionName` | `string` | Function name |
+| `signature` | `string` | Function signature text |
+| `execution_count` / `executionCount` | `int` | Number of tracked executions |
+| `thumbs_up` / `thumbsUp` | `int` | Positive votes attributed to this function |
+| `thumbs_down` / `thumbsDown` | `int` | Negative votes attributed to this function |
+| `last_success_at` / `lastSuccessAt` | `string \| null` | Last success timestamp (ISO 8601) |
+| `last_failure_at` / `lastFailureAt` | `string \| null` | Last failure timestamp (ISO 8601) |
+| `common_errors` / `commonErrors` | `string[]` | Frequent error messages |
+| `avg_output_size` / `avgOutputSize` | `float` | Average output size observed from telemetry |
+| `output_completeness` / `outputCompleteness` | `float` | Non-empty output ratio (0.0 to 1.0) |
+| `repeat_call_rate` / `repeatCallRate` | `float` | Repeat invocation ratio from telemetry |
+| `total_logged_calls` / `totalLoggedCalls` | `int` | Number of logged telemetry calls |
+| `author_agent` / `authorAgent` | `string \| null` | Authoring agent identifier when available |
+| `reviewed_by_human` / `reviewedByHuman` | `boolean` | Whether this function received human review |
+| `derived_from` / `derivedFrom` | `string \| null` | Parent fingerprint lineage, if derived |
 
 ---
 

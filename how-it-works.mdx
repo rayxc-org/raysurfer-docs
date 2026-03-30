@@ -162,6 +162,12 @@ reputation_score = thumbs_up / (thumbs_up + thumbs_down)
 
 Snippets with higher reputation scores are prioritized during retrieval, ensuring your agent uses the most reliable code.
 
+## Per-Function Signals
+
+Snippet-level votes tell you whether the overall script was useful. For iterative agents, you can also enable per-function reputation to surface diagnostics inside each function and track function-level telemetry.
+
+Use `per_function_reputation` / `perFunctionReputation` on upload and search. See [Per-Function Reputation](/per-function-reputation) for copy-paste examples.
+
 ## Public Snippets — The Community Registry
 
 The skills library extends to a public registry of validated code patterns sourced from popular open-source GitHub repositories. These are community-contributed skills that any agent can search and use.

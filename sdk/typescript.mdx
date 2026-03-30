@@ -216,6 +216,7 @@ const client = new RaySurfer({ apiKey: "your_api_key" });
 // 1. Search for cached code
 const searchResult = await client.search({
   task: "Fetch GitHub trending repos",
+  perFunctionReputation: true,
 });
 for (const match of searchResult.matches) {
   console.log(`${match.codeBlock.name}: ${match.combinedScore}`);
@@ -230,6 +231,7 @@ await client.upload({
   fileWritten: { path: "fetch_repos.ts", content: "function fetch() { ... }" },
   succeeded: true,
   dependencies: { "node-fetch": "3.3.0", "zod": "3.22.0" },
+  perFunctionReputation: true,
 });
 
 // 2b. Bulk upload prompts/logs/code for sandboxed grading
@@ -323,13 +325,14 @@ Each `SearchMatch` contains:
 | `dependencies` | `Record<string, string>` | Package name to version mapping (e.g., `{"node-fetch": "3.3.0"}`) |
 | `agentId` | `string \| null` | Agent identifier when snippet came from an agent-owned repo |
 | `s3Url` | `string \| null` | Presigned download URL for agent-stored script content |
+| `functions` | `FunctionReputation[] \| null` | Per-function reputation metadata (when `perFunctionReputation: true`) |
 
 ### Method Reference
 
 | Method | Description |
 |--------|-------------|
-| `search({ task, topK?, minVerdictScore?, preferComplete? })` | Search for cached code snippets |
-| `upload({ task, fileWritten, succeeded, ... })` | Store a code file for future reuse |
+| `search({ task, topK?, minVerdictScore?, preferComplete?, perFunctionReputation? })` | Search for cached code snippets |
+| `upload({ task, fileWritten, succeeded, perFunctionReputation?, ... })` | Store a code file for future reuse |
 | `uploadBulkCodeSnips({ prompts, filesWritten, ... })` | Bulk upload for grading |
 | `delete(snippetId)` | Delete a snippet by ID or name |
 | `voteCodeSnip({ task, codeBlockId, codeBlockName, codeBlockDescription, succeeded })` | Vote on snippet usefulness |
